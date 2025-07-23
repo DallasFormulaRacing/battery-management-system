@@ -2,8 +2,6 @@
 
 # Battery Management System
 
-## DALLAS FORMULA RACING | UT DALLAS FSAE EV TEAM
-
 ## Getting Started
 
 Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-system.git`
@@ -26,3 +24,45 @@ Make sure you have the following utilities:
 ### VS Code Extensions
 
 ## Directory Structure
+
+### Subdirectories
+
+`App` - contains application layer logic, like algorithms, and user-defined modules.
+
+`Core` - main function and project specific sources.
+
+`Drivers` - vendor drivers and HAL. Also contains CMSIS
+
+### Tree
+
+```bash
+.
+└── bms
+    ├── App
+    ├── build
+    ├── Core
+    │   ├── Inc
+    │   └── Src
+    └── Drivers
+        ├── BSP
+        │   └── STM32G4xx_Nucleo
+        ├── CMSIS
+        │   ├── Device
+        │   │   └── ST
+        │   │       └── STM32G4xx
+        │   │           ├── Include
+        │   │           └── Source
+        │   │               └── Templates
+        │   └── Include
+        └── STM32G4xx_HAL_Driver
+            ├── Inc
+            │   └── Legacy
+            └── Src
+
+22 directories
+
+```
+
+---
+
+> DALLAS FORMULA RACING EV TEAM
