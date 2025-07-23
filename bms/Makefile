@@ -61,6 +61,11 @@ Core/Src/system_stm32g4xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c  
 
+# === BEGIN USER ADDED SOURCES ===
+# I added the following source files to the C_SOURCES list
+C_SOURCES += $(wildcard App/*.c)
+# === END USER ADDED SOURCES ===
+
 # ASM sources
 ASM_SOURCES =  \
 startup_stm32g474xx.s
@@ -126,6 +131,13 @@ C_INCLUDES =  \
 -IDrivers/BSP/STM32G4xx_Nucleo \
 -IDrivers/CMSIS/Device/ST/STM32G4xx/Include \
 -IDrivers/CMSIS/Include
+
+
+# === BEGIN USER ADDED includes ===
+# I added the following include directories
+C_INCLUDES += -IApp
+# === END USER ADDED includes ===
+
 
 
 # compile gcc flags

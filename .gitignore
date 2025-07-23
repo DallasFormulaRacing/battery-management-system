@@ -1,0 +1,26 @@
+# Build artifacts
+bms/build/
+/*.o
+/*.elf
+/*.hex
+/*.bin
+/*.map
+
+
+# IDE files
+/.vscode/*.*
+!.vscode/tasks.json
+/.idea/
+/*.swp
+*.log
+
+# CubeMX
+*.ioc
+
+# STM32CubeIDE specific
+/.settings/
+/Debug/
+/Release/
+
+# MacOS cruft
+.DS_Store

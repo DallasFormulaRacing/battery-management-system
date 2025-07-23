@@ -1,0 +1,40 @@
+name: Linux Build
+
+on:
+  push:
+    paths:
+      - "bms/**"
+      - ".github/workflows/linux.yaml"
+  pull_request:
+    paths:
+      - "bms/**"
+      - ".github/workflows/linux.yaml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install ARM GCC Toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          version: "12.2.Rel1"
+
+      - name: Install Build Dependencies
+        run: sudo apt-get update && sudo apt-get install -y make
+
+      - name: Clean and Build Project
+        working-directory: ./bms
+        run: make clean && make
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bms-firmware
+          path: |
+            ./bms/build/*.elf
+            ./bms/build/*.hex
+            ./bms/build/*.bin

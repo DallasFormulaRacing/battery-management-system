@@ -1,0 +1,56 @@
+// Users can change this but if they do, ensure that it is gitignored.
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+        "label": "Build",
+        "type": "shell",
+        "command": "make",
+        "args": [],
+        "options": {
+            "cwd": "${workspaceFolder}/bms"
+        },
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        },
+        "problemMatcher": [
+            "$gcc"
+        ]
+    },
+    {
+        "label": "Flash BMS with OpenOCD",
+        "type": "shell",
+        "command": "openocd",
+        "args": [
+            "-f", "interface/stlink.cfg",
+            "-f", "target/stm32g4x.cfg",
+            "-c", "program build/bms.elf verify reset exit"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}/bms"
+        },
+        "group": {
+            "kind": "build",
+            "isDefault": false
+        },
+        "problemMatcher": []
+    },
+    {
+        "label": "Clean",
+        "type": "shell",
+        "command": "make",
+        "args": [
+            "clean"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}/bms"
+        },
+        "group": {
+            "kind": "build",
+            "isDefault": false
+        },
+        "problemMatcher": []
+    }
+  ]
+}
