@@ -1,3 +1,5 @@
+[![Linux Build](https://github.com/DallasFormulaRacing/battery-management-system/actions/workflows/linux.yml/badge.svg)](https://github.com/DallasFormulaRacing/battery-management-system/actions/workflows/linux.yml)
+
 # Battery Management System
 
 ## DALLAS FORMULA RACING | UT DALLAS FSAE EV TEAM
