@@ -7,7 +7,8 @@
          commnunicates with ADBMS6830 module
  */
 
-#include "../Inc/voltage.h"
+#include "voltage.h"
+#include "stm32g4xx_hal.h"
 
 
 void adbms6830_init() {
@@ -22,6 +23,6 @@ uint32_t adbms6830_read_cell_voltage() {
 
 }
 
-adbms6830_status_t adbms6830_get_status() {
+adbms6830_state_t adbms6830_get_status() {
 
 }

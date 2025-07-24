@@ -14,6 +14,7 @@ bms/build/
 /.idea/
 /*.swp
 *.log
+*.idx
 
 # CubeMX
 *.ioc
@@ -25,3 +26,4 @@ bms/build/
 
 # MacOS cruft
 .DS_Store
+compile_commands.json

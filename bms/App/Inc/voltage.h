@@ -11,14 +11,17 @@
 
 #include <stdint.h> 
 
+
+
+
 typedef enum { 
     ADBMS6830_OK, 
     ADBMS6830_ERROR 
-} adbms6830_status_t;
+} adbms6830_state_t;
 
 void adbms6830_init();
 void adbms6830_start_adc_conversion();
 uint32_t adbms6830_read_cell_voltage();
-adbms6830_status_t adbms6830_get_status();
+adbms6830_state_t adbms6830_get_status();
 
 #endif
