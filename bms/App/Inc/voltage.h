@@ -12,8 +12,6 @@
 #include <stdint.h> 
 
 
-
-
 typedef enum { 
     ADBMS6830_OK, 
     ADBMS6830_ERROR 

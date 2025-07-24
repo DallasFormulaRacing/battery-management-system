@@ -8,7 +8,6 @@
  */
 
 #include "voltage.h"
-#include "stm32g4xx_hal.h"
 
 
 void adbms6830_init() {
