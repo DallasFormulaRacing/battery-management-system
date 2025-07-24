@@ -6,6 +6,7 @@ bms/build/
 /*.bin
 /*.map
 
+/.clangd
 
 # IDE files
 /.vscode/*.*

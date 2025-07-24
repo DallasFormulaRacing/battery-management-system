@@ -12,7 +12,7 @@
         },
         "group": {
             "kind": "build",
-            "isDefault": true
+            "isDefault": false
         },
         "problemMatcher": [
             "$gcc"
@@ -51,6 +51,21 @@
             "isDefault": false
         },
         "problemMatcher": []
-    }
+    },
+    {
+            "label": "Run All",
+            "type": "shell",
+            "dependsOn": [
+                "Clean",
+                "Build",
+                "Flash"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
   ]
 }

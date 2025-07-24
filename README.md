@@ -23,15 +23,39 @@ Make sure you have the following utilities:
 
 ### VS Code Extensions
 
+```txt
+cschlosser.doxdocgen
+dan-c-underwood.arm
+marus25.cortex-debug
+mcu-debug.debug-tracker-vscode
+mcu-debug.memory-view
+mcu-debug.peripheral-viewer
+mcu-debug.rtos-views
+ms-python.python
+ms-python.vscode-pylance
+ms-python.vscode-python-envs
+ms-vscode.cmake-tools
+ms-vscode.cpptools-extension-pack
+ms-vscode.cpptools-themes
+ms-vscode.hexeditor
+ms-vscode.makefile-tools
+ms-vscode.vscode-serial-monitor
+pkief.material-icon-theme
+trond-snekvik.gnu-mapfiles
+twxs.cmake
+usernamehw.errorlens
+zixuanwang.linkerscript
+```
+
 ## Directory Structure
 
 ### Subdirectories
 
-`App` - contains application layer logic, like algorithms, and user-defined modules.
+`App` - contains application layer logic, like algorithms and other user-defined modules. Write additional firmware here.
 
-`Core` - main function and project specific sources.
+`Core` - main function and architecture-specific sources. Edit as least often as possible.
 
-`Drivers` - vendor drivers and HAL. Also contains CMSIS
+`Drivers` - vendor drivers and HAL. Also contains CMSIS library. Do not touch.
 
 ### Tree
 
@@ -65,4 +89,4 @@ Make sure you have the following utilities:
 
 ---
 
-> DALLAS FORMULA RACING EV TEAM
+> Authors: DALLAS FORMULA RACING EV TEAM
