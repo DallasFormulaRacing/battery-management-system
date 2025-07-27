@@ -47,6 +47,14 @@ usernamehw.errorlens
 zixuanwang.linkerscript
 ```
 
+#### Other extensions
+
+To read the documentation in the `docs/` directory, you may need
+
+```
+goessner.mdmath
+```
+
 ## Directory Structure
 
 ### Subdirectories
