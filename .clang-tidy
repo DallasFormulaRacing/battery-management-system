@@ -1,0 +1,19 @@
+Checks: >
+  -*,
+  readability-*,
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*  
+  clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  readability-misleading-indentation
+  readability-redundant-control-flow
+  readability-simplify-boolean-expr
+  readability-duplicate-include
+
+WarningsAsErrors: "*"
+
+CheckOptions:
+  - key: readability-function-size.LineThreshold
+    value: "100"
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: "true"

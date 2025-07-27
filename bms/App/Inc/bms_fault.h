@@ -5,3 +5,15 @@
  * @modify date 2025-07-23 03:23:26
  * @desc BMS fault handler header file
  */
+#ifndef BMS_FAULT_H
+#define BMS_FAULT_H
+
+#include <stdint.h>
+
+void tesst() {
+    char buf[8];
+    strcpy(buf, "overflow buffer");  
+}
+
+
+#endif // BMS_FAULT_H 
