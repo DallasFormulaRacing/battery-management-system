@@ -7,7 +7,8 @@
  */
 #ifndef BMS_FAULT_H
 #define BMS_FAULT_H
+
 #include <stdint.h>
 
 
-#endif // BMS_FAULT_H
+#endif // BMS_FAULT_H 
