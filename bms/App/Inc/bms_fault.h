@@ -10,9 +10,9 @@
 
 #include <stdint.h>
 
-void tesst() {
-    char buf[8];
-    strcpy(buf, "overflow buffer");  
+int unused_var_function() {
+    int unused = 42;
+    return 0;
 }
 
 
