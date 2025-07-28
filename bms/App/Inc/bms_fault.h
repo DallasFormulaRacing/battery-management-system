@@ -15,5 +15,4 @@ int unused_var_function() {
     return 0;
 }
 
-
 #endif // BMS_FAULT_H 
