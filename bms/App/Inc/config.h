@@ -10,7 +10,7 @@
 #define CONFIG_H
 
 // Safe operating limits
-#define TEMP_LIMIT_HIGH_F
+#define TEMP_LIMIT_HIGH_F 1111
 #define TEMP_LIMIT_LOW_F
 #define VOLT_LIMIT_HIGH_V
 #define VOLT_LIMIT_LOW_V
