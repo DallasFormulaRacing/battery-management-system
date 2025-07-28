@@ -6,3 +6,10 @@
  * @desc BMS fault handler source file, deals with fault detection, handling and
  * shutdown curcuit logic.
  */
+
+#include "bms_fault.h"
+
+int unused_var_function() {
+    int unused = 42;
+    return 0;
+}

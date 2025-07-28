@@ -10,10 +10,6 @@
 
 #include <stdint.h>
 
-int unused_var_function() {
-    int unused = 42;
-    return 0;
-}
 
 
 #endif // BMS_FAULT_H 
