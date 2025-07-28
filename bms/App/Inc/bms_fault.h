@@ -11,5 +11,4 @@
 #include <stdint.h>
 
 
-
 #endif // BMS_FAULT_H 
