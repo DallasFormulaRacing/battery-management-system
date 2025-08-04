@@ -43,3 +43,7 @@ Broadcast commands are
 ### Example: A Simple Transaction
 
 ## Need to know
+
+## 5. Cell Balancing
+
+PWM on the ADBMS6830 is used primarily for passive cell balancing. It allows controlled switching of external balancing resistors to discharge individual cells and equalize voltages across the battery pack. Use PWM when implementing balancing logic to maintain cell voltage uniformity during charging or maintenance cycles.
