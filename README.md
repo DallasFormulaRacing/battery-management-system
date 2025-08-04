@@ -55,6 +55,16 @@ To read the documentation in the `docs/` directory, you may need
 goessner.mdmath
 ```
 
+### How to Contribute:
+
+New features will be developed on a branch separate from production `master` and will be merged by pull request. All contributions will undergo review at the pull request level.
+
+Your pull request will be automatically blocked from merging if it does not pass a compile check!
+
+Please see [branch naming conventions](https://www.geeksforgeeks.org/git/how-to-naming-conventions-for-git-branches/) and [pull request naming conventions](https://github.com/mozilla-mobile/firefox-ios/wiki/Pull-Request-Naming-Guide) and name them appropriately. Bad naming is bad documentation and bad documentation is bad code. Refer to previous PRs or old branch names for inspiration/clarification.
+
+If applicable, please tie your pull request to one or more issues. Try to find an issue to solve with your PR, or just make one. Duplicate issues will be filtered.
+
 ## Directory Structure
 
 ### Subdirectories
