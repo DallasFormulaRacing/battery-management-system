@@ -4,7 +4,7 @@
  * @create date 2025-08-04 10:17:02
  * @modify date 2025-08-04 10:17:02
  * @desc A header file for BMS commands. Please see adbms6830b.pdf 
-         commands section for details Table 50 for details.
+         commands section Table 50 for details.
  */
 
  #ifndef BMS_COMMANDS_H
@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 
+// ------------------- PEC (Cyclic Redundancy Check) Definitions -------------------
 
 // precomputed COMMAND append CRC15 Table
 const uint16_t CMD_PEC15_LUT[256] = {
@@ -52,5 +53,45 @@ const uint16_t DATA_PEC10_LUT[256] = {
     0x20a, 0x285, 0x314, 0x39b, 0x036, 0x0b9, 0x128, 0x1a7, 0x2fd, 0x272, 0x3e3, 0x36c, 0x0c1, 0x04e, 0x1df, 0x150,
     0x3e4, 0x36b, 0x2fa, 0x275, 0x1d8, 0x157, 0x0c6, 0x049, 0x313, 0x39c, 0x20d, 0x282, 0x12f, 0x1a0, 0x031, 0x0be
 };
+
+// ------------------- Command Codes -------------------
+//extern uint8_t      [2];        // 
+
+// Configuration Register Commands : WRCFGx
+extern uint8_t      WRCFGA[2];        // Write Configuration Register Group A
+extern uint8_t      WRCFGB[2];        // Write Configuration Register Group B
+extern uint8_t      RDCGFA[2];        // Read Configuration Register Group A
+extern uint8_t      RDCGFB[2];        // Read Configuration Register Group B
+
+// Cell Voltage Register Commands : RDCVx
+extern uint8_t      RDCVA[2];        // Read Cell Voltage Register Group A
+extern uint8_t      RDCVB[2];        // Read Cell Voltage Register Group B
+extern uint8_t      RDCVC[2];        // Read Cell Voltage Register Group C
+extern uint8_t      RDCVD[2];        // Read Cell Voltage Register Group D
+extern uint8_t      RDCVE[2];        // Read Cell Voltage Register Group E
+extern uint8_t      RDCVF[2];        // Read Cell Voltage Register Group F
+extern uint8_t      RDCVALL[2];      // Read Cell Voltage ALL
+
+// Read Status Register Commands : RDSTATx
+extern uint8_t      RDSTATA[2];     // Read Status Register Group A
+extern uint8_t      RDSTATB[2];     // Read Status Register Group B
+extern uint8_t      RDSTATC[2];     // Read Status Register Group C
+extern uint8_t      RDSTATD[2];     // Read Status Register Group D
+extern uint8_t      RDSTATE[2];     // Read Status Register Group E
+extern uint8_t      RDSTATCERR[2];  // Read Status Register Errors (toggle bit 6)
+
+extern uint8_t      PLADC[2];       // Poll for ADC Conversion Status
+
+
+// Start Cell Voltage ADC Conversion and Poll Status
+
+
+
+build_ADCV(uint8_t ow, uint8_t rstf, uint8_t dcp, uint8_t cont, uint8_t rd);
+
+
+
+uint16_t calc_PEC15(uint8_t *data, uint16_t len);
+uint16_t calc_PEC10(uint8_t *data, uint16_t len);
 
 #endif // BMS_COMMANDS_H
