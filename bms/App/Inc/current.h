@@ -12,3 +12,5 @@
 void start_current_measurement(void);
 void stop_current_measurement(void);
 void coulomb_counter(void);
+
+#endif // CURRENT_H

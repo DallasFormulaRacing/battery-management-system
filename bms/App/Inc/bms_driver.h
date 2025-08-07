@@ -10,6 +10,7 @@
 #define BMS_DRIVER_H
 
 #include <stdint.h>
+#include "stm32g4xx_hal.h" // Include HAL for STM32G4 series
 #include "commands.h"
 
 extern HAL_SPI_HandleTypeDef hspi1; // SPI handle for AD BMS 6830
