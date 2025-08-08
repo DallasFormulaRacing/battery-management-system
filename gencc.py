@@ -6,7 +6,10 @@ include_dirs = [
     "-I./bms/Core/Inc",
     "-I./bms/Drivers/STM32G4xx_HAL_Driver/Inc",  
     "-I./bms/Drivers/CMSIS/Device/ST/STM32G4xx/Include",
-    "-I./bms/Drivers/CMSIS/Include"
+    "-I./bms/Drivers/CMSIS/Include",
+    "-I/Applications/ArmGNUToolchain/13.3.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/include",
+    "-I/Applications/ArmGNUToolchain/13.3.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/include-fixed",
+    "-I/Applications/ArmGNUToolchain/13.3.rel1/arm-none-eabi/arm-none-eabi/include"
 ]
 
 defines = [

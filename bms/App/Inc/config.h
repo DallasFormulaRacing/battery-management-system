@@ -2,7 +2,7 @@
  * @author Will Kim
  * @email <wkim@utdallas.edu>
  * @create date 2025-07-23 03:19:33
- * @modify date 2025-07-23 03:19:33
+ * @modify date 2025-08-07 20:21:25
  * @desc Store safe operating limits, runtime configs, parameters and constants.
  */
 
