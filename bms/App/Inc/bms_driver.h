@@ -15,17 +15,6 @@
 #include "commands.h"
 #include <stdint.h>
 
-#define BMS_SPI1_Port GPIOB
-#define BMS_Status_Port GPIOC
-/*
-#define BMS_SPI1_CS_Pin GPIO_PIN_12
-#define BMS_SPI1_SCK_Pin GPIO_PIN_13
-#define BMS_SPI1_MISO_Pin GPIO_PIN_14
-#define BMS_SPI1_MOSI_Pin GPIO_PIN_15
-*/
-
-#define BMS_SPI2_Port GPIOC //(EXcept NSS, NSS GPIO Port is GPIOA)
-
 
 void bms_wakeup();
 

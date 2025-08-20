@@ -63,60 +63,24 @@ void Error_Handler(void);
 #define RCC_OSC32_IN_GPIO_Port GPIOC
 #define RCC_OSC32_OUT_Pin GPIO_PIN_15
 #define RCC_OSC32_OUT_GPIO_Port GPIOC
-
-
 #define RCC_OSC_IN_Pin GPIO_PIN_0
 #define RCC_OSC_IN_GPIO_Port GPIOF
 #define RCC_OSC_OUT_Pin GPIO_PIN_1
 #define RCC_OSC_OUT_GPIO_Port GPIOF
-
-
-#define BMS_SPI1_CS_Pin GPIO_PIN_12
-#define BMS_SPI1_CS_GPIO_Port GPIOB
-#define BMS_SPI1_SCK_Pin GPIO_PIN_13
-#define BMS_SPI1_SCK_GPIO_Port GPIOB
-#define BMS_SPI1_MISO_Pin GPIO_PIN_14
-#define BMS_SPI1_MISO_GPIO_Port GPIOB
-#define BMS_SPI1_MOSI_Pin GPIO_PIN_15
-#define BMS_SPI1_MOSI_GPIO_Port GPIOB
-
-
-#define BMS_INTR1_Pin GPIO_PIN_7
-#define BMS_INTR1_GPIO_Port GPIOC
-#define BMS_WAKE1_Pin GPIO_PIN_8
-#define BMS_WAKE1_GPIO_Port GPIOC
-
-
-#define CAN_RX_Pin GPIO_PIN_11
-#define CAN_RX_GPIO_Port GPIOA
-#define CAN_TX_Pin GPIO_PIN_12
-#define CAN_TX_GPIO_Port GPIOA
-
-
+#define BMS_WAKE2_Pin GPIO_PIN_8
+#define BMS_WAKE2_GPIO_Port GPIOC
+#define BMS_INTR2_Pin GPIO_PIN_9
+#define BMS_INTR2_GPIO_Port GPIOC
+#define BMS_WAKE1_Pin GPIO_PIN_9
+#define BMS_WAKE1_GPIO_Port GPIOA
+#define BMS_INTR1_Pin GPIO_PIN_10
+#define BMS_INTR1_GPIO_Port GPIOA
 #define T_SWDIO_Pin GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin GPIO_PIN_14
 #define T_SWCLK_GPIO_Port GPIOA
-
-
-#define BMS_SPI2_NSS_Pin GPIO_PIN_15
-#define BMS_SPI2_NSS_GPIO_Port GPIOA
-#define BMS_SPI2_SCK_Pin GPIO_PIN_10
-#define BMS_SPI2_SCK_GPIO_Port GPIOC
-#define BMS_SPI2_MISO_Pin GPIO_PIN_11
-#define BMS_SPI2_MISO_GPIO_Port GPIOC
-#define BMS_SPI2_MOSI_Pin GPIO_PIN_12
-#define BMS_SPI2_MOSI_GPIO_Port GPIOC
-
-
 #define T_SWO_Pin GPIO_PIN_3
 #define T_SWO_GPIO_Port GPIOB
-
-
-#define BMS_WAKE2_Pin GPIO_PIN_5
-#define BMS_WAKE2_GPIO_Port GPIOB
-#define BMS_INTR2_Pin GPIO_PIN_6
-#define BMS_INTR2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

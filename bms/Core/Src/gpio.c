@@ -51,23 +51,10 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : BMS_INTR1_Pin */
-  GPIO_InitStruct.Pin = BMS_INTR1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(BMS_INTR1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BMS_WAKE1_Pin */
-  GPIO_InitStruct.Pin = BMS_WAKE1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BMS_WAKE1_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : BMS_WAKE2_Pin */
   GPIO_InitStruct.Pin = BMS_WAKE2_Pin;
@@ -81,6 +68,19 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(BMS_INTR2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BMS_WAKE1_Pin */
+  GPIO_InitStruct.Pin = BMS_WAKE1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(BMS_WAKE1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BMS_INTR1_Pin */
+  GPIO_InitStruct.Pin = BMS_INTR1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BMS_INTR1_GPIO_Port, &GPIO_InitStruct);
 
 }
 
