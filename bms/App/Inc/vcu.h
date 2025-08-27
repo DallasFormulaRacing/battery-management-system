@@ -17,15 +17,10 @@
 #include "fdcan.h"
 #include <stdint.h>
 
-FDCAN_HandleTypeDef hfdcan1;
 
-FDCAN_TxHeaderTypeDef TxHeader;
-uint8_t TxData[8];
-uint32_t TxMailbox;
 
-FDCAN_RxHeaderTypeDef RxHeader;
-uint8_t RxData[8];
-uint32_t RxMailbox;
-
+void VCU_CAN_Init(void);
+void VCU_CAN_Send(uint8_t *data);
+void VCU_CAN_Receive(void);
 
 #endif

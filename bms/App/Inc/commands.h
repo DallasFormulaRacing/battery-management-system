@@ -10,8 +10,9 @@
  #ifndef BMS_COMMANDS_H
  #define BMS_COMMANDS_H
 
-#include <stdint.h>
 #include "pec_table.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 const uint16_t CMD_PEC15_LUT[256];
 const uint16_t DATA_PEC10_LUT[256];
@@ -43,17 +44,17 @@ extern const uint8_t      RDSTATE[2];     // Read Status Register Group E
 extern const uint8_t      RDSTATCERR[2];  // Read Status Register Errors (toggle bit 6)
 
 extern const uint8_t      PLADC[2];       // Poll for ADC Conversion Status
-
+extern const uint8_t      CLRFLAG[2];
 
 // Start Cell Voltage ADC Conversion and Poll Status
-extern const uint8_t      ADCV[2];   // Start ADC Conversion
-
+extern const uint8_t      default_ADCV[2];   // Start ADC Conversion
 
 void build_ADCV_command(uint8_t OW, uint8_t RSTF, uint8_t DCP, uint8_t CONT, uint8_t RD);
 
-
-
 uint16_t calc_PEC15(uint8_t *data, uint16_t len);
-uint16_t calc_PEC10(uint8_t *data, uint16_t len);
+uint16_t calc_PEC10(uint8_t *data, uint16_t len,  uint8_t *commandCounter);
+
+uint16_t pack_PEC15(uint8_t *data);
+uint16_t pack_PEC10(uint8_t *data, uint8_t *commandCounter);
 
 #endif // BMS_COMMANDS_H

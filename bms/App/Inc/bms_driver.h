@@ -13,9 +13,16 @@
 #include "spi.h"
 #include "stm32g4xx_hal.h"
 #include "commands.h"
-#include <stdint.h>
+#include "stm32g4xx_hal_def.h"
+#include "stm32g4xx_hal_spi.h"
+#include <stdio.h>
 
+SPI_HandleTypeDef hspi2; 
+SPI_HandleTypeDef hspi3;
 
-void bms_wakeup();
+void bms_iso_wake();
+void bms_iso_wake_via_spi();
+
+void bms_request_();
 
 #endif // BMS_DRIVER_H

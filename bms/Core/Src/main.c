@@ -18,12 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "crc.h"
 #include "fdcan.h"
 #include "spi.h"
 #include "gpio.h"
-#include "stm32g4xx_hal.h"
-#include "stm32g4xx_hal_spi.h"
-#include <stdint.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -97,6 +95,7 @@ int main(void)
   MX_FDCAN2_Init();
   MX_SPI2_Init();
   MX_SPI3_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -134,21 +133,23 @@ int main(void)
   {
 
     /* -- Sample board code for User push-button in interrupt mode ---- */
-    if (BspButtonState == BUTTON_PRESSED)
-    {
-      /* Update button state */
-      BspButtonState = BUTTON_RELEASED;
-      /* -- Sample board code to toggle led ---- */
-      BSP_LED_Toggle(LED_GREEN);
+    // if (BspButtonState == BUTTON_PRESSED)
+    // {
+    //   /* Update button state */
+    //   BspButtonState = BUTTON_RELEASED;
+    //   /* -- Sample board code to toggle led ---- */
+    //   BSP_LED_Toggle(LED_GREEN);
 
-      /* ..... Perform your action ..... */
-    }
+    //   /* ..... Perform your action ..... */
+    // }
 
-    uint8_t msg[] = "Hello World";
+    // uint8_t msg[] = "Dallas Formula Racing";
 
-    HAL_SPI_Transmit(&hspi2, msg, sizeof(msg), HAL_MAX_DELAY);
+    // HAL_SPI_Transmit(&hspi2, msg, sizeof(msg), HAL_MAX_DELAY);
 
-    HAL_Delay(10);
+    // HAL_Delay(10);
+
+
 
     /* USER CODE END WHILE */
 

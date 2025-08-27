@@ -9,6 +9,7 @@
  */
 
 #include "commands.h"
+#include <stdint.h>
 
 /**
  * @brief Calculate the PEC15 for a given data frame.
@@ -21,16 +22,12 @@
  * @return uint16_t the calculated PEC15 value
  */
 uint16_t calc_PEC15(uint8_t *data, uint16_t len) {
-    uint16_t rem, addr;
-    rem = 16; /* initialize the PEC */
-    for (uint8_t i = 0; i < len; i++)
-    {
-        /* calculate PEC table address */
-        addr = ( ((rem >> 7) ^ data[i]) & 0xff);
-        rem = ( (rem << 8) ^ CMD_PEC15_LUT[addr]);
-    }
-    /* The CRC15 has a 0 in the LSB so the rem must be multiplied by 2 */
-    return (rem << 1);
+    //0b000 0000 0001 0000; from datasheet pg 53
+    const uint16_t initial_PEC = 0x0010;
+    
+    //0b 0100 0101 1001 1001; x^15 + x^14 + x^10 + x^8 + x^7 + x^4 + x^3 + 1
+    const uint16_t polynomial = 0x4599;
+
 }
 
 /**
@@ -44,8 +41,39 @@ uint16_t calc_PEC15(uint8_t *data, uint16_t len) {
  * @param len the length of the data frame
  * @return uint16_t the calculated PEC10 value
  */
-uint16_t calc_PEC10(uint8_t *data, uint16_t len) {
-    //todo
+uint16_t calc_PEC10(uint8_t *data, uint16_t len, uint8_t *commandCounter) {
+    uint16_t nRemainder = 16u; /* PEC_SEED */
+    /* x10 + x7 + x3 + x2 + x + 1 <- the CRC10 polynomial 100 1000 1111 */
+    uint16_t nPolynomial = 0x8Fu;
+    uint8_t nByteIndex, nBitIndex;
+    uint16_t nTableAddr;
+
+    for (nByteIndex = 0u; nByteIndex < len; ++nByteIndex)
+    {
+        /* calculate PEC table address */
+        nTableAddr = (uint16_t)(((uint16_t)(nRemainder >> 2) ^ (uint8_t)data[nByteIndex]) & (uint8_t)0xff);
+        nRemainder = (uint16_t)(((uint16_t)(nRemainder << 8)) ^ DATA_PEC10_LUT[nTableAddr]);
+    }
+    /* If array is from received buffer add command counter to crc calculation */
+    if (commandCounter != NULL)
+    {
+        nRemainder ^= (uint16_t)(*commandCounter << 4u);
+    }
+    /* Perform modulo-2 division, a bit at a time */
+    for (nBitIndex = 6U; nBitIndex > 0U; --nBitIndex)
+    {
+        /* Try to divide the current data bit */
+        if ((nRemainder & 0x200U) > 0U)
+        {
+            nRemainder = (uint16_t)((nRemainder << 1U));
+            nRemainder = (uint16_t)(nRemainder ^ nPolynomial);
+        }
+        else
+        {
+            nRemainder = (uint16_t)((nRemainder << 1U));
+        }
+    }
+    return ((uint16_t)(nRemainder & 0x3FFU));
 }
 
 // ------------------- Command Code Definitions -------------------
@@ -58,3 +86,24 @@ uint16_t calc_PEC10(uint8_t *data, uint16_t len) {
 */
 
 // TODO define all the command codes as extern uint8_t arrays
+
+// Configuration Register Commands : WRCFGx
+const uint8_t WRCFGA[2]        = { 0x00, 0x01 };
+const uint8_t WRCFGB[2]        = { 0x00, 0x24 };
+const uint8_t RDCFGA[2]        = { 0x00, 0x02 };
+const uint8_t RDCFGB[2]        = { 0x00, 0x26 };
+
+// Read Status Register Commands : RDSTATx
+const uint8_t RDSTATA[2]       = { 0x00, 0x30 };
+const uint8_t RDSTATB[2]       = { 0x00, 0x31 };
+const uint8_t RDSTATC[2]       = { 0x00, 0x32 };
+const uint8_t RDSTATD[2]       = { 0x00, 0x33 };
+const uint8_t RDSTATE[2]       = { 0x00, 0x34 };
+const uint8_t RDSTATCERR[2]    = { 0x00, 0x72 };  
+
+/* Read all AUX and all Status Registers */
+const uint8_t RDASALL[2]       = { 0x00, 0x35 };
+
+/* Poll adc command */
+const uint8_t PLADC[2]         = { 0x07, 0x18 };
+const uint8_t CLRFLAG[2]       = { 0x07, 0x17 };

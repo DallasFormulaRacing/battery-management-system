@@ -10,6 +10,7 @@
 #define PEC_TABLE_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 extern const uint16_t CMD_PEC15_LUT[256];
 extern const uint16_t DATA_PEC10_LUT[256];
