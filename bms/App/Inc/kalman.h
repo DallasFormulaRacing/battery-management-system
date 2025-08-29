@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-
+// See https://www.st.com/resource/en/user_manual/um3185-getting-started-with-autodevkit-battery-management-system-bms-evaluation-boards-stmicroelectronics.pdf
 
 
 #endif // KALMAN_H

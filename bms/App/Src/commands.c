@@ -11,6 +11,8 @@
 #include "commands.h"
 #include <stdint.h>
 
+#define BYTE_MASK 0xFF
+
 /**
  * @brief Calculate the PEC15 for a given data frame.
  *  The command PEC is a 15-bit cyclic redundancy check (CRC) value 
@@ -22,11 +24,18 @@
  * @return uint16_t the calculated PEC15 value
  */
 uint16_t calc_PEC15(uint8_t *data, uint16_t len) {
-    //0b000 0000 0001 0000; from datasheet pg 53
-    const uint16_t initial_PEC = 0x0010;
+    uint16_t remainder = 16; 
     
-    //0b 0100 0101 1001 1001; x^15 + x^14 + x^10 + x^8 + x^7 + x^4 + x^3 + 1
-    const uint16_t polynomial = 0x4599;
+    uint16_t addr = 0U; /* initialize the PEC */
+
+    for (uint8_t i = 0; i < len; i++) /* loops for each byte in data array */
+    {
+        addr = (((remainder >> 7) ^ data[i]) & BYTE_MASK); /* calculate PEC table address */
+        remainder = ((remainder << 8) ^ CMD_PEC15_LUT[addr]);
+    }
+
+    /* The CRC15 has a 0 in the LSB so the remainder must be multiplied by 2 */
+    return (remainder << 1); 
 
 }
 
@@ -57,7 +66,7 @@ uint16_t calc_PEC10(uint8_t *data, uint16_t len, uint8_t *commandCounter) {
     /* If array is from received buffer add command counter to crc calculation */
     if (commandCounter != NULL)
     {
-        nRemainder ^= (uint16_t)(*commandCounter << 4u);
+        nRemainder ^= (uint16_t)(*commandCounter << 4U);
     }
     /* Perform modulo-2 division, a bit at a time */
     for (nBitIndex = 6U; nBitIndex > 0U; --nBitIndex)
@@ -75,6 +84,24 @@ uint16_t calc_PEC10(uint8_t *data, uint16_t len, uint8_t *commandCounter) {
     }
     return ((uint16_t)(nRemainder & 0x3FFU));
 }
+
+uint16_t pack_PEC15(uint8_t *data) {
+    // TODO
+    uint16_t cmd[2];
+
+    uint16_t pec = calc_PEC15(data, 2);
+
+    cmd[0] = (uint8_t)(pec >> sizeof(uint8_t));
+
+    cmd[1] = (uint8_t)(pec);
+
+    return (uint16_t)cmd;
+}
+
+
+
+
+
 
 // ------------------- Command Code Definitions -------------------
 

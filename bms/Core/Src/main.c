@@ -21,6 +21,7 @@
 #include "crc.h"
 #include "fdcan.h"
 #include "spi.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -61,6 +62,14 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void SPI_test() {
+    uint8_t msg[] = "Dallas Formula Racing";
+
+    HAL_SPI_Transmit(&hspi2, msg, sizeof(msg), HAL_MAX_DELAY);
+
+    HAL_Delay(100);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +105,7 @@ int main(void)
   MX_SPI2_Init();
   MX_SPI3_Init();
   MX_CRC_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -120,7 +130,7 @@ int main(void)
   /* USER CODE BEGIN BSP */
 
   /* -- Sample board code to send message over COM1 port ---- */
-  printf("Welcome to STM32 world !\n\r");
+  //printf("Welcome to STM32 world !\n\r");
 
   /* -- Sample board code to switch on led ---- */
   BSP_LED_On(LED_GREEN);
@@ -132,7 +142,7 @@ int main(void)
   while (1)
   {
 
-    /* -- Sample board code for User push-button in interrupt mode ---- */
+    // /* -- Sample board code for User push-button in interrupt mode ---- */
     // if (BspButtonState == BUTTON_PRESSED)
     // {
     //   /* Update button state */
@@ -142,13 +152,6 @@ int main(void)
 
     //   /* ..... Perform your action ..... */
     // }
-
-    // uint8_t msg[] = "Dallas Formula Racing";
-
-    // HAL_SPI_Transmit(&hspi2, msg, sizeof(msg), HAL_MAX_DELAY);
-
-    // HAL_Delay(10);
-
 
 
     /* USER CODE END WHILE */

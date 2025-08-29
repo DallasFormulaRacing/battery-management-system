@@ -2,6 +2,8 @@ import os
 import json
 
 include_dirs = [
+    "-I./bms/Common/Inc",
+    "-I./bms/Common/Src",
     "-I./bms/App/Inc",
     "-I./bms/Core/Inc",
     "-I./bms/Drivers/STM32G4xx_HAL_Driver/Inc",  
