@@ -8,10 +8,10 @@
 
 #include "current.h"
 
-
+void current_measure() {
+    // get the avg current draw from segment 
+}
 
 void coulomb_counter_init(void) {
 
 }
-
-

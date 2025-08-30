@@ -12,6 +12,15 @@
 #include <stdint.h>
 
 #define BYTE_MASK 0xFF
+#define HALF_BYTE_MASK 0x0F
+
+#define UPPER_8(x) (x >> 8)
+#define LOWER_8(x) (x & BYTE_MASK)
+
+static message_command_t build_ADCV_command(const ADC_cmd_cfg_t *config);
+static message_command_t build_ADSV_command(const ADC_cmd_cfg_t *config);
+static message_command_t build_ADAX_command(const ADC_cmd_cfg_t *config);
+static message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config);
 
 /**
  * @brief Calculate the PEC15 for a given data frame.
@@ -23,7 +32,7 @@
  * @param len the length of the data frame
  * @return uint16_t the calculated PEC15 value
  */
-uint16_t calc_PEC15(uint8_t *data, uint16_t len) {
+uint16_t calc_PEC15(const uint8_t *data, uint16_t len) {
     uint16_t remainder = 16; 
     
     uint16_t addr = 0U; /* initialize the PEC */
@@ -50,12 +59,13 @@ uint16_t calc_PEC15(uint8_t *data, uint16_t len) {
  * @param len the length of the data frame
  * @return uint16_t the calculated PEC10 value
  */
-uint16_t calc_PEC10(uint8_t *data, uint16_t len, uint8_t *commandCounter) {
+uint16_t calc_PEC10(const uint8_t *data, uint16_t len, const uint8_t *commandCounter) {
     uint16_t nRemainder = 16u; /* PEC_SEED */
     /* x10 + x7 + x3 + x2 + x + 1 <- the CRC10 polynomial 100 1000 1111 */
     uint16_t nPolynomial = 0x8Fu;
-    uint8_t nByteIndex, nBitIndex;
-    uint16_t nTableAddr;
+    uint8_t nByteIndex = 0;
+    uint8_t nBitIndex = 0;
+    uint8_t nTableAddr = 0;
 
     for (nByteIndex = 0u; nByteIndex < len; ++nByteIndex)
     {
@@ -82,26 +92,136 @@ uint16_t calc_PEC10(uint8_t *data, uint16_t len, uint8_t *commandCounter) {
             nRemainder = (uint16_t)((nRemainder << 1U));
         }
     }
-    return ((uint16_t)(nRemainder & 0x3FFU));
+    return (uint16_t)(nRemainder & 0x3FFU);
 }
 
-uint16_t pack_PEC15(uint8_t *data) {
+
+message_header_t pack_PEC15(uint8_t *data) {
     // TODO
-    uint16_t cmd[2];
+    uint16_t pec_calc = calc_PEC15(data, 2);
 
-    uint16_t pec = calc_PEC15(data, 2);
-
-    cmd[0] = (uint8_t)(pec >> sizeof(uint8_t));
-
-    cmd[1] = (uint8_t)(pec);
-
-    return (uint16_t)cmd;
+    return (message_header_t){
+        .pec[0] = UPPER_8(pec_calc),
+        .pec[1] = LOWER_8(pec_calc)
+    };
 }
 
+message_header_t pack_PEC10(uint8_t *data, const uint8_t *commandCounter) {
+    // TODO
+    uint16_t pec_calc = calc_PEC10(data, 6, commandCounter);
 
+    return (message_header_t){
+        .pec[0] = UPPER_8(pec_calc),
+        .pec[1] = LOWER_8(pec_calc)
+    };
+}
 
+/**
+ * @brief Top level ADC command builder function
+ * 
+ * @param config ADC command config struct
+ * @return message_command_t the command built based on which type
+ */
+message_command_t build_ADC_command(const ADC_cmd_cfg_t *config) {
+    switch (config->command_type) {
+        case ADC_ADCV:
+            return build_ADCV_command(config);
+        case ADC_ADSV:
+            return build_ADSV_command(config);
+        case ADC_ADAX:
+            return build_ADAX_command(config);
+        case ADC_ADAX2:
+            return build_ADAX2_command(config);
+        default:
+            // Return a default command or handle error
+            return (message_command_t){ .cmd = {0x00, 0x00} };
+    }
+}
 
+/**
+ * @brief Build ADCV command (cell voltage readings)
+ * | 10 | 9 | 8  |  7   | 6 | 5 |  4  | 3 |  2   |  1  |  0  |
+ * |----|---|--- |------|---|---|-----|---|----- |-----|-----|
+ * |  0 | 1 | RD | CONT | 1 | 1 | DCP | 0 | RSTF | OW1 | OW0 |
+ * @param config ADC command config struct
+ * @return message_command_t 
+ */
+static message_command_t build_ADCV_command(const ADC_cmd_cfg_t *config) {
+    uint16_t command_builder = 0;
 
+    command_builder |= (config->RD << 8) | (config->CONT << 7);
+    command_builder |= (config->DCP << 4) | (config->RSTF << 2) | config->OW;
+    command_builder |= (0x01 << 9) | (0x03 << 5);
+
+    return (message_command_t) {
+        .cmd[0] = UPPER_8(command_builder),
+        .cmd[1] = LOWER_8(command_builder)
+    };
+}
+
+/**
+ * @brief Build ADSV command (S-ADC)
+ * | 10 | 9 | 8 |  7   | 6 | 5 |  4  | 3 | 2 |  1  |  0  |
+ * |----|---|---|------|---|---|-----|---|---|-----|-----|
+ * |  0 | 0 | 1 | CONT | 1 | 1 | DCP | 1 | 0 | OW1 | OW0 |
+ * @param config 
+ * @return message_command_t 
+ */
+static message_command_t build_ADSV_command(const ADC_cmd_cfg_t *config) {
+    uint16_t command_builder = 0;
+
+    command_builder |= (config->CONT << 7) | (config->DCP << 4) | config->OW;
+    command_builder |= (0x01 << 8) | (0x11 << 5) | (0x01 << 3);
+
+    return (message_command_t) {
+        .cmd[0] = UPPER_8(command_builder),
+        .cmd[1] = LOWER_8(command_builder)
+    };
+}
+
+/**
+ * @brief Build ADAX command (auxiliary ADC status)
+ * | 10 | 9 | 8  |  7  |  6  | 5 | 4 |  3  |  2  |  1  |  0  |
+ * |----|---|--- |-----|-----|---|---|-----|-----|-----|-----|
+ * |  1 | 0 | OW | PUP | CH4 | 0 | 1 | CH3 | CH2 | CH1 | CH0 |
+ * @param config 
+ * @return message_command_t 
+ */
+static message_command_t build_ADAX_command(const ADC_cmd_cfg_t *config) {
+    uint16_t command_builder = 0;
+
+    uint8_t CH4 = (config->CH >> 4);
+
+    command_builder |= (config->OW << 8) | (config->PUP << 7) | (CH4 << 6);
+    command_builder |= (0x01 << 10) | (0x01 << 4);
+    command_builder |= (config->CH); 
+
+    return (message_command_t) {
+        .cmd[0] = UPPER_8(command_builder),
+        .cmd[1] = LOWER_8(command_builder)
+    };
+}
+
+/**
+ * @brief Build ADAX2 command (auxiliary 2 ADC status)
+ * | 10 | 9 | 8 | 7 | 6 | 5 | 4 |  3  |  2  |  1  |  0  |
+ * |----|---|---|---|---|---|---|-----|-----|-----|-----|
+ * | 1  | 0 | 0 | 0 | 0 | 0 | 0 | CH3 | CH2 | CH1 | CH0 |
+ * @param config 
+ * @return message_command_t 
+ */
+static message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config) {
+    uint16_t command_builder = 0;
+
+    uint8_t CH = (config->CH & HALF_BYTE_MASK);
+
+    command_builder |= (0x01 << 10) | (config->CH);
+
+    return (message_command_t) {
+        .cmd[0] = UPPER_8(command_builder),
+        .cmd[1] = LOWER_8(command_builder) 
+    };
+}
 
 // ------------------- Command Code Definitions -------------------
 
@@ -134,3 +254,18 @@ const uint8_t RDASALL[2]       = { 0x00, 0x35 };
 /* Poll adc command */
 const uint8_t PLADC[2]         = { 0x07, 0x18 };
 const uint8_t CLRFLAG[2]       = { 0x07, 0x17 };
+
+const uint8_t WRCOMM[2]        = {0};
+const uint8_t RDCOMM[2]        = {0};
+const uint8_t STCOMM[2]        = {0};
+const uint8_t SNAP[2]          = {0};
+const uint8_t UNSNAP[2]        = {0};
+const uint8_t RDACALL[2]       = {0};
+const uint8_t RDCVALL[2]       = {0};
+
+const uint8_t CMDIS[2]         = {0};
+const uint8_t CMEN[2]          = {0};
+const uint8_t CMHB[2]          = {0};
+
+
+// default adc command, can be modified with build_ADCV_command()

@@ -12,49 +12,60 @@
 
 #include "pec_table.h"
 #include <stdint.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
 const uint16_t CMD_PEC15_LUT[256];
 const uint16_t DATA_PEC10_LUT[256];
 
-// ------------------- Command Codes -------------------
-//extern uint8_t      [2];        // 
+// See table 50 of the ADBMS6830b ref man 
 
-// Configuration Register Commands : WRCFGx
-extern const uint8_t      WRCFGA[2];        // Write Configuration Register Group A
-extern const uint8_t      WRCFGB[2];        // Write Configuration Register Group B
-extern const uint8_t      RDCGFA[2];        // Read Configuration Register Group A
-extern const uint8_t      RDCGFB[2];        // Read Configuration Register Group B
+typedef enum {
+        ADC_ADCV,
+        ADC_ADSV,
+        ADC_ADAX,
+        ADC_ADAX2
+} ADC_cmd_type_e;
 
-// Cell Voltage Register Commands : RDCVx
-extern const uint8_t      RDCVA[2];        // Read Cell Voltage Register Group A
-extern const uint8_t      RDCVB[2];        // Read Cell Voltage Register Group B
-extern const uint8_t      RDCVC[2];        // Read Cell Voltage Register Group C
-extern const uint8_t      RDCVD[2];        // Read Cell Voltage Register Group D
-extern const uint8_t      RDCVE[2];        // Read Cell Voltage Register Group E
-extern const uint8_t      RDCVF[2];        // Read Cell Voltage Register Group F
-extern const uint8_t      RDCVALL[2];      // Read Cell Voltage ALL
+typedef struct {
+        uint8_t OW:2; // See bitfield
+        uint8_t RSTF:1;
+        uint8_t DCP:1;
+        uint8_t CONT:1;
+        uint8_t RD:1;
+        uint8_t PUP:1;
+        uint8_t CH:5;
+        ADC_cmd_type_e command_type;
+} ADC_cmd_cfg_t; // cmd = command, cfg = configuration
 
-// Read Status Register Commands : RDSTATx
-extern const uint8_t      RDSTATA[2];     // Read Status Register Group A
-extern const uint8_t      RDSTATB[2];     // Read Status Register Group B
-extern const uint8_t      RDSTATC[2];     // Read Status Register Group C
-extern const uint8_t      RDSTATD[2];     // Read Status Register Group D
-extern const uint8_t      RDSTATE[2];     // Read Status Register Group E
-extern const uint8_t      RDSTATCERR[2];  // Read Status Register Errors (toggle bit 6)
+typedef struct {
+        uint8_t cmd[2];
+} message_command_t;
 
-extern const uint8_t      PLADC[2];       // Poll for ADC Conversion Status
-extern const uint8_t      CLRFLAG[2];
+typedef struct {
+        uint8_t pec[2];
+} message_header_t;
 
-// Start Cell Voltage ADC Conversion and Poll Status
-extern const uint8_t      default_ADCV[2];   // Start ADC Conversion
+typedef struct {
+        message_command_t command;
+        message_header_t message_header;
+} message_t;
 
-void build_ADCV_command(uint8_t OW, uint8_t RSTF, uint8_t DCP, uint8_t CONT, uint8_t RD);
+// See table 52 on how to use ADC Command flags
 
-uint16_t calc_PEC15(uint8_t *data, uint16_t len);
-uint16_t calc_PEC10(uint8_t *data, uint16_t len,  uint8_t *commandCounter);
+uint16_t calc_PEC15(const uint8_t *data, uint16_t len);
+uint16_t calc_PEC10(const uint8_t *data, uint16_t len, const uint8_t *commandCounter);
 
-uint16_t pack_PEC15(uint8_t *data);
-uint16_t pack_PEC10(uint8_t *data, uint8_t *commandCounter);
+// Command builder prototypes
+message_command_t build_ADC_command(const ADC_cmd_cfg_t *config);
+
+
+// PEC packer prototypes
+message_header_t pack_PEC15(uint8_t *data);
+message_header_t pack_PEC10(uint8_t *data, const uint8_t *commandCounter);
+
+/*      
+        See memory map (pg 61) on how to translate register reads
+        into meaningful measurements
+*/
 
 #endif // BMS_COMMANDS_H

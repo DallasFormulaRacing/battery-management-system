@@ -29,7 +29,7 @@
 // SPI 1 Peripheral for Uplink
 SPI_HandleTypeDef hspi1;
 
-void bms_iso_wake() {
+void bms_iso_wake_pin() {
     // Set the wake pins to high
     HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_SET);
@@ -46,10 +46,10 @@ void bms_iso_wake() {
     HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_RESET);
 }
 
-void bms_iso_wake_via_spi() {
-    const uint16_t DUMMY_BYTES = 0xFFFF;
+void bms_iso_wake_spi() {
+    const uint8_t DUMMY_BYTES[2] = {0xFF, 0xFF};
 
-    HAL_SPI_Transmit(&hspi1, &DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
+    HAL_SPI_Transmit(&hspi1, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
 }
 
 

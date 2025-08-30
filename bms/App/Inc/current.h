@@ -19,10 +19,14 @@ void coulomb_counter(void);
 
 void coulomb_counter_init(void);
 
+void current_measure();
+
 typedef struct {
     uint32_t current;        // Current measurement in microamperes
     uint32_t timestamp;      // Timestamp of the measurement
+    void (*callback)(void*);
 } coulomb_counter_t;
+
 
 
 #endif // CURRENT_H

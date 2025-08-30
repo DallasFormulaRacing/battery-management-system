@@ -20,9 +20,14 @@
 SPI_HandleTypeDef hspi2; 
 SPI_HandleTypeDef hspi3;
 
-void bms_iso_wake();
-void bms_iso_wake_via_spi();
+void bms_iso_wake_pin();
+void bms_iso_wake_spi();
 
 void bms_request_();
+
+// See bus protocols
+
+void bms_read();
+void bms_write();
 
 #endif // BMS_DRIVER_H

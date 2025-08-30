@@ -145,7 +145,7 @@ C_INCLUDES =  \
 
 # === BEGIN USER ADDED includes ===
 # I added the following include directories
-C_INCLUDES += -IApp
+C_INCLUDES += -IApp/Inc
 # === END USER ADDED includes ===
 
 
