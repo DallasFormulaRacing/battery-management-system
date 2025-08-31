@@ -7,8 +7,8 @@
          commands section Table 50 for details.
  */
 
- #ifndef BMS_COMMANDS_H
- #define BMS_COMMANDS_H
+#ifndef BMS_COMMANDS_H
+#define BMS_COMMANDS_H
 
 #include "pec_table.h"
 #include <stdint.h>
@@ -67,5 +67,56 @@ message_header_t pack_PEC10(uint8_t *data, const uint8_t *commandCounter);
         See memory map (pg 61) on how to translate register reads
         into meaningful measurements
 */
+
+// ------------------- Command Code Definitions -------------------
+
+/* How to read command codes from the datasheet and convert to C
+    * 1. Use Clear Flags CLRFLAG [1 1 1 0 0 0 1 0 1 1 1] (11 bits) as example
+    * 2. Write in binary: 11100010111 and pad: 0000 0111 0001 0111
+    * 3. Convert to hex: 0x07, 0x17
+    * 4. Write in C: extern uint8_t CLRFLAG[2] = {0x07, 0x17};
+*/
+
+// TODO define all the command codes as extern uint8_t arrays
+
+// Configuration Register Commands : WRCFGx
+const message_command_t WRCFGA = { .cmd = { 0x00, 0x01 } };
+const message_command_t WRCFGB = { .cmd = { 0x00, 0x24 } };
+const message_command_t RDCFGA = { .cmd = { 0x00, 0x02 } };
+const message_command_t RDCFGB = { .cmd = { 0x00, 0x26 } };
+
+// Read Status Register Commands : RDSTATx
+const message_command_t RDSTATA    = { .cmd = { 0x00, 0x30 } };
+const message_command_t RDSTATB    = { .cmd = { 0x00, 0x31 } };
+const message_command_t RDSTATC    = { .cmd = { 0x00, 0x32 } };
+const message_command_t RDSTATD    = { .cmd = { 0x00, 0x33 } };
+const message_command_t RDSTATE    = { .cmd = { 0x00, 0x34 } };
+const message_command_t RDSTATCERR = { .cmd = { 0x00, 0x72 } };
+
+/* Read all AUX and all Status Registers */
+const message_command_t RDASALL    = { .cmd = { 0x00, 0x35 } };
+
+/* Poll adc command */
+const message_command_t PLADC      = { .cmd = { 0x07, 0x18 } };
+const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
+
+
+// TODO rewrite these later
+const message_command_t WRCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0001
+const message_command_t RDCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0010
+const message_command_t STCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0011
+
+const message_command_t SNAP       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0010 1101
+const message_command_t UNSNAP     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0010 1111
+
+const message_command_t RDACALL    = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 1100
+const message_command_t RDCVALL    = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0000 1100
+
+const message_command_t CMDIS      = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 0000
+const message_command_t CMEN       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 0001
+const message_command_t CMHB       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 1000 0011
+
+
+// default adc command, can be modified with build_ADCV_command()
 
 #endif // BMS_COMMANDS_H
