@@ -2,7 +2,7 @@
  * @author Will Kim
  * @email <wkim@utdallas.edu>
  * @create date 2025-08-04 16:20:36
- * @modify date 2025-08-04 16:20:36
+ * @modify date 2025-09-02 18:30:41
  * @desc Implementing PEC functions and command structs.
     The purpose of the CRC PEC functions is to ensure data integrity, 
     similar to how checksums are used in credit card numbers or hashes in passwords.
@@ -13,6 +13,7 @@
 
 #define BYTE_MASK 0xFF
 #define HALF_BYTE_MASK 0x0F
+#define TEN_BIT_MASK 0x03FF
 
 #define UPPER_8(x) (x >> 8)
 #define LOWER_8(x) (x & BYTE_MASK)
@@ -92,10 +93,17 @@ uint16_t calc_PEC10(const uint8_t *data, uint16_t len, const uint8_t *commandCou
             nRemainder = (uint16_t)((nRemainder << 1U));
         }
     }
-    return (uint16_t)(nRemainder & 0x3FFU);
+    return (uint16_t)(nRemainder & TEN_BIT_MASK);
 }
 
 
+
+/**
+ * @brief Pack the PEC15 value into a message header.
+ * Split the PEC15 value into two bytes and store them in the message header.
+ * @param data 
+ * @return message_header_t 
+ */
 message_header_t pack_PEC15(uint8_t *data) {
     // TODO
     uint16_t pec_calc = calc_PEC15(data, 2);
@@ -106,9 +114,16 @@ message_header_t pack_PEC15(uint8_t *data) {
     };
 }
 
+/**
+ * @brief Pack the PEC10 value into a message header.
+ * Split the PEC10 value into two bytes and store them in the message header.
+ * @param data 
+ * @param commandCounter 
+ * @return message_header_t 
+ */
 message_header_t pack_PEC10(uint8_t *data, const uint8_t *commandCounter) {
     // TODO
-    uint16_t pec_calc = calc_PEC10(data, 6, commandCounter);
+    uint16_t pec_calc = calc_PEC10(data, sizeof(data), commandCounter);
 
     return (message_header_t){
         .pec[0] = UPPER_8(pec_calc),
@@ -134,7 +149,7 @@ message_command_t build_ADC_command(const ADC_cmd_cfg_t *config) {
             return build_ADAX2_command(config);
         default:
             // Return a default command or handle error
-            return (message_command_t){ .cmd = {0x00, 0x00} };
+            return (message_command_t){ .cmd = {0} };
     }
 }
 

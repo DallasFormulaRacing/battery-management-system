@@ -93,6 +93,10 @@ const message_command_t RDSTATD    = { .cmd = { 0x00, 0x33 } };
 const message_command_t RDSTATE    = { .cmd = { 0x00, 0x34 } };
 const message_command_t RDSTATCERR = { .cmd = { 0x00, 0x72 } };
 
+// Read serial ID command : RDSID
+// 0000 0000 0010 1100
+const message_command_t RDSID      = { .cmd = { 0x00, 0x30 } };
+
 /* Read all AUX and all Status Registers */
 const message_command_t RDASALL    = { .cmd = { 0x00, 0x35 } };
 
@@ -102,19 +106,37 @@ const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
 
 
 // TODO rewrite these later
-const message_command_t WRCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0001
-const message_command_t RDCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0010
-const message_command_t STCOMM     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0111 0010 0011
+// 0b0000 0111 0010 0001 = 0x07 0x21
+const message_command_t WRCOMM     = { .cmd = { 0x07, 0x21 } }; 
 
-const message_command_t SNAP       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0010 1101
-const message_command_t UNSNAP     = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0010 1111
+// 0b0000 0111 0010 0010 = 0x07 0x22
+const message_command_t RDCOMM     = { .cmd = { 0x07, 0x22 } }; 
 
-const message_command_t RDACALL    = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 1100
-const message_command_t RDCVALL    = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0000 1100
+// 0b0000 0111 0010 0011 = 0x07 0x23
+const message_command_t STCOMM     = { .cmd = { 0x07, 0x23 } }; 
 
-const message_command_t CMDIS      = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 0000
-const message_command_t CMEN       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 0100 0001
-const message_command_t CMHB       = { .cmd = { 0x00, 0x00 } }; // 0b0000 0000 1000 0011
+// 0b0000 0000 0010 1101 = 0x00 0x2D
+const message_command_t SNAP       = { .cmd = { 0x00, 0x2D } }; 
+
+// 0b0000 0000 0010 1111 = 0x00 0x2F
+const message_command_t UNSNAP     = { .cmd = { 0x00, 0x2F } }; 
+
+
+// 0b0000 0000 0100 1100 = 0x00 0x4C
+const message_command_t RDACALL    = { .cmd = { 0x00, 0x4C } }; 
+
+// 0b0000 0000 0000 1100 = 0x00 0x0C
+const message_command_t RDCVALL    = { .cmd = { 0x00, 0x0C } }; 
+
+
+// 0b0000 0000 0100 0000 = 0x00 0x40
+const message_command_t CMDIS      = { .cmd = { 0x00, 0x40 } }; 
+
+// 0b0000 0000 0100 0001 = 0x00 0x41
+const message_command_t CMEN       = { .cmd = { 0x00, 0x41 } }; 
+
+// 0b0000 0000 1000 0011 = 0x00 0x83
+const message_command_t CMHB       = { .cmd = { 0x00, 0x83 } }; 
 
 
 // default adc command, can be modified with build_ADCV_command()

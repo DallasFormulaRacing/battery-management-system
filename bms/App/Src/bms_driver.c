@@ -7,7 +7,8 @@
  */
 
 #include "bms_driver.h" // SPI handle for AD BMS 6830
-#include <stdint.h>
+#include "stm32g4xx_hal_spi.h"
+
 
 
 // Pin PA10
@@ -25,9 +26,6 @@
 // Pin PC8
 #define BMS_WAKE2_GPIO_Port GPIOC
 #define BMS_WAKE2_Pin GPIO_PIN_8
-
-// SPI 1 Peripheral for Uplink
-SPI_HandleTypeDef hspi1;
 
 void bms_iso_wake_pin() {
     // Set the wake pins to high
@@ -49,7 +47,8 @@ void bms_iso_wake_pin() {
 void bms_iso_wake_spi() {
     const uint8_t DUMMY_BYTES[2] = {0xFF, 0xFF};
 
-    HAL_SPI_Transmit(&hspi1, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
+    HAL_SPI_Transmit(&hspi2, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
+    HAL_SPI_Transmit(&hspi3, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
 }
 
 
