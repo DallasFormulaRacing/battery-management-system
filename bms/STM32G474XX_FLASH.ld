@@ -147,6 +147,13 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  /* Lookup tables in flash (read-only) */
+  .lookup_tables :
+  {
+      KEEP(*(.lookup_tables))
+  } >FLASH
+
+
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 
