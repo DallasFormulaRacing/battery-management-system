@@ -9,13 +9,8 @@
 
 #ifndef BMS_COMMANDS_H
 #define BMS_COMMANDS_H
-
-#include "pec_table.h"
 #include <stdint.h>
-//#include <stdlib.h>
 
-const uint16_t CMD_PEC15_LUT[256];
-const uint16_t DATA_PEC10_LUT[256];
 
 // See table 50 of the ADBMS6830b ref man 
 
@@ -77,7 +72,7 @@ message_header_t pack_PEC10(uint8_t *data, const uint8_t *commandCounter);
     * 4. Write in C: extern uint8_t CLRFLAG[2] = {0x07, 0x17};
 */
 
-// TODO define all the command codes as extern uint8_t arrays
+// TODO define all the command codes 
 
 // Configuration Register Commands : WRCFGx
 const message_command_t WRCFGA = { .cmd = { 0x00, 0x01 } };
@@ -95,7 +90,7 @@ const message_command_t RDSTATCERR = { .cmd = { 0x00, 0x72 } };
 
 // Read serial ID command : RDSID
 // 0000 0000 0010 1100
-const message_command_t RDSID      = { .cmd = { 0x00, 0x30 } };
+const message_command_t RDSID      = { .cmd = { 0x00, 0x2C } };
 
 /* Read all AUX and all Status Registers */
 const message_command_t RDASALL    = { .cmd = { 0x00, 0x35 } };
@@ -104,8 +99,6 @@ const message_command_t RDASALL    = { .cmd = { 0x00, 0x35 } };
 const message_command_t PLADC      = { .cmd = { 0x07, 0x18 } };
 const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
 
-
-// TODO rewrite these later
 // 0b0000 0111 0010 0001 = 0x07 0x21
 const message_command_t WRCOMM     = { .cmd = { 0x07, 0x21 } }; 
 
@@ -121,13 +114,11 @@ const message_command_t SNAP       = { .cmd = { 0x00, 0x2D } };
 // 0b0000 0000 0010 1111 = 0x00 0x2F
 const message_command_t UNSNAP     = { .cmd = { 0x00, 0x2F } }; 
 
-
 // 0b0000 0000 0100 1100 = 0x00 0x4C
 const message_command_t RDACALL    = { .cmd = { 0x00, 0x4C } }; 
 
 // 0b0000 0000 0000 1100 = 0x00 0x0C
 const message_command_t RDCVALL    = { .cmd = { 0x00, 0x0C } }; 
-
 
 // 0b0000 0000 0100 0000 = 0x00 0x40
 const message_command_t CMDIS      = { .cmd = { 0x00, 0x40 } }; 

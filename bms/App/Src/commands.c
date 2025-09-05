@@ -10,18 +10,19 @@
 
 #include "commands.h"
 #include <stdint.h>
+#include "pec_table.h"
 
-#define BYTE_MASK 0xFF
-#define HALF_BYTE_MASK 0x0F
-#define TEN_BIT_MASK 0x03FF
+#define BYTE_MASK 0xFFU
+#define HALF_BYTE_MASK 0x0FU
+#define TEN_BIT_MASK 0x03FFU
 
-#define UPPER_8(x) (x >> 8)
+#define UPPER_8(x) ((x >> 8) & BYTE_MASK)
 #define LOWER_8(x) (x & BYTE_MASK)
 
-static message_command_t build_ADCV_command(const ADC_cmd_cfg_t *config);
-static message_command_t build_ADSV_command(const ADC_cmd_cfg_t *config);
-static message_command_t build_ADAX_command(const ADC_cmd_cfg_t *config);
-static message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config);
+static inline message_command_t build_ADCV_command(const ADC_cmd_cfg_t *config);
+static inline message_command_t build_ADSV_command(const ADC_cmd_cfg_t *config);
+static inline message_command_t build_ADAX_command(const ADC_cmd_cfg_t *config);
+static inline message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config);
 
 /**
  * @brief Calculate the PEC15 for a given data frame.
@@ -148,7 +149,7 @@ message_command_t build_ADC_command(const ADC_cmd_cfg_t *config) {
         case ADC_ADAX2:
             return build_ADAX2_command(config);
         default:
-            // Return a default command or handle error
+            // Return a default command 
             return (message_command_t){ .cmd = {0} };
     }
 }
