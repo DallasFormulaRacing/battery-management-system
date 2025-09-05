@@ -105,6 +105,8 @@ bms_core_state_t bms_init() {
     HAL_SPI_Init(&hspi3);
 
     // Initialize timer peripheral
+    HAL_TIM_Base_Start_IT(&htim2);                
+    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
 
     // Initialize UART peripheral #ifdef DEBUG
 
@@ -137,5 +139,21 @@ HAL_StatusTypeDef bms_transmit(SPI_HandleTypeDef hspi, message_t tx_msg) {
     //return HAL_SPI_Transmit(&hspi, (uint8_t) ???, 16, HAL_MAX_DELAY);
     return HAL_OK;
 }
+
+/*
+implement HAL_TIM_Base_Start_IT
+
+__HAL_TIM_GET_COUNTER
+
+HAL_TIM_IC_Start_IT, HAL_TIM_ReadCapturedValue
+
+HAL_TIM_OC_Start_IT, HAL_TIM_OC_Stop_IT, __HAL_TIM_SET_COMPARE
+
+HAL_TIM_PeriodElapsedCallback
+
+HAL_TIM_IC_CaptureCallback
+
+HAL_TIM_OC_DelayElapsedCallback
+*/
 
 

@@ -9,23 +9,72 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// Safe operating limits
-#define TEMP_LIMIT_HIGH_F 1111
-#define TEMP_LIMIT_LOW_F
-#define VOLT_LIMIT_HIGH_V
-#define VOLT_LIMIT_LOW_V
-#define CURR_LIMIT_HIGH_A
-#define CURR_LIMIT_LOW_A
+#include <stdint.h>
+#include <stdbool.h>
 
-// Runtime configurations
-#define ADC_RESOLUTION
-#define ADC_VREF 3.
+enum {
+NUM_PACKS_PER_SEGMENT = 23,
+NUM_SEGMENTS = 6,
+PLACEHOLDER_BCZ_IDK = 1,
+SPI_MAILBOX_LENGTH = 32
+};
 
-// Parameters
-#define NUM_CELLS
-#define CELL_CAPACITY
+/**
+ * @brief Enumeration of measurement states
+ * OK = all good
+ * OVUV_ERR = over/under voltage error
+ * OC_ERR = overcurrent error
+ */
+typedef enum {
+    BMS_OK,
+    BMS_OVUV_ERR,
+    BMS_OC_ERR,
+    BMS_OPEN_WIRE_ERR
+} bms_measure_status_t;
 
-// Constants
-#define PI 3.14159
+/**
+ * @brief Enumeration of ADBMS6830 chip states
+ */
+typedef enum {
+    BMS_SLEEP,
+    BMS_STDBY,
+    BMS_EXT_BAL,
+    BMS_MEASURE,
+    BMS_REFUP,
+    BMS_DTM_MEASURE,
+    BMS_ERR,
+} bms_core_state_t;
+
+/**
+ * @brief Enumeration of ADBMS6822 isoSPI Transciever states
+ * 
+ */
+typedef enum {
+    ISOSPI_IDLE,
+    ISOSPI_READY,
+    ISOSPI_ACTIVE
+} isoSPI_state_t;
+
+
+typedef struct {
+    bms_core_state_t current_state;
+    bms_measure_status_t last_measure_status;
+    uint32_t    t_now_ms;
+    uint32_t    t_next_action_ms;
+    uint8_t     spi_rx[SPI_MAILBOX_LENGTH];
+    uint8_t     spi_tx[SPI_MAILBOX_LENGTH];
+    uint32_t    pec_errors_count;
+    uint32_t    comm_retries_count;
+    bool        intr1_flag;
+    bool        intr2_flag;
+
+    uint16_t     pack_volt_mV[PLACEHOLDER_BCZ_IDK];
+    uint16_t     pack_temp_degC[PLACEHOLDER_BCZ_IDK];  
+    uint16_t     pack_curr_mA[PLACEHOLDER_BCZ_IDK];
+    // status
+    uint32_t    last_sample_ms;
+    uint32_t    last_report_ms;
+    uint32_t    fault_code;
+} bms_system_context_block_t;
 
 #endif // CONFIG_H
