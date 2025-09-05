@@ -7,9 +7,10 @@
  */
 
 #include "bms_driver.h" // SPI handle for AD BMS 6830
+#include "commands.h"
+#include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_spi.h"
-
-
+#include <string.h>
 
 // Pin PA10
 #define BMS_INTR1_GPIO_Port GPIOA
@@ -27,7 +28,45 @@
 #define BMS_WAKE2_GPIO_Port GPIOC
 #define BMS_WAKE2_Pin GPIO_PIN_8
 
-void bms_iso_wake_pin() {
+#define WAKE_TX_DELAY_MS
+
+typedef enum {
+    MESSAGE_COPY_TO_BYTE,
+    MESSAGE_COPY_FROM_BYTE
+} memcpy_direction;
+
+/**
+ * @brief Helper function to copy messages 
+ * between different representations
+ * @param src 
+ * @param direction of translation
+ * @param dest 
+ */
+static inline void message_memcpy(void *src, memcpy_direction direction, void *dest) {
+    if (!src || !dest) {
+        return;
+    }
+
+    if (direction == MESSAGE_COPY_TO_BYTE) {
+        const message_t *msg = (const message_t *)src;
+        uint8_t *out = (uint8_t *)dest;
+        memcpy(&out[0], msg->command.cmd, 2);
+        memcpy(&out[2], msg->message_header.pec, 2);
+    } 
+    
+    else { 
+        message_t *msg = (message_t *)dest;
+        const uint8_t *in = (const uint8_t *)src;
+        memcpy(msg->command.cmd, &in[0], 2);
+        memcpy(msg->message_header.pec, &in[2], 2);
+    }
+}
+
+/**
+ * @brief 
+ * 
+ */
+ void bms_iso_wake_pin() {
     // Set the wake pins to high
     HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_SET);
@@ -44,11 +83,59 @@ void bms_iso_wake_pin() {
     HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_RESET);
 }
 
+/**
+ * @brief 
+ * 
+ */
 void bms_iso_wake_spi() {
     const uint8_t DUMMY_BYTES[2] = {0xFF, 0xFF};
 
     HAL_SPI_Transmit(&hspi2, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
     HAL_SPI_Transmit(&hspi3, (uint8_t *)&DUMMY_BYTES, sizeof(DUMMY_BYTES), HAL_MAX_DELAY);
+}
+
+/**
+ * @brief 
+ * 
+ * @return bms_core_state_t 
+ */
+bms_core_state_t bms_init() {
+    // Initialize the SPI peripherals
+    HAL_SPI_Init(&hspi2);
+    HAL_SPI_Init(&hspi3);
+
+    // Initialize timer peripheral
+
+    // Initialize UART peripheral #ifdef DEBUG
+
+    // Initialize CAN peripheral
+
+    // Wake BMS chain
+
+    // Start ADCs -- command
+
+    // Read from a status register confirming OK status -- command
+
+    // Do other stuff before task loop idk
+    return BMS_STDBY;
+}
+
+/**
+ * @brief 
+ * 
+ */
+void bms_service_taskd() {
+    // loop register read commands 
+        // Cell voltages
+        // open wire (OW) detection
+    // pack can message
+    // report to CAN line 
+
+}
+
+HAL_StatusTypeDef bms_transmit(SPI_HandleTypeDef hspi, message_t tx_msg) {
+    //return HAL_SPI_Transmit(&hspi, (uint8_t) ???, 16, HAL_MAX_DELAY);
+    return HAL_OK;
 }
 
 
