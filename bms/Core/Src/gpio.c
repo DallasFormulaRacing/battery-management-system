@@ -56,8 +56,6 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SHUTDOWN_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOC, BMS_WAKE2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : SHUTDOWN_Pin BMS_WAKE2_Pin */
