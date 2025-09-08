@@ -58,8 +58,15 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, BMS_WAKE2_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : SHUTDOWN_Pin BMS_WAKE2_Pin */
-  GPIO_InitStruct.Pin = SHUTDOWN_Pin|BMS_WAKE2_Pin;
+  /*Configure GPIO pins : SHUTDOWN_Pin */
+  GPIO_InitStruct.Pin = SHUTDOWN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BMS_WAKE2_Pin */
+  GPIO_InitStruct.Pin = BMS_WAKE2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
