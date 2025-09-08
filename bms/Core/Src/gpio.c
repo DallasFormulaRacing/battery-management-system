@@ -20,6 +20,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
+#include "main.h"
+#include "stm32g474xx.h"
+#include "stm32g4xx_hal_gpio.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -51,17 +54,18 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BMS_WAKE2_GPIO_Port, BMS_WAKE2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, SHUTDOWN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, BMS_WAKE2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BMS_WAKE1_GPIO_Port, BMS_WAKE1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : BMS_WAKE2_Pin */
-  GPIO_InitStruct.Pin = BMS_WAKE2_Pin;
+  /*Configure GPIO pins : SHUTDOWN_Pin BMS_WAKE2_Pin */
+  GPIO_InitStruct.Pin = SHUTDOWN_Pin|BMS_WAKE2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BMS_WAKE2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : BMS_INTR2_Pin */
   GPIO_InitStruct.Pin = BMS_INTR2_Pin;
