@@ -1,4 +1,4 @@
-use crate::ui::{draw_detail_popup, draw_homepage};
+use crate::ui::draw_homepage;
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
@@ -49,8 +49,8 @@ pub fn run_homepage(
 
     loop {
         // Always check for input (every ~100 ms)
-        if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
+        if event::poll(Duration::from_millis(100))?
+            && let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
                     KeyCode::Esc => selected_detail = None,
@@ -66,7 +66,6 @@ pub fn run_homepage(
 
                 last_render = Instant::now();
             }
-        }
 
         // Only update + render if enough time has passed
         if last_render.elapsed() >= render_interval {
