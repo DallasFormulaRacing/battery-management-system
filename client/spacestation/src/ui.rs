@@ -97,7 +97,7 @@ pub fn draw_homepage(
     ];
 
     // X axis: show a 60s sliding window following t
-    let window = 15.0; // width of visible window in seconds
+    let window = 90.0; // width of visible window in seconds
 
     let (x_start, x_end) = if t < window {
         (0.0, window) // before threshold, axis grows to 60s
@@ -345,17 +345,27 @@ pub fn draw_segment(f: &mut Frame, area: Rect, seg_num: usize) {
         .split(inner);
 
     // Placeholder values – replace with real data
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
-    // Voltage values (±0.02 V variation)
-    let vmax = 3.95 + rng.gen_range(-0.02..0.02);
-    let vavg = 3.90 + rng.gen_range(-0.02..0.02);
-    let vmin = 3.85 + rng.gen_range(-0.02..0.02);
+    let mut v = [
+        3.90 + rng.random_range(-0.02..0.02),
+        3.90 + rng.random_range(-0.02..0.02),
+        3.90 + rng.random_range(-0.02..0.02),
+    ];
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let vmin = v[0];
+    let vavg = v[1];
+    let vmax = v[2];
 
-    // Temp values (±0.5 °C variation)
-    let tmax = 42.0 + rng.gen_range(-0.5..0.5);
-    let tavg = 40.0 + rng.gen_range(-0.5..0.5);
-    let tmin = 38.0 + rng.gen_range(-0.5..0.5);
+    let mut t = [
+        40.0 + rng.random_range(-0.5..0.5),
+        40.0 + rng.random_range(-0.5..0.5),
+        40.0 + rng.random_range(-0.5..0.5),
+    ];
+    t.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let tmin = t[0];
+    let tavg = t[1];
+    let tmax = t[2];
 
     // Voltage row
     let voltages = [

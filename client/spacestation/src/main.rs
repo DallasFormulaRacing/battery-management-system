@@ -3,7 +3,6 @@ mod ui;
 mod usb;
 
 use crossterm::{
-    event::{self, Event, KeyCode},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
