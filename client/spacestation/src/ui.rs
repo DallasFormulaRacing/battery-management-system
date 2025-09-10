@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 
 use chrono::Local;
+use rand::Rng;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -96,7 +97,7 @@ pub fn draw_homepage(
     ];
 
     // X axis: show a 60s sliding window following t
-    let window = 15.0; // width of visible window in seconds
+    let window = 90.0; // width of visible window in seconds
 
     let (x_start, x_end) = if t < window {
         (0.0, window) // before threshold, axis grows to 60s
@@ -344,12 +345,27 @@ pub fn draw_segment(f: &mut Frame, area: Rect, seg_num: usize) {
         .split(inner);
 
     // Placeholder values – replace with real data
-    let vmax = 3.95;
-    let vavg = 3.90;
-    let vmin = 3.85;
-    let tmax = 42.0;
-    let tavg = 40.0;
-    let tmin = 38.0;
+    let mut rng = rand::rng();
+
+    let mut v = [
+        3.90 + rng.random_range(-0.02..0.02),
+        3.90 + rng.random_range(-0.02..0.02),
+        3.90 + rng.random_range(-0.02..0.02),
+    ];
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let vmin = v[0];
+    let vavg = v[1];
+    let vmax = v[2];
+
+    let mut t = [
+        40.0 + rng.random_range(-0.5..0.5),
+        40.0 + rng.random_range(-0.5..0.5),
+        40.0 + rng.random_range(-0.5..0.5),
+    ];
+    t.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let tmin = t[0];
+    let tavg = t[1];
+    let tmax = t[2];
 
     // Voltage row
     let voltages = [

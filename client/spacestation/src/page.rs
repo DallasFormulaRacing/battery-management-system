@@ -2,7 +2,7 @@ use crate::ui::{draw_detail_popup, draw_homepage};
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub struct AppState {
     pub t: f64,
@@ -44,22 +44,12 @@ pub fn run_homepage(
     let mut selected_detail: Option<usize> = None;
     let mut app = AppState::new();
 
+    let mut last_render = Instant::now();
+    let render_interval = Duration::from_secs(1); // 1 FPS
+
     loop {
-        // update fake current data
-        app.push_fake_current();
-
-        terminal.draw(|f| {
-            draw_homepage(
-                f,
-                app.t,             // f64 time
-                &app.current_data, // &[ (f64, f64) ]
-                demo_mode,
-                selected_detail,
-            );
-        })?;
-
-        // handle input
-        if event::poll(std::time::Duration::from_millis(200))? {
+        // Always check for input (every ~100 ms)
+        if event::poll(Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
@@ -69,7 +59,24 @@ pub fn run_homepage(
                     }
                     _ => {}
                 }
+
+                terminal.draw(|f| {
+                    draw_homepage(f, app.t, &app.current_data, demo_mode, selected_detail);
+                })?;
+
+                last_render = Instant::now();
             }
+        }
+
+        // Only update + render if enough time has passed
+        if last_render.elapsed() >= render_interval {
+            app.push_fake_current(); // new fake data point
+
+            terminal.draw(|f| {
+                draw_homepage(f, app.t, &app.current_data, demo_mode, selected_detail);
+            })?;
+
+            last_render = Instant::now();
         }
     }
 
