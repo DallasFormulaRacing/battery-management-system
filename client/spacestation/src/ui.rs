@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 
 use chrono::Local;
+use rand::Rng;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -344,12 +345,17 @@ pub fn draw_segment(f: &mut Frame, area: Rect, seg_num: usize) {
         .split(inner);
 
     // Placeholder values – replace with real data
-    let vmax = 3.95;
-    let vavg = 3.90;
-    let vmin = 3.85;
-    let tmax = 42.0;
-    let tavg = 40.0;
-    let tmin = 38.0;
+    let mut rng = rand::thread_rng();
+
+    // Voltage values (±0.02 V variation)
+    let vmax = 3.95 + rng.gen_range(-0.02..0.02);
+    let vavg = 3.90 + rng.gen_range(-0.02..0.02);
+    let vmin = 3.85 + rng.gen_range(-0.02..0.02);
+
+    // Temp values (±0.5 °C variation)
+    let tmax = 42.0 + rng.gen_range(-0.5..0.5);
+    let tavg = 40.0 + rng.gen_range(-0.5..0.5);
+    let tmin = 38.0 + rng.gen_range(-0.5..0.5);
 
     // Voltage row
     let voltages = [
