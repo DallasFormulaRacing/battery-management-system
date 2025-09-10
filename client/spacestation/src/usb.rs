@@ -11,8 +11,8 @@ struct GeneralSegment {
 }
 
 struct SegmentDetail {
-    cell_voltages: Vec<f32>,
-    cell_temps: Vec<f32>,
-    balancing_status: Vec<bool>,
+    cell_voltages: [f32; 23],
+    cell_temps: [f32; 23],
+    balancing_status: [u16; 23],
     general: GeneralSegment,
 }
