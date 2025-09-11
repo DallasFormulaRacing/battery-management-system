@@ -24,6 +24,8 @@ bms/build/
 /Debug/
 /Release/
 
+target/
+
 # MacOS cruft
 .DS_Store
 compile_commands.json
