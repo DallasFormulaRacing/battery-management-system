@@ -238,4 +238,3 @@ static message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config) {
         .cmd[1] = LOWER_8(command_builder) 
     };
 }
-

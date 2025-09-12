@@ -13,11 +13,19 @@
 #include <stdbool.h>
 
 enum {
-NUM_PACKS_PER_SEGMENT = 23,
-NUM_SEGMENTS = 6,
-PLACEHOLDER_BCZ_IDK = 1,
-SPI_MAILBOX_LENGTH = 32
+    NUM_PACKS_PER_SEGMENT = 23,
+    NUM_SEGMENTS = 6,
+    PLACEHOLDER_BCZ_IDK = 1,
+    SPI_MAILBOX_LENGTH = 32,
+    MAX_NOM_VOLT_mV = 4200,
+    MIN_NOM_VOLT_mV = 2800,
+    MAX_TEMP_DEG_C = 60,
+    MAX_NOM_CURR_A = 180,
+    BMS_SPI_TX_TIMEOUT = 100,
 };
+
+const double FULL_CHARGE_CAPACITY_AH = 0;
+
 
 /**
  * @brief Enumeration of measurement states
@@ -55,26 +63,9 @@ typedef enum {
     ISOSPI_ACTIVE
 } isoSPI_state_t;
 
-
-typedef struct {
-    bms_core_state_t current_state;
-    bms_measure_status_t last_measure_status;
-    uint32_t    t_now_ms;
-    uint32_t    t_next_action_ms;
-    uint8_t     spi_rx[SPI_MAILBOX_LENGTH];
-    uint8_t     spi_tx[SPI_MAILBOX_LENGTH];
-    uint32_t    pec_errors_count;
-    uint32_t    comm_retries_count;
-    bool        intr1_flag;
-    bool        intr2_flag;
-
-    uint16_t     pack_volt_mV[PLACEHOLDER_BCZ_IDK];
-    uint16_t     pack_temp_degC[PLACEHOLDER_BCZ_IDK];  
-    uint16_t     pack_curr_mA[PLACEHOLDER_BCZ_IDK];
-    // status
-    uint32_t    last_sample_ms;
-    uint32_t    last_report_ms;
-    uint32_t    fault_code;
-} bms_system_context_block_t;
+typedef enum {
+    OPEN,
+    CLOSED
+} SHUTDOWN_CIRCUIT_STATE;
 
 #endif // CONFIG_H

@@ -67,6 +67,12 @@ void Error_Handler(void);
 #define RCC_OSC_IN_GPIO_Port GPIOF
 #define RCC_OSC_OUT_Pin GPIO_PIN_1
 #define RCC_OSC_OUT_GPIO_Port GPIOF
+#define SHUTDOWN_Pin GPIO_PIN_1
+#define SHUTDOWN_GPIO_Port GPIOC
+#define TX_UART_Pin GPIO_PIN_4
+#define TX_UART_GPIO_Port GPIOC
+#define RX_UART_Pin GPIO_PIN_5
+#define RX_UART_GPIO_Port GPIOC
 #define BMS_WAKE2_Pin GPIO_PIN_8
 #define BMS_WAKE2_GPIO_Port GPIOC
 #define BMS_INTR2_Pin GPIO_PIN_9

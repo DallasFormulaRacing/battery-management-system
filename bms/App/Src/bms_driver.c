@@ -8,7 +8,10 @@
 
 #include "bms_driver.h" // SPI handle for AD BMS 6830
 #include "commands.h"
+#include "main.h"
 #include "stm32g4xx_hal_def.h"
+#include "stm32g4xx_hal_fdcan.h"
+#include "stm32g4xx_hal_gpio.h"
 #include "stm32g4xx_hal_spi.h"
 #include <string.h>
 
@@ -101,20 +104,31 @@ void bms_iso_wake_spi() {
  */
 bms_core_state_t bms_init() {
     // Initialize the SPI peripherals
-    HAL_SPI_Init(&hspi2);
-    HAL_SPI_Init(&hspi3);
+    (void)HAL_SPI_Init(&hspi2);
+    (void)HAL_SPI_Init(&hspi3);
 
     // Initialize timer peripheral
-    HAL_TIM_Base_Start_IT(&htim2);                
-    HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+    (void)HAL_TIM_Base_Init(&htim2);
+    (void)HAL_TIM_Base_Start_IT(&htim2);
+
+    // Start timer tick
+    (void)HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
 
     // Initialize UART peripheral #ifdef DEBUG
+    (void)HAL_UART_Init(&huart1);
 
     // Initialize CAN peripheral
+    (void)HAL_FDCAN_Init(&hfdcan2);
+
+    // Drive SHUTDOWN SIGNAL HIGH
+    set_shutdown_circuit(CLOSED);
 
     // Wake BMS chain
+    bms_iso_wake_pin();
 
     // Start ADCs -- command
+
+    // Write to a configuration register to start ADCs -- command
 
     // Read from a status register confirming OK status -- command
 
@@ -138,6 +152,17 @@ void bms_service_taskd() {
 HAL_StatusTypeDef bms_transmit(SPI_HandleTypeDef hspi, message_t tx_msg) {
     //return HAL_SPI_Transmit(&hspi, (uint8_t) ???, 16, HAL_MAX_DELAY);
     return HAL_OK;
+}
+
+void set_shutdown_circuit(SHUTDOWN_CIRCUIT_STATE line) {
+    switch (line) {
+        case OPEN: 
+            HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin , GPIO_PIN_RESET);
+            return;
+        case CLOSED: 
+            HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin , GPIO_PIN_SET);
+            return;
+    }
 }
 
 /*
