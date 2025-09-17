@@ -39,14 +39,20 @@ typedef struct {
     uint32_t    pec_errors_count;
     uint32_t    comm_retries_count;
 
-    uint16_t     pack_volt_mV[NUM_PACKS_PER_SEGMENT];
-    uint16_t     pack_temp_degC[NUM_PACKS_PER_SEGMENT];  
+    
     uint16_t     high_current_mA;
 
     uint32_t    last_sample_ms;
     uint32_t    last_report_ms;
     uint32_t    fault_code;
 } bms_system_context_block_t;
+
+typedef struct {
+    float raw_voltage;
+    float avg_voltage;
+    float filtered_voltage;
+    float temperature;
+} cell_info_t;
 
 void bms_iso_wake_pin();
 void bms_iso_wake_spi();
