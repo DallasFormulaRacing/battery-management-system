@@ -1,4 +1,5 @@
 // Users can change this but if they do, ensure that it is gitignored.
+// See https://code.visualstudio.com/docs/editor/tasks for more information
 {
   "version": "2.0.0",
   "tasks": [
@@ -19,7 +20,7 @@
         ]
     },
     {
-        "label": "Flash BMS with OpenOCD",
+        "label": "Flash",
         "type": "shell",
         "command": "openocd",
         "args": [

@@ -1,12 +1,21 @@
+# DISCLAIMER: THIS MAY NOT WORK OUT OF THE BOX ON YOUR DEVICE. 
+# EDIT AS NEEDED, BUT DO NOT FORGET TO GITIGNORE YOUR VERSION.
+# THIS IS JUST AN EXAMPLE (THAT HAPPENS TO WORK FOR ME)
+
 import os
 import json
 
 include_dirs = [
+    "-I./bms/Common/Inc",
+    "-I./bms/Common/Src",
     "-I./bms/App/Inc",
     "-I./bms/Core/Inc",
     "-I./bms/Drivers/STM32G4xx_HAL_Driver/Inc",  
     "-I./bms/Drivers/CMSIS/Device/ST/STM32G4xx/Include",
-    "-I./bms/Drivers/CMSIS/Include"
+    "-I./bms/Drivers/CMSIS/Include",
+    "-I/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/include",
+    "-I/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/13.3.1/include-fixed",
+    "-I/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi/include"
 ]
 
 defines = [
