@@ -30,6 +30,7 @@ static inline message_command_t build_ADAX2_command(const ADC_cmd_cfg_t *config)
     calculated for all 16 bits of a command, using the initial PEC value of
     b'000000000010000 and the following characteristic polynomial: 
     x^15 + x^14 + x^10 + x^8 + x^7 + x^4 + x^3 + 1.
+    From nda
  * @param data pointer to the data frame to calculate the PEC for
  * @param len the length of the data frame
  * @return uint16_t the calculated PEC15 value

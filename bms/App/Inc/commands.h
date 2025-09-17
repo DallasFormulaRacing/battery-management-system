@@ -129,6 +129,25 @@ const message_command_t CMEN       = { .cmd = { 0x00, 0x41 } };
 // 0b0000 0000 1000 0011 = 0x00 0x83
 const message_command_t CMHB       = { .cmd = { 0x00, 0x83 } }; 
 
+// Clear Cell Voltage Register Groups CLRCELL: 0b0000 0111 0001 0001 = 0x07, 0x11
+const message_command_t CLRCELL    = { .cmd = { 0x07, 0x11 } };
+
+// Clear Filtered Cell Voltage Register Groups CLRFC: 0b0000 0111 0101 0000 = 0x07, 0x50
+const message_command_t CLRFC      = { .cmd = { 0x07, 0x50 } };
+
+// Clear Auxiliary Register Groups CLRAUX: 0b0000 0111 0001 0010 = 0x07, 0x12
+const message_command_t CLRAUX     = { .cmd = { 0x07, 0x12 } };
+
+// Clear S-Voltage Register Groups CLRSPIN: 0b0000 0111 0101 1000 = 0x07, 0x58
+const message_command_t CLRSPIN    = { .cmd = { 0x07, 0x58 } };
+
+// Clear Flags CLRFLAG: 0b0000 0111 0001 0111 = 0x07, 0x17
+const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
+
+// Clear OVUV CLOVUV: 0b0000 0111 0101 0101 = 0x07, 0x55
+const message_command_t CLOVUV     = { .cmd = { 0x07, 0x55 } };
+
+
 
 // default adc command, can be modified with build_ADCV_command()
 
