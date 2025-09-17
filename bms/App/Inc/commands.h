@@ -97,6 +97,8 @@ const message_command_t RDASALL    = { .cmd = { 0x00, 0x35 } };
 
 /* Poll adc command */
 const message_command_t PLADC      = { .cmd = { 0x07, 0x18 } };
+
+// Clear Flags CLRFLAG: 0b0000 0111 0001 0111 = 0x07, 0x17
 const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
 
 // 0b0000 0111 0010 0001 = 0x07 0x21
@@ -141,12 +143,38 @@ const message_command_t CLRAUX     = { .cmd = { 0x07, 0x12 } };
 // Clear S-Voltage Register Groups CLRSPIN: 0b0000 0111 0101 1000 = 0x07, 0x58
 const message_command_t CLRSPIN    = { .cmd = { 0x07, 0x58 } };
 
-// Clear Flags CLRFLAG: 0b0000 0111 0001 0111 = 0x07, 0x17
-const message_command_t CLRFLAG    = { .cmd = { 0x07, 0x17 } };
-
 // Clear OVUV CLOVUV: 0b0000 0111 0101 0101 = 0x07, 0x55
 const message_command_t CLOVUV     = { .cmd = { 0x07, 0x55 } };
 
+// Write PWM Register Group A: 0b0000 0000 0000 0100 = 0x00, 0x04
+const message_command_t WRPWMA     = { .cmd = { 0x00, 0x04 } };
+
+// Read PWM Register Group A: 0b0000 0001 0000 1000 = 0x01, 0x08
+const message_command_t RDPWMA     = { .cmd = { 0x01, 0x08 } };
+
+/* Write PWM Register Group B: 0b0000 0000 0000 0101 = 0x00, 0x05 */
+const message_command_t WRPWMB     = { .cmd = { 0x00, 0x05 } };
+
+/* Read PWM Register Group B: 0b0000 0001 0000 1001 = 0x01, 0x09 */
+const message_command_t RDPWMB     = { .cmd = { 0x01, 0x09 } };
+
+/* Read Cell Voltage Register Group A: 0b0000 0000 0001 0010 = 0x00, 0x12 */
+const message_command_t RDCVA      = { .cmd = { 0x00, 0x12 } };
+
+/* Read Cell Voltage Register Group B: 0b0000 0000 0001 0110 = 0x00, 0x16 */
+const message_command_t RDCVB      = { .cmd = { 0x00, 0x16 } };
+
+/* Read Cell Voltage Register Group C: 0b0000 0000 0010 0100 = 0x00, 0x24 */
+const message_command_t RDCVC      = { .cmd = { 0x00, 0x24 } };
+
+/* Read Cell Voltage Register Group D: 0b0000 0000 0010 1010 = 0x00, 0x2A */
+const message_command_t RDCVD      = { .cmd = { 0x00, 0x2A } };
+
+/* Read Cell Voltage Register Group E: 0b0000 0000 0010 1001 = 0x00, 0x29 */
+const message_command_t RDCVE      = { .cmd = { 0x00, 0x29 } };
+
+/* Read Cell Voltage Register Group F: 0b0000 0000 0010 1011 = 0x00, 0x2B */
+const message_command_t RDCVF      = { .cmd = { 0x00, 0x2B } };
 
 
 // default adc command, can be modified with build_ADCV_command()
