@@ -26,6 +26,8 @@ bms/build/
 .fingerprint
 target
 
+target/
+
 # MacOS cruft
 .DS_Store
 compile_commands.json
