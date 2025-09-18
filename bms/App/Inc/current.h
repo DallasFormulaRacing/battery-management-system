@@ -13,9 +13,10 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t current;        // Current measurement in microamperes
-    uint32_t timestamp;      // Timestamp of the measurement
+    uint32_t current;        
+    uint32_t timestamp;     
     uint32_t accumulated_charge; // Accumulated charge in coulombs
+    uint8_t state_of_charge;       
     void (*error_callback)(SHUTDOWN_CIRCUIT_STATE); // Overcurrent -> open shutdown circuit
 } coulomb_counter_t;
 

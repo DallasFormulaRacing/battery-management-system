@@ -52,6 +52,7 @@ typedef struct {
     float avg_voltage;
     float filtered_voltage;
     float temperature;
+    float deviation;
 } cell_info_t;
 
 void bms_iso_wake_pin();

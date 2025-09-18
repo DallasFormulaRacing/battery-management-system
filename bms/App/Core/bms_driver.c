@@ -13,6 +13,7 @@
 #include "stm32g4xx_hal_fdcan.h"
 #include "stm32g4xx_hal_gpio.h"
 #include "stm32g4xx_hal_spi.h"
+#include <stdint.h>
 #include <string.h>
 
 // Pin PA10
@@ -103,6 +104,8 @@ void bms_iso_wake_spi() {
  * @return bms_core_state_t 
  */
 bms_core_state_t bms_init() {
+    //(void)HAL_GPIO_Init();
+
     // Initialize the SPI peripherals
     (void)HAL_SPI_Init(&hspi2);
     (void)HAL_SPI_Init(&hspi3);
@@ -126,11 +129,11 @@ bms_core_state_t bms_init() {
     // Wake BMS chain
     bms_iso_wake_pin();
 
-    // Start ADCs -- command
-
-    // Write to a configuration register to start ADCs -- command
+    // Send start ADCs command
 
     // Read from a status register confirming OK status -- command
+
+    // Send CLRAUX, CLRCELL, and/or CLRDONE and other clear flags
 
     // Do other stuff before task loop idk
     return BMS_STDBY;
@@ -154,6 +157,11 @@ HAL_StatusTypeDef bms_transmit(SPI_HandleTypeDef hspi, message_t tx_msg) {
     return HAL_OK;
 }
 
+/**
+ * @brief Set the shutdown circuit line
+ * Note: When GPIO init is called, this pin is inti
+ * @param line 
+ */
 void set_shutdown_circuit(SHUTDOWN_CIRCUIT_STATE line) {
     switch (line) {
         case OPEN: 
@@ -163,6 +171,16 @@ void set_shutdown_circuit(SHUTDOWN_CIRCUIT_STATE line) {
             HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin , GPIO_PIN_SET);
             return;
     }
+}
+
+/**
+ * @brief Translates actual voltage values from register values
+ * See table 104 in 6830B
+ * @param raw register value
+ * @return float real voltage
+ */
+float translate_voltage_value(uint16_t raw) {
+    return (float)(raw * 0.000150f) + 1.5f;
 }
 
 /*
