@@ -19,7 +19,7 @@
         ]
     },
     {
-        "label": "Flash BMS with OpenOCD",
+        "label": "Flash",
         "type": "shell",
         "command": "openocd",
         "args": [
