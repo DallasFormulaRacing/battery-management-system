@@ -23,6 +23,7 @@ bms/build/
 /.settings/
 /Debug/
 /Release/
+target/
 
 # MacOS cruft
 .DS_Store

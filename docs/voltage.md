@@ -1,5 +1,9 @@
 # A developer note on the Analog Devices BMS 6830 and BMS 6833
 
+## 0. Important Documents
+
+[ADBMS6830B](https://www.analog.com/media/en/technical-documentation/data-sheets/adbms6830b.pdf)
+
 ## 1. Introduction
 
 The voltage monitor stack we will use involves the ADBMS6830B and ADBMS6822. The ADBMS6830B is here on out referred to as the "6830", and the ADBMS6822 is here on out referred to as the "6822".
