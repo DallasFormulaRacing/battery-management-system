@@ -70,15 +70,15 @@ typedef voltage_readings_t int16_t;
 typedef struct {
   uint8_t REFON : 1;   // Reference remains power up/down
   uint8_t CTH : 3;     // Comparison voltages threshold C vs S
-  uint8_t FLAG_D : 8;  //
-  uint8_t SOAKON : 1;  //
-  uint8_t OWRNG : 1;   //
-  uint8_t OWA : 3;     //
-  uint16_t GPO : 10;   //
-  uint8_t SNAP_ST : 1; //
-  uint8_t MUTE_ST : 1; //
-  uint8_t COMM_BK : 1; //
-  uint8_t FC : 3;      //
+  uint8_t FLAG_D : 8;  // Diagnostics flags for x
+  uint8_t SOAKON : 1;  // Soak enable for AUX ADC
+  uint8_t OWRNG : 1;   // Soak time range
+  uint8_t OWA : 3;     // OW Soak times
+  uint16_t GPO : 10;   // GPIOx Pin Control
+  uint8_t SNAP_ST : 1; // Snapshot status
+  uint8_t MUTE_ST : 1; // Mute status
+  uint8_t COMM_BK : 1; // Communication Break feature
+  uint8_t FC : 3;      // IIR filter parameter
 } bms_cfg_reg_a_t;
 
 typedef struct {
