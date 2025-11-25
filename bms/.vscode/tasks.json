@@ -10,9 +10,11 @@
                 "build",
                 "-DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake",
                 "-G",
-                "Ninja"
+                "Unix Makefiles",
             ],
-            "problemMatcher": []
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
             "label": "Build",
