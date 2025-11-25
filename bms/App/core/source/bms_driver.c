@@ -22,9 +22,7 @@ inline void asic_cs_low() {
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
 }
 
-inline void asic_cs_hi() { 
-  HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); 
-}
+inline void asic_cs_hi() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); }
 
 inline void spi_write(uint16_t size, uint8_t *tx_data) {
   HAL_SPI_Transmit(hspi_bms, tx_data, size, SPI_TIME_OUT);
