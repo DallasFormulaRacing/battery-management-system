@@ -1,4 +1,4 @@
-# Extended Kalman filtering for Electric Vehicle Battery Management System
+# State of Charge (SoC) Estimation for Electric Vehicle Battery Management Systems
 
 ```
 Author(s): Will Kim     ...   <wkim@utdallas.edu>
@@ -10,7 +10,7 @@ Author(s): Will Kim     ...   <wkim@utdallas.edu>
 
 ### Abstract
 
-Accurate estimation of a battery's state of charge (SoC) and state of health (SoH) is important for the reliability, safety, and performance of modern battery management systems (BMS) in electric vehicles (EV). Limitations of standalone sensor and monitoring measurements include sensor noise, measurement drift and generally do not offer enough data to reliably report the charge and health of the batteries. Sensor fusion techniques, such as the extended Kalman filter (EKF), have become essential in addrressing the limitations of individual sensing methods by integrating data from voltage, current, and temperature sensors with predictive battery models. This paper provides a structured overview of EKF-based SoC and SoH estimation. We begin with a summary of simpler approaches, such as coulomb counting and open-circuit voltage methods, highlighting their shortcomings in dynamic operating conditions. We then present the EKF as a robust alternative, capable of fusing non-linear battery models with sensor data to continuously estimate internal states and adapt to varying operational scenarios. The EKF algorithm is broken down into its prediction and update steps, and its application to electrochemical and equivalent circuit models is discussed. Practical implementation challenges, including initialization, model fidelity, noise characterization, and computational cost on embedded systems, are also addressed. This work aims to serve as a foundational guide for engineers seeking to implement or refine EKF-based state estimation in BMS applications.
+Accurate estimation of a battery's state of charge (SoC) and state of health (SoH) is important for the reliability, safety, and performance of modern battery management systems (BMS) in electric vehicles (EV). Limitations of standalone sensor and monitoring measurements include sensor noise, measurement drift and generally do not offer enough data to reliably report the charge and health of the batteries. Sensor fusion techniques, such as the extended Kalman filter (EKF), have become essential in addressing the limitations of individual sensing methods by integrating data from voltage, current, and temperature sensors with predictive battery models. This document provides a structured overview of SoC and SoH estimation methods, including both Coulomb Counting (CC) and EKF-based approaches. We begin with a summary of simpler approaches, such as coulomb counting and open-circuit voltage methods, highlighting their shortcomings in dynamic operating conditions. We then present advanced methods, including EKF, capable of fusing non-linear battery models with sensor data to continuously estimate internal states and adapt to varying operational scenarios. Practical implementation challenges, including initialization, model fidelity, noise characterization, and computational cost on embedded systems, are also addressed. This work aims to serve as a foundational guide for engineers seeking to implement or refine SoC estimation in BMS applications.
 
 ### Similar work and relevant literature
 
@@ -38,21 +38,35 @@ In the surrounding work and literature, there are mainly three ways to model the
 
 [TODO](pick a method and explain why it was chosen. use matlab to validate and justify.)
 
-## 2. Limitations of other mathematical models and techniques
+## 2. Coulomb Counting (CC)
 
-### Coulomb Counting
+### Principle
 
-### Open circuit voltage
+Coulomb Counting is a straightforward method for estimating SoC by integrating the battery current over time. The SoC is updated based on the charge entering or leaving the battery, starting from a known initial state.
 
-### Standard Kalman filter
+### Limitations
 
-### Unscented Kalman filter
+- Sensitive to sensor drift and offset errors
+- Accumulation of integration errors over time
+- Requires accurate initial SoC
+- Does not account for battery aging or temperature effects
 
-### Machine learning
+### Implementation
 
-### Why EKF
+- Current sensor selection and calibration
+- Integration algorithm
+- Periodic correction using reference measurements (e.g., open-circuit voltage)
 
-## 3. The Extended Kalman Filter
+### Validation
+
+- Simulation and bench test results
+- Error analysis and correction strategies
+
+## 3. Extended Kalman Filter (EKF) for SoC Estimation
+
+### Overview
+
+The EKF is a robust sensor fusion technique that integrates data from multiple sensors with predictive battery models to estimate SoC and SoH in real time, even under nonlinear and dynamic conditions.
 
 ### Notation
 
