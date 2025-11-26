@@ -1,5 +1,5 @@
 add_library(bms_soc
-    coulomb.c
+     ${CMAKE_CURRENT_SOURCE_DIR}/coulomb.c
 )
 
 target_include_directories(bms_soc
