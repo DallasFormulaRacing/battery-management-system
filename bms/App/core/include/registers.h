@@ -148,7 +148,7 @@ typedef struct {
 } bms_stat_reg_c_t;
 
 typedef struct {
-  uint16_t CL_CSFLT;
+  uint16_t CL_CSxFLT;
   uint8_t CL_SMED : 1;
   uint8_t CL_SED : 1;
   uint8_t CL_CMED : 1;
@@ -236,13 +236,13 @@ typedef struct {
 } aux_openwire_t;
 
 typedef struct {
-  bms_cfg_reg_a_t tx_cfga;
-  bms_cfg_reg_a_t rx_cfga;
+  bms_cfg_reg_a_t tx_cfg_a;
+  bms_cfg_reg_a_t rx_cfg_a;
 
-  bms_cfg_reg_b_t tx_cfgb;
-  bms_cfg_reg_b_t rx_cfgb;
+  bms_cfg_reg_b_t tx_cfg_b;
+  bms_cfg_reg_b_t rx_cfg_b;
 
-  clearflag_reg_t clflag;
+  clearflag_reg_t clr_flag;
 
   cell_voltage_t cell;
   avg_cell_voltage_t avg_cell;
@@ -258,8 +258,8 @@ typedef struct {
   bms_stat_reg_d_t stat_d;
   bms_stat_reg_e_t stat_e;
 
-  pwm_reg_a_t pwm_a;
-  pwm_reg_b_t pwm_b;
+  pwm_reg_a_t pwm_ctl_a;
+  pwm_reg_b_t pwm_ctl_b;
 
   comms_reg_t comm;
   serial_id_reg_t sid;
