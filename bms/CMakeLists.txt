@@ -39,8 +39,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         bms_core
-        bms_parse
-        bms_soc
 )
 
 

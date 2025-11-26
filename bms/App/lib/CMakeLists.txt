@@ -1,14 +1,15 @@
-add_library(bms_core
-    source/bms_driver.c
+add_library(bms_lib
+    bms.c
+    parse.c
 )
 
-target_compile_definitions(bms_core
+target_compile_definitions(bms_lib
     PUBLIC
         STM32G474xx    
         USE_HAL_DRIVER
 )
 
-target_include_directories(bms_core
+target_include_directories(bms_lib
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/Core/Inc   

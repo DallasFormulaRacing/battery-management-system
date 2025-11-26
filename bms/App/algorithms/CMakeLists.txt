@@ -1,2 +1,2 @@
-add_subdirectory(parse)
+add_subdirectory(pec)
 add_subdirectory(soc)  # later
