@@ -1,5 +1,6 @@
 add_library(bms_pec
     pec.c
+    pec.h
 )
 
 target_include_directories(bms_pec
