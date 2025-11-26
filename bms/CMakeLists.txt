@@ -16,8 +16,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Sources
 
-add_subdirectory(App/core)
-add_subdirectory(App/algorithms)
+add_subdirectory(App)
 
 # CubeMX-generated application sources
 file(GLOB CORE_SOURCES
