@@ -10,16 +10,34 @@ Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-
 
 Make sure you have the following utilities:
 
+
 - `make`
+- `CMake`
 - `gcc-arm-none-eabi`
 - `openocd`
+
+DO NOT USE CUBE-CMAKE
 
 [Add more here]
 
 ### How to run
 
-1. `make`
-2.
+`Firmware Instructions`
+
+`cwd = bms`
+
+1. `mkdir build && cd build`
+2. `cmake ..`
+3. `cmake --build build`
+
+If you get compiler detection errors make sure the CMake GNU ARM toolchain flag is being detected!
+
+`Client TUI Instructions`
+
+`cwd = client/spacestation`
+
+1. `cargo build`
+2. `cargo run`
 
 ### VS Code Extensions
 
@@ -31,9 +49,6 @@ mcu-debug.debug-tracker-vscode
 mcu-debug.memory-view
 mcu-debug.peripheral-viewer
 mcu-debug.rtos-views
-ms-python.python
-ms-python.vscode-pylance
-ms-python.vscode-python-envs
 ms-vscode.cmake-tools
 ms-vscode.cpptools-extension-pack
 ms-vscode.cpptools-themes
@@ -79,29 +94,33 @@ If applicable, please tie your pull request to one or more issues. Try to find a
 
 ```bash
 .
-└── bms
-    ├── App
-    ├── build
-    ├── Core
-    │   ├── Inc
-    │   └── Src
-    └── Drivers
-        ├── BSP
-        │   └── STM32G4xx_Nucleo
-        ├── CMSIS
-        │   ├── Device
-        │   │   └── ST
-        │   │       └── STM32G4xx
-        │   │           ├── Include
-        │   │           └── Source
-        │   │               └── Templates
-        │   └── Include
-        └── STM32G4xx_HAL_Driver
-            ├── Inc
-            │   └── Legacy
-            └── Src
+├── App
+│   ├── algorithms
+│   │   ├── cb
+│   │   ├── pec
+│   │   ├── soc
+│   │   └── thermal
+│   ├── core
+│   │   ├── include
+│   │   └── source
+│   └── lib
+│       ├── api
+│       │   ├── include
+│       │   └── source
+│       └── program
+├── Core
+│   ├── Inc
+│   └── Src
+├── Drivers
+│   ├── CMSIS
+│   │   └── Include
+│   └── STM32G4xx_HAL_Driver
+│       ├── Inc
+│       └── Src
+└── cmake
 
-22 directories
+82 directories
+
 
 ```
 
