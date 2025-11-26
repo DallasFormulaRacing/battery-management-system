@@ -1,9 +1,6 @@
 #ifndef PEC_H
 #define PEC_H
 
-// ------------------- PEC (Cyclic Redundancy Check) Definitions
-// -------------------
-
 // precomputed COMMAND append CRC15 Table
 __attribute__((section(".lookup_tables"), used))
 const uint16_t CMD_PEC15_LUT[256] = {
