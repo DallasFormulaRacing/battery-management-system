@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 
+if (NOT CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE
+        "${CMAKE_CURRENT_LIST_DIR}/cmake/gcc-arm-none-eabi.cmake"
+        CACHE FILEPATH "Toolchain file"
+    )
+endif()
+
 project(bms C ASM)
 
 set(CMAKE_C_STANDARD 11)
@@ -7,30 +14,35 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Sources
-file(GLOB_RECURSE BMS_SOURCES
+
+add_subdirectory(App/core)
+add_subdirectory(App/algorithms)
+
+# CubeMX-generated application sources
+file(GLOB CORE_SOURCES
     Core/Src/*.c
-    App/drivers/src/*.c
-    App/core/*.c
-    App/algorithms/*.c
 )
 
 add_executable(${PROJECT_NAME}
-    ${BMS_SOURCES}
+    ${CORE_SOURCES}
     startup_stm32g474xx.s
 )
 
-# Include directories
+# MCU / HAL / CMSIS include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     Core/Inc
-    App/drivers/inc
-    App/core
-    App/algorithms
     Drivers/CMSIS/Include
     Drivers/CMSIS/Device/ST/STM32G4xx/Include
     Drivers/STM32G4xx_HAL_Driver/Inc
-    Archive/ADBMS6830/lib/inc
-    Archive/ADBMS6830/program/inc
 )
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        bms_core
+        bms_parse
+        bms_soc
+)
+
 
 # Compiler defines
 target_compile_definitions(${PROJECT_NAME} PRIVATE
