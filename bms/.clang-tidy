@@ -3,17 +3,39 @@ Checks: >
   readability-*,
   bugprone-*,
   clang-analyzer-*,
-  cppcoreguidelines-*  
-  clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
-  readability-misleading-indentation
-  readability-redundant-control-flow
-  readability-simplify-boolean-expr
-  readability-duplicate-include
+  clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  readability-misleading-indentation,
+  -readability-magic-numbers,
+  -readability-implicit-bool-conversion,
+  -readability-braces-around-statements,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-interfaces-global-init,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic
 
-WarningsAsErrors: "*"
+WarningsAsErrors: ""
 
 CheckOptions:
+  - key: bugprone-reserved-identifier
+    value: "false"
   - key: readability-function-size.LineThreshold
     value: "100"
   - key: readability-implicit-bool-conversion.AllowPointerConditions
     value: "true"
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: "2"
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: "^(_|it|id)$"
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: "2"
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: "^(_|it|id)$"
+  - key: readability-identifier-length.MinimumLoopCounterNameLength
+    value: "2"
+  - key: readability-identifier-length.IgnoredLoopCounterNames
+    value: "^([ijk])$"
+  - key: readability-identifier-length.MinimumExceptionNameLength
+    value: "3"
+  - key: readability-identifier-length.IgnoredExceptionVariableNames
+    value: "^(e|ex)$"

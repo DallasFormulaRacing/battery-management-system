@@ -23,8 +23,17 @@ bms/build/
 /.settings/
 /Debug/
 /Release/
+.fingerprint
+target
+
+Archive
+
 target/
 
 # MacOS cruft
 .DS_Store
 compile_commands.json
+
+*.project
+*.bak
+*.yaml
