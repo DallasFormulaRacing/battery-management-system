@@ -16,26 +16,30 @@ void handle_init() {
   hi2c_bms = &hi2c1;
 }
 
-inline void delay(uint32_t ms) { HAL_Delay(ms); }
+void delay(uint32_t ms) { HAL_Delay(ms); }
 
-inline void asic_cs_low() {
-  HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
-}
+void asic_cs_low() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET); }
 
-inline void asic_cs_hi() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); }
+void asic_cs_hi() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); }
 
-inline void spi_write(uint16_t size, uint8_t *tx_data) {
+void spi_write(uint16_t size, uint8_t *tx_data) {
+  asic_cs_low();
   HAL_SPI_Transmit(hspi_bms, tx_data, size, SPI_TIME_OUT);
   /* SPI1 , data, size, timeout */
+  asic_cs_hi();
 }
 
-inline void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
+void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
+  asic_cs_low();
   HAL_SPI_Transmit(hspi_bms, tx_data, 4, SPI_TIME_OUT);
   HAL_SPI_Receive(hspi_bms, rx_data, size, SPI_TIME_OUT);
+  asic_cs_hi();
 }
 
-inline void spi_read(uint16_t size, uint8_t *rx_data) {
+void spi_read(uint16_t size, uint8_t *rx_data) {
+  asic_cs_low();
   HAL_SPI_Receive(hspi_bms, rx_data, size, SPI_TIME_OUT);
+  asic_cs_hi();
 }
 
 #if TIM_EN
