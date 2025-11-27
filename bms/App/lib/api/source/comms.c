@@ -7,9 +7,6 @@ static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
 static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
                          uint8_t *rx_data, uint8_t bytes_per_asic_register);
 
-static void spi_write_all(uint8_t ic_count, command_msg_t cmd_msg,
-                          uint8_t *tx_data, uint8_t bytes_per_asic_register);
-
 static comm_status_t handle_single_asic(const uint8_t *rx_data,
                                         uint8_t bytes_in_reg,
                                         asic_status_buffers_t *status,
@@ -161,22 +158,6 @@ static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
                          uint8_t *rx_data, uint8_t bytes_per_asic_register) {
   uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
   spi_write_read(cmd_msg, rx_data, len);
-}
-
-/**
- * @brief
- *
- * @param ic_count
- * @param cmd_msg
- * @param tx_data
- * @param bytes_per_asic_register
- */
-static void spi_write_all(uint8_t ic_count, command_msg_t cmd_msg,
-                          uint8_t *tx_data, uint8_t bytes_per_asic_register) {
-  uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
-
-  spi_write(4U, cmd_msg);
-  spi_write(len, tx_data);
 }
 
 /**
