@@ -10,5 +10,5 @@ target_include_directories(bms_pec
 
 target_link_libraries(bms_pec
     PUBLIC
-        bms_core
+        bms_api
 )
