@@ -24,22 +24,40 @@ static comm_status_t pec_check(const uint8_t *rx_data, uint16_t rx_pec,
 
 /******************************************************************************/
 
+/**
+ * @brief Send a command to the BMS
+ *
+ * @param tx_cmd
+ */
 void bms_send_command(const command_t tx_cmd) {
   command_msg_t cmd_msg;
   build_command_buffer(tx_cmd, cmd_msg);
   spi_write(4, cmd_msg);
 }
 
+/**
+ * @brief Read data registers from the BMS
+ *
+ * @param ic_count
+ * @param command_bytes
+ * @param asic_status_buffers
+ * @param bytes_per_asic_register
+ * @return comm_status_t
+ */
 comm_status_t bms_read_data_register(uint8_t ic_count, command_t command_bytes,
                                      asic_status_buffers_t *asic_status_buffers,
                                      uint8_t bytes_per_asic_register) {
-  command_msg_t cmd_msg;
-  comm_status_t status;
 
-  if (ic_count > ADBMS_NUM_CELLS_PER_IC || ic_count == 0)
+  if (ic_count == 0U)
     return COMM_INVALID_NUMBER_OF_ICS;
 
   if (bytes_per_asic_register == 0)
+    return COMM_INVALID_PARAMETERS;
+
+  if (bytes_per_asic_register < 3U)
+    return COMM_INVALID_PARAMETERS;
+
+  if ((uint16_t)ic_count * bytes_per_asic_register > UINT8_MAX)
     return COMM_INVALID_PARAMETERS;
 
   if ((asic_status_buffers == NULL) ||
@@ -49,35 +67,79 @@ comm_status_t bms_read_data_register(uint8_t ic_count, command_t command_bytes,
     return COMM_ERROR;
   }
 
-  if (bytes_per_asic_register < 3U) {
-    return COMM_ERROR;
-  }
-
-  if ((uint16_t)ic_count * bytes_per_asic_register > UINT8_MAX) {
-    return COMM_ERROR;
-  }
+  command_msg_t cmd_msg = {0};
 
   build_command_buffer(command_bytes, cmd_msg);
 
   spi_read_all(ic_count, cmd_msg, asic_status_buffers->register_data,
                bytes_per_asic_register);
 
-  for (uint8_t i = 0; i < ic_count; i++) {
-    status =
-        handle_single_asic(asic_status_buffers->register_data,
-                           bytes_per_asic_register, asic_status_buffers, i);
-  }
-
-  return status;
+  return read_all_asics(ic_count, bytes_per_asic_register,
+                        asic_status_buffers->register_data,
+                        asic_status_buffers);
 }
 
-comm_status_t bms_write_data_register(uint8_t ic_count, command_t command_bytes,
-                                      uint8_t *data) {
-  // todo: placeholder
+/**
+ * @brief Write data registers to the BMS
+ *
+ * @param ic_count
+ * @param command_bytes
+ * @param per_asic_data
+ * @param bytes_per_asic_data
+ * @return comm_status_t
+ */
+comm_status_t bms_write_data_register(uint8_t ic_count,
+                                      const command_t command_bytes,
+                                      const uint8_t *per_asic_data,
+                                      uint8_t bytes_per_asic_data) {
+  if (ic_count == 0U)
+    return COMM_INVALID_NUMBER_OF_ICS;
+
+  if ((per_asic_data == NULL) || (bytes_per_asic_data == 0U))
+    return COMM_INVALID_PARAMETERS;
+
+  const uint16_t per_asic_frame_len = (uint16_t)bytes_per_asic_data + 2U;
+
+  const uint16_t total_frame_len =
+      4U + (per_asic_frame_len * (uint16_t)ic_count);
+
+  if (total_frame_len > UINT8_MAX) {
+    return COMM_INVALID_PARAMETERS;
+  }
+
+  uint8_t frame[UINT8_MAX];
+
+  build_command_buffer(command_bytes, frame);
+
+  uint8_t idx = 4U;
+
+  for (uint8_t current_ic = ic_count; current_ic > 0U; --current_ic) {
+    const uint8_t *src =
+        &per_asic_data[(uint16_t)(current_ic - 1U) * bytes_per_asic_data];
+
+    for (uint8_t b = 0U; b < bytes_per_asic_data; ++b) {
+      frame[idx++] = src[b];
+    }
+
+    uint16_t data_pec = calc_PEC10(0U, bytes_per_asic_data, src);
+
+    frame[idx++] = (uint8_t)(data_pec >> 8);
+    frame[idx++] = (uint8_t)data_pec;
+  }
+
+  spi_write((uint8_t)total_frame_len, frame);
+
+  return COMM_OK;
 }
 
 /*************************************************************/
 
+/**
+ * @brief Append PEC bytes for a given command
+ *
+ * @param command_bytes
+ * @param cmd
+ */
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
   uint16_t cmd_pec;
   cmd[0] = command_bytes[0];
@@ -87,12 +149,28 @@ static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
   cmd[3] = (uint8_t)(cmd_pec);
 }
 
+/**
+ * @brief
+ *
+ * @param ic_count
+ * @param cmd_msg
+ * @param rx_data
+ * @param bytes_per_asic_register
+ */
 static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
                          uint8_t *rx_data, uint8_t bytes_per_asic_register) {
   uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
   spi_write_read(cmd_msg, rx_data, len);
 }
 
+/**
+ * @brief
+ *
+ * @param ic_count
+ * @param cmd_msg
+ * @param tx_data
+ * @param bytes_per_asic_register
+ */
 static void spi_write_all(uint8_t ic_count, command_msg_t cmd_msg,
                           uint8_t *tx_data, uint8_t bytes_per_asic_register) {
   uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
@@ -101,6 +179,15 @@ static void spi_write_all(uint8_t ic_count, command_msg_t cmd_msg,
   spi_write(len, tx_data);
 }
 
+/**
+ * @brief
+ *
+ * @param rx_data
+ * @param bytes_in_reg
+ * @param status
+ * @param index
+ * @return comm_status_t
+ */
 static comm_status_t handle_single_asic(const uint8_t *rx_data,
                                         uint8_t bytes_in_reg,
                                         asic_status_buffers_t *status,
@@ -110,42 +197,56 @@ static comm_status_t handle_single_asic(const uint8_t *rx_data,
   uint8_t *cmd_counter = &status->command_counter[index];
   uint8_t *pec_err = &status->pec_error_flags[index];
 
-  /* Extract command counter from second-to-last byte (upper 6 bits) */
   *cmd_counter = (uint8_t)(rx_data[bytes_in_reg - 2U] >> 2);
 
-  /* Reconstruct 10-bit PEC from last two bytes */
   rx_pec = (uint16_t)(((rx_data[bytes_in_reg - 2U] & 0x03U) << 8) |
                       rx_data[bytes_in_reg - 1U]);
 
-  /* Check PEC */
   comm_status_t pec_status = pec_check(rx_data, rx_pec, bytes_in_reg);
 
-  /* 0 = OK, 1 = PEC error (your existing convention) */
   *pec_err = (pec_status == COMM_OK) ? 0U : 1U;
   return pec_status;
 }
 
+/**
+ * @brief
+ *
+ * @param rx_data
+ * @param rx_pec
+ * @param bytes_in_reg
+ * @return comm_status_t
+ */
 static comm_status_t pec_check(const uint8_t *rx_data, uint16_t rx_pec,
                                uint8_t bytes_in_reg) {
   uint16_t calculated_pec =
       calc_PEC10(1U, (uint8_t)(bytes_in_reg - 2U), rx_data);
+
   return (rx_pec == calculated_pec) ? COMM_OK : COMM_INVALID_PEC_ERROR_FLAG;
 }
 
+/**
+ * @brief
+ *
+ * @param ic_count
+ * @param bytes_in_reg
+ * @param rx_data
+ * @param status
+ * @return comm_status_t
+ */
 static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
                                     uint8_t *rx_data,
                                     asic_status_buffers_t *status) {
-  comm_status_t overall = COMM_OK;
+
+  comm_status_t command_status = COMM_OK;
 
   for (uint8_t current_ic = 0U; current_ic < ic_count; ++current_ic) {
     const uint8_t *asic_data = &rx_data[current_ic * bytes_in_reg];
-    comm_status_t s =
+    comm_status_t current_status =
         handle_single_asic(asic_data, bytes_in_reg, status, current_ic);
 
-    if ((s != COMM_OK) && (overall == COMM_OK)) {
-      overall = s; /* preserve first error */
-    }
+    if (current_status != COMM_OK)
+      command_status = current_status;
   }
 
-  return overall;
+  return command_status;
 }
