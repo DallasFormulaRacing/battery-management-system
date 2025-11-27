@@ -13,7 +13,7 @@ static comm_status_t handle_single_asic(const uint8_t *rx_data,
                                         uint8_t index);
 
 static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
-                                    uint8_t *rx_data,
+                                    const uint8_t *rx_data,
                                     asic_status_buffers_t *status);
 
 static comm_status_t pec_check(const uint8_t *rx_data, uint16_t rx_pec,
@@ -114,15 +114,16 @@ comm_status_t bms_write_data_register(uint8_t ic_count,
     const uint8_t *src =
         &per_asic_data[(uint16_t)(current_ic - 1U) * bytes_per_asic_data];
 
-    for (uint8_t b = 0U; b < bytes_per_asic_data; ++b) {
-      frame[idx++] = src[b];
+    for (uint8_t byte_index = 0U; byte_index < bytes_per_asic_data;
+         ++byte_index) {
+      frame[idx++] = src[byte_index];
     }
 
     uint16_t data_pec = calc_PEC10(0U, bytes_per_asic_data, src);
 
     frame[idx++] = (uint8_t)(data_pec >> 8);
     frame[idx++] = (uint8_t)data_pec;
-  }
+  } // end for
 
   spi_write((uint8_t)total_frame_len, frame);
 
@@ -215,7 +216,7 @@ static comm_status_t pec_check(const uint8_t *rx_data, uint16_t rx_pec,
  * @return comm_status_t
  */
 static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
-                                    uint8_t *rx_data,
+                                    const uint8_t *rx_data,
                                     asic_status_buffers_t *status) {
 
   comm_status_t command_status = COMM_OK;
