@@ -46,8 +46,7 @@ void bms_set_dcc_discharge(cell_asic_ctx_t *asic_ctx);
 void bms_clear_dcc_discharge(cell_asic_ctx_t *asic_ctx);
 void bms_write_read_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx);
 void bms_gpio_spi_communication(cell_asic_ctx_t *asic_ctx);
-void bms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
-void bms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
+
 void bms_set_dtrng_dcto_value(cell_asic_ctx_t *asic_ctx);
 void bms_run_osc_mismatch_self_test(cell_asic_ctx_t *asic_ctx);
 void bms_run_thermal_shutdown_self_test(cell_asic_ctx_t *asic_ctx);
@@ -73,5 +72,9 @@ void bms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx);
 void bms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx);
 void bms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 void bms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
+
+// i dont think these are needed but im keeping them for now
+void bms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
+void bms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
 
 #endif
