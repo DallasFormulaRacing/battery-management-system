@@ -9,5 +9,5 @@ target_include_directories(bms_soc
 
 target_link_libraries(bms_soc
     PUBLIC
-        bms_core
+        bms_api
 )
