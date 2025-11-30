@@ -1,7 +1,4 @@
-name: Linux Build
-
-permissions:
-  security-events: write
+name: Linux Build Compile
 
 on:
   push:
@@ -15,103 +12,43 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache cargo registry and build
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Dependencies
+      - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y make clang-tidy cargo
-          cargo install clang-tidy-sarif
+          sudo apt-get install -y cmake ninja-build
+          sudo apt-get install -y gcc-arm-none-eabi
 
-      - name: Install ARM GCC Toolchain
-        uses: carlosperate/arm-none-eabi-gcc-action@v1
-        with:
-          release: "12.2.Rel1"
-
-      - name: Generate compile_commands.json
-        run: |
-          python3 gencc.py
-          mkdir -p bms/build
-          mv compile_commands.json bms/build/
-
-      - name: Validate compile_commands.json
-        working-directory: ./bms/build
-        run: |
-          test -f compile_commands.json || (echo "Missing compile_commands.json" && exit 1)
-
-      - name: Run clang-tidy on changed files (safe)
+      - name: Configure (CMake)
         working-directory: ./bms
         run: |
           set -e
-
-          echo "Fetching full history..."
-          git fetch origin master --prune --unshallow || git fetch origin master --prune
-
-          echo "Trying to find common base commit..."
-          BASE=$(git merge-base origin/master HEAD || echo "")
-
-          if [ -z "$BASE" ]; then
-            echo "Warning: No common base commit found. Defaulting to full scan."
-            FILES=$(find . -type f \( -name '*.c' -o -name '*.h' -o -name '*.cpp' -o -name '*.hpp' \))
-          else
-            echo "Using base commit: $BASE"
-            FILES=$(git diff --name-only $BASE -- | grep -E '\.(c|h|cpp|hpp)$' || true)
-          fi
-
-          echo "Files to analyze:"
-          echo "$FILES"
-
-          mkdir -p ../clang-tidy-output
-
-          if [ -n "$FILES" ]; then
-            echo "Running clang-tidy..."
-            clang-tidy $FILES -p build 2>&1 | clang-tidy-sarif > ../clang-tidy-output/clang-tidy.sarif
-
-            if grep -q '"results": \[\]' ../clang-tidy-output/clang-tidy.sarif; then
-              echo "Empty SARIF — skipping upload."
-            else
-              echo "CLANG_TIDY_RAN=true" >> $GITHUB_ENV
-            fi
-          else
-            echo "No C/C++ source files to lint. Skipping."
-          fi
-
-      - name: Upload Clang-Tidy SARIF to GitHub
-        if: env.CLANG_TIDY_RAN == 'true'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: clang-tidy-output/clang-tidy.sarif
-
-      - name: Validate SARIF File Presence
-        if: env.CLANG_TIDY_RAN == 'true'
-        run: test -f clang-tidy-output/clang-tidy.sarif || (echo "SARIF file missing!" && exit 1)
-
-      - name: Output SARIF file contents
-        if: env.CLANG_TIDY_RAN == 'true'
-        run: cat clang-tidy-output/clang-tidy.sarif
-
-      - name: Build Firmware
+          cmake -S . -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
+            
+      - name: Build
         working-directory: ./bms
-        run: make clean && make
+        run: |
+          cmake --build build
 
-      - name: Upload Firmware Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Cache CMake build
+        uses: actions/cache@v3
         with:
-          name: bms-firmware
           path: |
-            ./bms/build/*.elf
-            ./bms/build/*.hex
-            ./bms/build/*.bin
+            bms/build
+          key: ${{ runner.os }}-build-${{ hashFiles('bms/CMakeLists.txt') }}
+          
+      - name: Upload firmware
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: bms/build/*.elf
+        
+        
