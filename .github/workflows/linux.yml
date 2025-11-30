@@ -1,4 +1,4 @@
-name: Linux Build Compile
+name: linux
 
 on:
   push:
@@ -15,16 +15,22 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout Repository
+      - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Build Dependencies
+      - name: install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
-          sudo apt-get install -y gcc-arm-none-eabi
+          sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi
 
-      - name: Configure (CMake)
+      - name: cache cmake
+        uses: actions/cache@v3
+        with:
+          path: |
+            bms/build
+          key: ${{ runner.os }}-build-${{ hashFiles('bms/CMakeLists.txt') }}
+
+      - name: configure (cmake)
         working-directory: ./bms
         run: |
           set -e
@@ -32,21 +38,15 @@ jobs:
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
-            
-      - name: Build
+
+      - name: build
         working-directory: ./bms
         run: |
           cmake --build build
 
-      - name: Cache CMake build
-        uses: actions/cache@v3
-        with:
-          path: |
-            bms/build
-          key: ${{ runner.os }}-build-${{ hashFiles('bms/CMakeLists.txt') }}
-          
-      - name: Upload firmware
-        uses: actions/upload-artifact@v3
+      - name: upload firmware
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v5
         with:
           name: firmware
           path: bms/build/*.elf
