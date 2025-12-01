@@ -96,11 +96,9 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,
 }
 */
 
-void bms_read_data(uint8_t ic_count, cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                   uint8_t *data);
+void bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data);
 
-void bms_write_data(uint8_t ic_count, cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                    uint8_t *data);
+void bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data);
 
 /*
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,

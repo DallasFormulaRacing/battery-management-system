@@ -9,8 +9,7 @@
  * @param data
  * @return comm_status_t
  */
-void bms_read_data(uint8_t ic_count, cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                   uint8_t *data) {
+void bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data) {
   // TODO:
 }
 
@@ -23,8 +22,7 @@ void bms_read_data(uint8_t ic_count, cell_asic_ctx_t *asic_ctx, bms_op_t type,
  * @param data
  * @return comm_status_t
  */
-void bms_write_data(uint8_t ic_count, cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                    uint8_t *data) {
+void bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data) {
   // TODO
 
   /*
