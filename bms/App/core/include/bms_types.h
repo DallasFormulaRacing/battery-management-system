@@ -236,6 +236,7 @@ typedef struct {
 } aux_openwire_t;
 
 typedef struct {
+  uint8_t ic_count;
   bms_cfg_reg_a_t tx_cfg_a;
   bms_cfg_reg_a_t rx_cfg_a;
 

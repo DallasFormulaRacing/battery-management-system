@@ -17,5 +17,6 @@
     "files.associations": {
         "*.c": "c",
         "*.h": "c"
-    }
+    },
+    "makefile.configureOnOpen": false
 }

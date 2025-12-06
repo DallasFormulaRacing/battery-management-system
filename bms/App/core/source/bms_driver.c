@@ -1,4 +1,6 @@
 #include "bms_driver.h"
+#include <string.h>
+
 #define WAKEUP_DELAY 1 /* BMS ic wakeup delay  */
 #define TIM_EN 0
 
@@ -9,11 +11,12 @@
 SPI_HandleTypeDef *hspi_bms;
 UART_HandleTypeDef *huart_bms;
 I2C_HandleTypeDef *hi2c_bms;
+UART_HandleTypeDef *hlpuart_vcp;
 
 void handle_init() {
   hspi_bms = &hspi1;
-  huart_bms = &huart5;
   hi2c_bms = &hi2c1;
+  hlpuart_vcp = &hlpuart1;
 }
 
 void delay(uint32_t ms) { HAL_Delay(ms); }
@@ -40,6 +43,10 @@ void spi_read(uint16_t size, uint8_t *rx_data) {
   asic_cs_low();
   HAL_SPI_Receive(hspi_bms, rx_data, size, SPI_TIME_OUT);
   asic_cs_hi();
+}
+
+void print_over_uart(const char *str) {
+  HAL_UART_Transmit(hlpuart_vcp, (uint8_t *)str, strlen(str), UART_TIME_OUT);
 }
 
 #if TIM_EN

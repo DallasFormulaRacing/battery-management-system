@@ -1,17 +1,17 @@
 # ! App/core/CMakeLists.txt
 
-target_sources(bms_core
+target_sources(bms_api
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source/bms_driver.c
 )
 
-target_compile_definitions(bms_core
+target_compile_definitions(bms_api
     PUBLIC
         STM32G474xx
         USE_HAL_DRIVER
 )
 
-target_include_directories(bms_core
+target_include_directories(bms_api
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include      
 

@@ -16,11 +16,12 @@ extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi5;
-extern UART_HandleTypeDef huart4;
-extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef hlpuart1;
 
 #define CS_PIN GPIO_PIN_6
 #define GPIO_PORT GPIOB
+
+void handle_init(void);
 
 void delay(uint32_t ms);
 
@@ -41,6 +42,8 @@ void stop_timer(void);
 uint32_t get_tim_count(void);
 
 void asic_wakeup(uint8_t total_ic);
+
+void print_over_uart(const char *str);
 
 #endif
 /** @}*/

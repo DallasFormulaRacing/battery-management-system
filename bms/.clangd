@@ -2,6 +2,8 @@ CompileFlags:
   Add:
     - '-ferror-limit=0'
     - '-Wno-implicit-int'
+    - '--sysroot=/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi'
+    - '-isystem/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi/include'
   CompilationDatabase: build/Debug
 Diagnostics:
   Suppress:
