@@ -3,6 +3,9 @@
 
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "config.h"
+#include <stdint.h>
+#include <string.h>
 
 typedef struct {
   uint8_t ic_index;
@@ -23,10 +26,10 @@ void set_cfg_b_discharge_time_out_value(
 void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
                             pwm_duty_cycle_t duty_cycle);
 
-void parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
+void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_cfg_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
-void bms_parse_cfg_(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
-                    uint8_t *data);
+void bms_parse_cfg_grp(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+                       uint8_t *data);
 
 // --- cell & voltage parses ---
 void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
