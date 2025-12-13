@@ -31,7 +31,7 @@ typedef enum {
 typedef enum {
   RD_OFF = 0,
   RD_ON = 1,
-} read_device_enable_t; // RD
+} redundant_enable_t; // RD
 
 typedef enum {
   SINGLE = 0,
