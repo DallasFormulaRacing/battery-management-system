@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include "bms_types.h"
+#include "bms_enums.h"
 
 #define IC_COUNT_CHAIN 1 // this has to be at compile time.
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
