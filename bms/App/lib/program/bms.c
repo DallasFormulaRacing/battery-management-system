@@ -1,6 +1,6 @@
 #include "bms.h"
 
-typedef void (*state_handler_t)(bms_handle_t *hbms);
+typedef void (*state_handler_t)(bms_handler_t *hbms);
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
@@ -22,12 +22,19 @@ void bms_sm_init(bms_handler_t *hbms) {
 }
 
 void bms_sm_run(bms_handler_t *hbms) {
-  if (hbms->state.current_state != BMS_STATE_FAULT &&
-      bms_check_for_fault(hbms)) {
+  if (hbms->state.current_state != BMS_STATE_FAULT && bms_check_for_fault(hbms)) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
-
     return;
   }
 
   state_handlers[hbms->state.current_state](hbms);
 }
+
+void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
+  hbms->state.previous_state = hbms->state.current_state;
+  hbms->state.current_state = new_state;
+  hbms->state.state_entry_tick = HAL_GetTick();
+ 
+//todo: maybe reset flags here on transition
+}
+

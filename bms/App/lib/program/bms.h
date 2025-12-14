@@ -7,6 +7,11 @@
 #include "bms_types.h"
 #include "config.h"
 
+#define IDLE_POLLING_INTERVAL_MS 1000
+#define MEASUREMENT_POLLING_INTERVAL_MS 10
+#define FAULT_RETRY_COUNT 2
+#define CELL_BALANCING_CHECK_INTERVAL_MS 3000
+
 typedef enum {
   BMS_STATE_BOOT,
   BMS_STATE_INIT,
@@ -58,16 +63,16 @@ typedef struct {
 void bms_sm_init(bms_handler_t *hbms);
 void bms_sm_run(bms_handler_t *hbms);
 
-void bms_state_entry(bms_handle_t *hbms);
-void bms_state_init(bms_handle_t *hbms);
-void bms_state_idle(bms_handle_t *hbms);
-void bms_state_measure(bms_handle_t *hbms);
-void bms_state_charging(bms_handle_t *hbms);
-void bms_state_balancing(bms_handle_t *hbms);
-void bms_state_fault(bms_handle_t *hbms);
-void bms_state_sleep(bms_handle_t *hbms);
+void bms_state_entry(bms_handler_t *hbms);
+void bms_state_init(bms_handler_t *hbms);
+void bms_state_idle(bms_handler_t *hbms);
+void bms_state_measure(bms_handler_t *hbms);
+void bms_state_charging(bms_handler_t *hbms);
+void bms_state_balancing(bms_handler_t *hbms);
+void bms_state_fault(bms_handler_t *hbms);
+void bms_state_sleep(bms_handler_t *hbms);
 
-void bms_sm_transition(bms_handle_t *hbms, bms_state_t new_state);
-bool bms_check_for_fault(bms_handle_t *hbms);
+void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state);
+bool bms_check_for_fault(bms_handler_t *hbms);
 
 #endif
