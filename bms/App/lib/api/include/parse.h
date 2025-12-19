@@ -14,6 +14,19 @@ typedef struct {
   pwm_duty_cycle_t duty_cycle;
 } pwm_target_cell_ctl_t;
 
+typedef enum {
+  MEASURE_RAW = 0,
+  MEASURE_FILTERED,
+  MEASURE_AVG,
+  MEASURE_S,
+  MEASURE_F,
+} parse_measurement_type_t;
+
+typedef enum {
+  MEASURE_AUX_ADC = 0,
+  MEASURE_AUX_ADC_REDNT,
+} parse_adc_measurement_type_t;
+
 uint16_t set_ov_voltage_threshold(float volt);
 uint16_t set_uv_voltage_threshold(float volt);
 uint8_t make_cfg_a_flag(diagnostics_flags_for_x_t flag_d, flag_ctl_t flag);
@@ -41,9 +54,9 @@ void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
 void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
                       uint8_t *fcv_data);
 
-void bms_parse_aux(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
                    uint8_t *aux_data);
-void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
                          uint8_t *raux_data);
 
 // --- status parses ---
@@ -52,8 +65,8 @@ void bms_parse_status_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data);
-void bms_parse_status_(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
-                       uint8_t *data);
+void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
+                             cfg_reg_group_select_t grp, uint8_t *data);
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 

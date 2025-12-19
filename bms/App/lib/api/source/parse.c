@@ -2,6 +2,11 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 
+static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
+                                       cfg_reg_group_select_t grp,
+                                       const uint8_t *data, uint8_t curr_ic,
+                                       parse_measurement_type_t m_type);
+
 uint16_t set_ov_voltage_threshold(float volt) {
   uint16_t vov_value;
   uint8_t shift_bits = 12;
@@ -186,61 +191,504 @@ void bms_parse_cfg_grp(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
   }
 }
 
+static inline void parse_aux_register(cell_asic_ctx_t *asic_ctx,
+                                      aux_reg_group_select_t grp,
+                                      const uint8_t *data, uint8_t curr_ic,
+                                      parse_adc_measurement_type_t atype) {
+  // todo
+  voltage_readings_t *readings;
+
+  switch (atype) {
+  case MEASURE_AUX_ADC:
+    readings = &asic_ctx[curr_ic].aux.aux_voltages_array[0];
+    break;
+  case MEASURE_AUX_ADC_REDNT:
+    readings = &asic_ctx[curr_ic].rednt_aux.rednt_aux_voltages_array[0];
+    break;
+  }
+  switch (grp) {
+  case AUX_REG_GROUP_A: /* Aux Register group A */
+    readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[2] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case AUX_REG_GROUP_B: /* Aux Register group B */
+    readings[3] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[4] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[5] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case AUX_REG_GROUP_C: /* Aux Register group C */
+    readings[6] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[7] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[8] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case AUX_REG_GROUP_D: /* Aux Register group D */
+    readings[9] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[10] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[11] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case NO_AUX_REG_GROUP: /* Aux Register group ALL */
+    readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[2] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    readings[3] = (voltage_readings_t)(data[6] + (data[7] << 8));
+    readings[4] = (voltage_readings_t)(data[8] + (data[9] << 8));
+    readings[5] = (voltage_readings_t)(data[10] + (data[11] << 8));
+    readings[6] = (voltage_readings_t)(data[12] + (data[13] << 8));
+    readings[7] = (voltage_readings_t)(data[14] + (data[15] << 8));
+    readings[8] = (voltage_readings_t)(data[16] + (data[17] << 8));
+    readings[9] = (voltage_readings_t)(data[18] + (data[19] << 8));
+    readings[10] = (voltage_readings_t)(data[20] + (data[21] << 8));
+    readings[11] = (voltage_readings_t)(data[22] + (data[23] << 8));
+    break;
+
+  default:
+    break;
+  }
+}
+
+static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
+                                       cfg_reg_group_select_t grp,
+                                       const uint8_t *data, uint8_t curr_ic,
+                                       parse_measurement_type_t mtype) {
+  // todo
+  voltage_readings_t *readings;
+
+  switch (mtype) {
+  case MEASURE_RAW:
+    readings = &asic_ctx[curr_ic].cell.cell_voltages_array[0];
+    break;
+  case MEASURE_FILTERED:
+    readings = &asic_ctx[curr_ic].filtered_cell.filtered_cell_voltages_array[0];
+    break;
+  case MEASURE_AVG:
+    readings = &asic_ctx[curr_ic].avg_cell.avg_cell_voltages_array[0];
+    break;
+  case MEASURE_S:
+    readings = &asic_ctx[curr_ic].s_cell.s_cell_voltages_array[0];
+    break;
+  default:
+    break;
+  }
+
+  switch (grp) {
+  case CFG_REG_GROUP_A: /* Cell Register group A */
+    readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[2] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case CFG_REG_GROUP_B: /* Cell Register group B */
+    readings[3] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[4] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[5] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case CFG_REG_GROUP_C: /* Cell Register group C */
+    readings[6] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[7] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[8] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case CFG_REG_GROUP_D: /* Cell Register group D */
+    readings[9] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[10] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[11] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case CFG_REG_GROUP_E: /* Cell Register group E */
+    readings[12] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[13] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[14] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    break;
+
+  case CFG_REG_GROUP_F: /* Cell Register group F */
+    readings[15] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    break;
+
+  case ALL_CFG_REG_GROUPS: /* Cell Register group ALL */
+    readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
+    readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
+    readings[2] = (voltage_readings_t)(data[4] + (data[5] << 8));
+    readings[3] = (voltage_readings_t)(data[6] + (data[7] << 8));
+    readings[4] = (voltage_readings_t)(data[8] + (data[9] << 8));
+    readings[5] = (voltage_readings_t)(data[10] + (data[11] << 8));
+    readings[6] = (voltage_readings_t)(data[12] + (data[13] << 8));
+    readings[7] = (voltage_readings_t)(data[14] + (data[15] << 8));
+    readings[8] = (voltage_readings_t)(data[16] + (data[17] << 8));
+    readings[9] = (voltage_readings_t)(data[18] + (data[19] << 8));
+    readings[10] = (voltage_readings_t)(data[20] + (data[21] << 8));
+    readings[11] = (voltage_readings_t)(data[22] + (data[23] << 8));
+    readings[12] = (voltage_readings_t)(data[24] + (data[25] << 8));
+    readings[13] = (voltage_readings_t)(data[26] + (data[27] << 8));
+    readings[14] = (voltage_readings_t)(data[28] + (data[29] << 8));
+    readings[15] = (voltage_readings_t)(data[30] + (data[31] << 8));
+    break;
+
+  default:
+    break;
+  }
+}
+
 // --- cell & voltage parses ---
 void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
                     uint8_t *cv_data) {
   // TODO
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == ALL_CFG_REG_GROUPS) {
+    data_size = ADBMS_RDCVALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &cv_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_RAW);
+  }
 }
 
 void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
                         uint8_t *acv_data) {
   // TODO
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == ALL_CFG_REG_GROUPS) {
+    data_size = ADBMS_RDACALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &acv_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_AVG);
+  }
 }
 
 void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
                       uint8_t *scv_data) {
   // TODO
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == ALL_CFG_REG_GROUPS) {
+    data_size = ADBMS_RDSALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &scv_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_S);
+  }
 }
 
 void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
                       uint8_t *fcv_data) {
   // TODO
+
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == ALL_CFG_REG_GROUPS) {
+    data_size = ADBMS_RDFCALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &fcv_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_F);
+  }
 }
 
-void bms_parse_aux(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
                    uint8_t *aux_data) {
   // TODO
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == NO_AUX_REG_GROUP) {
+    data_size = ADBMS_RDASALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &aux_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_aux_register(asic_ctx, grp, data, curr_ic, MEASURE_AUX_ADC);
+  }
 }
 
-void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
                          uint8_t *raux_data) {
-  // TODO
+  uint8_t data_size;
+  uint8_t address = 0;
+  if (grp == NO_AUX_REG_GROUP) {
+    data_size = ADBMS_RDASALL_FRAME_SIZE;
+  } else {
+    data_size = ADBMS_RX_FRAME_BYTES;
+  }
+  // data = (uint8_t *)calloc(data_size, sizeof(uint8_t));
+  uint8_t data[data_size];
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    memcpy(&data[0], &raux_data[address], data_size);
+    address = ((curr_ic + 1) * (data_size));
+    parse_aux_register(asic_ctx, grp, data, curr_ic, MEASURE_AUX_ADC_REDNT);
+  }
 }
 
 // --- status parses ---
 void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  bms_stat_reg_a_t *status;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    status = &asic_ctx[curr_ic].stat_a;
+    mailbox = &asic_ctx[curr_ic].stat;
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    status->VREF2 =
+        (mailbox->rx_data_array[0] | (mailbox->rx_data_array[1] << 8));
+
+    status->ITMP =
+        (mailbox->rx_data_array[2] | (mailbox->rx_data_array[3] << 8));
+
+    status->VREF3 =
+        (mailbox->rx_data_array[4] | (mailbox->rx_data_array[5] << 8));
+  }
 }
 
 void bms_parse_status_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  bms_stat_reg_b_t *status;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    status = &asic_ctx[curr_ic].stat_b;
+    mailbox = &asic_ctx[curr_ic].stat;
+
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    status->VD = (mailbox->rx_data_array[0] | (mailbox->rx_data_array[1] << 8));
+
+    status->VA = (mailbox->rx_data_array[2] | (mailbox->rx_data_array[3] << 8));
+
+    status->VRES =
+        (mailbox->rx_data_array[4] | (mailbox->rx_data_array[5] << 8));
+  }
 }
 
 void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+
+  uint8_t address = 0;
+
+  bms_stat_reg_c_t *status;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    status = &asic_ctx[curr_ic].stat_c;
+    mailbox = &asic_ctx[curr_ic].stat;
+
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    status->CSxFLT =
+        (mailbox->rx_data_array[0] + (mailbox->rx_data_array[1] << 8));
+    status->OTP2_MED = (mailbox->rx_data_array[4] & 0x01);
+    status->OTP2_ED = ((mailbox->rx_data_array[4] & 0x02) >> 1);
+    status->OTP1_MED = ((mailbox->rx_data_array[4] & 0x04) >> 2);
+    status->OTP1_ED = ((mailbox->rx_data_array[4] & 0x08) >> 3);
+    status->VD_UV = ((mailbox->rx_data_array[4] & 0x10) >> 4);
+    status->VD_OV = ((mailbox->rx_data_array[4] & 0x20) >> 5);
+    status->VA_UV = ((mailbox->rx_data_array[4] & 0x40) >> 6);
+    status->VA_OV = ((mailbox->rx_data_array[4] & 0x80) >> 7);
+    status->OSC_CHK = (mailbox->rx_data_array[5] & 0x01);
+    status->TMODE_CHK = ((mailbox->rx_data_array[5] & 0x02) >> 1);
+    status->THSD = ((mailbox->rx_data_array[5] & 0x04) >> 2);
+    status->SLEEP = ((mailbox->rx_data_array[5] & 0x08) >> 3);
+    status->SPI_FLT = ((mailbox->rx_data_array[5] & 0x10) >> 4);
+    status->COMP = ((mailbox->rx_data_array[5] & 0x20) >> 5);
+    status->VDEL = ((mailbox->rx_data_array[5] & 0x40) >> 6);
+    status->VDE = ((mailbox->rx_data_array[5] & 0x80) >> 7);
+  }
 }
 
 void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+
+  uint8_t address = 0;
+  bms_stat_reg_d_t *status;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    status = &asic_ctx[curr_ic].stat_d;
+    mailbox = &asic_ctx[curr_ic].stat;
+
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    status->cell_undervoltage_array[0] = (mailbox->rx_data_array[0] & 0x01);
+    status->cell_overvoltage_array[0] =
+        ((mailbox->rx_data_array[0] & 0x02) >> 1);
+    status->cell_undervoltage_array[1] =
+        ((mailbox->rx_data_array[0] & 0x04) >> 2);
+    status->cell_overvoltage_array[1] =
+        ((mailbox->rx_data_array[0] & 0x08) >> 3);
+    status->cell_undervoltage_array[2] =
+        ((mailbox->rx_data_array[0] & 0x10) >> 4);
+    status->cell_overvoltage_array[2] =
+        ((mailbox->rx_data_array[0] & 0x20) >> 5);
+    status->cell_undervoltage_array[3] =
+        ((mailbox->rx_data_array[0] & 0x40) >> 6);
+    status->cell_overvoltage_array[3] =
+        ((mailbox->rx_data_array[0] & 0x80) >> 7);
+    /* uv, ov bits 5 to 8 status bits */
+    status->cell_undervoltage_array[4] = (mailbox->rx_data_array[1] & 0x01);
+    status->cell_overvoltage_array[4] =
+        ((mailbox->rx_data_array[1] & 0x02) >> 1);
+    status->cell_undervoltage_array[5] =
+        ((mailbox->rx_data_array[1] & 0x04) >> 2);
+    status->cell_overvoltage_array[5] =
+        ((mailbox->rx_data_array[1] & 0x08) >> 3);
+    status->cell_undervoltage_array[6] =
+        ((mailbox->rx_data_array[1] & 0x10) >> 4);
+    status->cell_overvoltage_array[6] =
+        ((mailbox->rx_data_array[1] & 0x20) >> 5);
+    status->cell_undervoltage_array[7] =
+        ((mailbox->rx_data_array[1] & 0x40) >> 6);
+    status->cell_overvoltage_array[7] =
+        ((mailbox->rx_data_array[1] & 0x80) >> 7);
+    /* uv, ov bits 9 to 12 status bits */
+    status->cell_undervoltage_array[8] = (mailbox->rx_data_array[2] & 0x01);
+    status->cell_overvoltage_array[8] =
+        ((mailbox->rx_data_array[2] & 0x02) >> 1);
+    status->cell_undervoltage_array[9] =
+        ((mailbox->rx_data_array[2] & 0x04) >> 2);
+    status->cell_overvoltage_array[9] =
+        ((mailbox->rx_data_array[2] & 0x08) >> 3);
+    status->cell_undervoltage_array[10] =
+        ((mailbox->rx_data_array[2] & 0x10) >> 4);
+    status->cell_overvoltage_array[10] =
+        ((mailbox->rx_data_array[2] & 0x20) >> 5);
+    status->cell_undervoltage_array[11] =
+        ((mailbox->rx_data_array[2] & 0x40) >> 6);
+    status->cell_overvoltage_array[11] =
+        ((mailbox->rx_data_array[2] & 0x80) >> 7);
+    /* uv, ov bits 13 to 16 status bits */
+    status->cell_undervoltage_array[12] = (mailbox->rx_data_array[3] & 0x01);
+    status->cell_overvoltage_array[12] =
+        ((mailbox->rx_data_array[3] & 0x02) >> 1);
+    status->cell_undervoltage_array[13] =
+        ((mailbox->rx_data_array[3] & 0x04) >> 2);
+    status->cell_overvoltage_array[13] =
+        ((mailbox->rx_data_array[3] & 0x08) >> 3);
+    status->cell_undervoltage_array[14] =
+        ((mailbox->rx_data_array[3] & 0x10) >> 4);
+    status->cell_overvoltage_array[14] =
+        ((mailbox->rx_data_array[3] & 0x20) >> 5);
+    status->cell_undervoltage_array[15] =
+        ((mailbox->rx_data_array[3] & 0x40) >> 6);
+    status->cell_overvoltage_array[15] =
+        ((mailbox->rx_data_array[3] & 0x80) >> 7);
+    /* ct and cts */
+    status->conversions_subcounter = (mailbox->rx_data_array[4] & 0x03);
+    status->conversion_counter = ((mailbox->rx_data_array[4] & 0xFC) >> 2);
+    /* oc_cntr */
+    status->osc_chk_counter = (mailbox->rx_data_array[5] & 0xFF);
+  }
 }
 
 void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  bms_stat_reg_e_t *status;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    status = &asic_ctx[curr_ic].stat_e;
+    mailbox = &asic_ctx[curr_ic].stat;
+
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    status->GPIOx = ((mailbox->rx_data_array[4] +
+                      ((mailbox->rx_data_array[5] & 0x03) << 8)));
+    status->REV = ((mailbox->rx_data_array[5] & 0xF0) >> 4);
+  }
 }
 
-void bms_parse_status_(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
-                       uint8_t *data) {
+void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
+                             cfg_reg_group_select_t grp, uint8_t *data) {
   // TODO
+  uint8_t status_c[ADBMS_RX_FRAME_BYTES];
+  uint8_t status_e[ADBMS_RX_FRAME_BYTES];
+  switch (grp) {
+  case CFG_REG_GROUP_A:
+    bms_parse_status_a(asic_ctx, &data[0]);
+    break;
+
+  case CFG_REG_GROUP_B:
+    bms_parse_status_b(asic_ctx, &data[0]);
+    break;
+
+  case CFG_REG_GROUP_C:
+    bms_parse_status_c(asic_ctx, &data[0]);
+    break;
+
+  case CFG_REG_GROUP_D:
+    bms_parse_status_d(asic_ctx, &data[0]);
+    break;
+
+  case CFG_REG_GROUP_E:
+    bms_parse_status_e(asic_ctx, &data[0]);
+    break;
+
+  case ALL_CFG_REG_GROUPS:
+    bms_parse_status_a(asic_ctx, &data[0]);
+    bms_parse_status_b(asic_ctx, &data[6]);
+    status_c[0] = data[12];
+    status_c[1] = data[13];
+    status_c[4] = data[14];
+    status_c[5] = data[15];
+    bms_parse_status_c(asic_ctx, &status_c[0]);
+    bms_parse_status_d(asic_ctx, &data[16]);
+    status_e[4] = data[22];
+    status_e[5] = data[23];
+    bms_parse_status_e(asic_ctx, &status_e[0]);
+    break;
+
+  default:
+    break;
+  }
 }
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
