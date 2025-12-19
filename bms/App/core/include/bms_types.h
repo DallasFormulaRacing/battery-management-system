@@ -117,6 +117,7 @@ typedef struct {
 typedef struct {
   uint16_t VREF2; // reference voltage 2
   uint16_t ITMP;  // internal die temperature
+  uint16_t VREF3; // reference voltage 3
 } bms_stat_reg_a_t;
 
 typedef struct {
@@ -170,6 +171,8 @@ typedef struct {
   uint8_t cell_overvoltage_array[ADBMS_NUM_CELLS_PER_IC];
   uint8_t cell_undervoltage_array[ADBMS_NUM_CELLS_PER_IC];
   uint8_t osc_chk_counter;
+  uint8_t conversion_counter : 6;
+  uint8_t conversions_subcounter : 2;
 } bms_stat_reg_d_t;
 
 typedef struct {

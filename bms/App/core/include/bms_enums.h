@@ -236,6 +236,14 @@ typedef enum {
 } cfg_reg_group_select_t; // GRP
 
 typedef enum {
+  AUX_REG_GROUP_A = 0x0,
+  AUX_REG_GROUP_B,
+  AUX_REG_GROUP_C,
+  AUX_REG_GROUP_D,
+  NO_AUX_REG_GROUP,
+} aux_reg_group_select_t; // AUX_GRP
+
+typedef enum {
   /* Register groups ----------------------------------------------------- */
   BMS_REG_CELL_VOLT,          // Cell voltage groups A–F (RDCVA..RDCVF)
   BMS_REG_AUX_VOLT,           // Aux voltage groups A–D (RDAUXA..RDAUXD)
