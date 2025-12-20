@@ -1,6 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
+#include "bms_enums.h"
 #include "bms_types.h"
 #include "comms.h"
 
@@ -96,9 +97,11 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,
 }
 */
 
-void bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data);
+comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
+                            cfg_reg_group_select_t group, uint8_t *data);
 
-void bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type, uint8_t *data);
+comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
+                             cfg_reg_group_select_t group, uint8_t *data);
 
 /*
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,
