@@ -236,6 +236,17 @@ typedef enum {
 } cfg_reg_group_select_t; // GRP
 
 typedef enum {
+  ASIC_MAILBOX_CONFIG_A,
+  ASIC_MAILBOX_CONFIG_B,
+  ASIC_MAILBOX_CLR_FLAG,
+  ASIC_MAILBOX_STAT,
+  ASIC_MAILBOX_COM,
+  ASIC_MAILBOX_PWM_A,
+  ASIC_MAILBOX_PWM_B,
+  ASIC_MAILBOX_RSID,
+} asic_mailbox_id_select_t;
+
+typedef enum {
   /* Register groups ----------------------------------------------------- */
   BMS_REG_CELL_VOLT,          // Cell voltage groups A–F (RDCVA..RDCVF)
   BMS_REG_AUX_VOLT,           // Aux voltage groups A–D (RDAUXA..RDAUXD)
