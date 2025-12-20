@@ -33,9 +33,9 @@ uint8_t make_cfg_a_flag(diagnostics_flags_for_x_t flag_d, flag_ctl_t flag);
 uint16_t make_cfg_a_gpo(bms_gpo_output_pin_t gpo,
                         bms_gpo_output_pin_state_t stat);
 uint16_t make_cfg_b_dcc_bit(discharge_cell_x_ctl_t dcc, dcc_bit_ctl_t dccbit);
-void set_cfg_b_discharge_time_out_value(
-    cell_asic_ctx_t *asic_ctx, discharge_timer_range_t timer_rang,
-    discharge_timer_timeout_t timeout_value);
+void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
+                                        discharge_timer_range_t range,
+                                        discharge_timer_timeout_t value);
 void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
                             pwm_duty_cycle_t duty_cycle);
 

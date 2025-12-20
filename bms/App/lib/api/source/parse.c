@@ -5,12 +5,12 @@
 static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
                                        cfg_reg_group_select_t group,
                                        const uint8_t *data, uint8_t curr_ic,
-                                       parse_measurement_type_t m_type);
+                                       parse_measurement_type_t mtype);
 
 uint16_t set_ov_voltage_threshold(float volt) {
   uint16_t vov_value;
   uint8_t shift_bits = 12;
-  volt = (volt - 1.5);
+  volt = (volt - 1.5F);
   volt = volt / (16 * 0.000150F);
   vov_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
   vov_value &= 0xFFF;
@@ -68,11 +68,7 @@ void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
     cfg_b = &asic_ctx[current_ic_idx].tx_cfg_b;
     cfg_b->DTRNG = range;
 
-    if (range == RANG_0_TO_63_MIN) {
-      cfg_b->DCTO = value;
-    }
-
-    else if (range == RANG_0_TO_16_8_HR) {
+    if (range == RANG_0_TO_63_MIN || range == RANG_0_TO_16_8_HR) {
       cfg_b->DCTO = value;
     }
   }
