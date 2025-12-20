@@ -12,6 +12,8 @@ static void write_to_all_ics(cell_asic_ctx_t *asic_ctx,
                              asic_mailbox_id_select_t mailbox);
 static asic_mailbox_t *get_mailbox(cell_asic_ctx_t *asic_ctx,
                                    asic_mailbox_id_select_t id);
+static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
+                             pwm_reg_group_select_t group);
 
 /**
  * @brief Read data from the BMS
@@ -31,10 +33,11 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 /**
  * @brief Write data to the BMS
  *
- * @param ic_count
  * @param asic_ctx
  * @param type
  * @param data
+ * // FIX: find way to switch between cfg and pwm groups
+ * @param group
  * @return comm_status_t
  */
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
@@ -44,6 +47,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
   switch (type) {
   case BMS_REG_CONFIG:
+    // FIX: group needs to be switchable
     if (config_a_b(asic_ctx, group) != COMM_OK) {
       return COMM_ERROR;
     };
@@ -55,7 +59,8 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     return COMM_OK;
     break;
   case BMS_REG_PWM:
-    if (config_a_b(asic_ctx, group) != COMM_OK) {
+    // FIX: group needs to be switchable
+    if (pwm_a_b(asic_ctx, group) != COMM_OK) {
       return COMM_ERROR;
     }
     return COMM_OK;
