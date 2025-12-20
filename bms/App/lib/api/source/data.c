@@ -39,13 +39,12 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
  */
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                              cfg_reg_group_select_t group, uint8_t *data) {
-  // TODO: remove haram calloc calls
-  // TODO: write handler functions in parse
   // NOTE: *data may not be needed???
+  // TODO: figure out what to do with *data
 
   switch (type) {
   case BMS_REG_CONFIG:
-    if (config_a_b(asic_ctx, group) == COMM_ERROR) {
+    if (config_a_b(asic_ctx, group) != COMM_OK) {
       return COMM_ERROR;
     };
     return COMM_OK;
@@ -53,6 +52,17 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   case BMS_REG_COMM:
     bms_create_comm(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_COM);
+    return COMM_OK;
+    break;
+  case BMS_REG_PWM:
+    if (config_a_b(asic_ctx, group) != COMM_OK) {
+      return COMM_ERROR;
+    }
+    return COMM_OK;
+    break;
+  case BMS_CMD_CLRFLAG:
+    bms_create_clrflag_data(asic_ctx);
+    write_to_all_ics(asic_ctx, ASIC_MAILBOX_CLR_FLAG);
     return COMM_OK;
     break;
   default:
@@ -72,6 +82,25 @@ static comm_status_t config_a_b(cell_asic_ctx_t *asic_ctx,
   case CFG_REG_GROUP_B:
     bms_create_cfg_b(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_CONFIG_B);
+    return COMM_OK;
+    break;
+  default:
+    return COMM_INVALID_COMMAND;
+    break;
+  }
+}
+
+static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
+                             pwm_reg_group_select_t group) {
+  switch (group) {
+  case PWM_REG_GROUP_A:
+    bms_create_pwm_a(asic_ctx);
+    write_to_all_ics(asic_ctx, ASIC_MAILBOX_PWM_A);
+    return COMM_OK;
+    break;
+  case PWM_REG_GROUP_B:
+    bms_create_pwm_a(asic_ctx);
+    write_to_all_ics(asic_ctx, ASIC_MAILBOX_PWM_B);
     return COMM_OK;
     break;
   default:
