@@ -117,6 +117,7 @@ typedef struct {
 typedef struct {
   uint16_t VREF2; // reference voltage 2
   uint16_t ITMP;  // internal die temperature
+  uint16_t VREF3; // reference voltage 3
 } bms_stat_reg_a_t;
 
 typedef struct {
@@ -170,6 +171,8 @@ typedef struct {
   uint8_t cell_overvoltage_array[ADBMS_NUM_CELLS_PER_IC];
   uint8_t cell_undervoltage_array[ADBMS_NUM_CELLS_PER_IC];
   uint8_t osc_chk_counter;
+  uint8_t conversion_counter : 6;
+  uint8_t conversions_subcounter : 2;
 } bms_stat_reg_d_t;
 
 typedef struct {
@@ -178,11 +181,11 @@ typedef struct {
 } bms_stat_reg_e_t;
 
 typedef struct {
-  uint8_t pwm_channel_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
+  uint8_t pwm_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
 } pwm_reg_a_t;
 
 typedef struct {
-  uint8_t pwm_channel_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
+  uint8_t pwm_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
 } pwm_reg_b_t;
 
 typedef struct {
@@ -276,7 +279,7 @@ typedef struct {
   asic_mailbox_t pwm_b;
   asic_mailbox_t rsid;
 
-  error_detection_t cccrc;
+  error_detection_t crc_err;
   aux_openwire_t gpio;
   cell_openwire_t owcell;
   diag_test_t diag_result;

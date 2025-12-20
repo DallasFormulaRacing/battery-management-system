@@ -236,7 +236,7 @@ typedef enum {
 } cfg_reg_group_select_t; // GRP
 
 typedef enum {
-  ASIC_MAILBOX_CONFIG_A,
+  ASIC_MAILBOX_CONFIG_A = 0x0,
   ASIC_MAILBOX_CONFIG_B,
   ASIC_MAILBOX_CLR_FLAG,
   ASIC_MAILBOX_STAT,
@@ -245,6 +245,19 @@ typedef enum {
   ASIC_MAILBOX_PWM_B,
   ASIC_MAILBOX_RSID,
 } asic_mailbox_id_select_t;
+
+typedef enum {
+  AUX_REG_GROUP_A = 0x0,
+  AUX_REG_GROUP_B,
+  AUX_REG_GROUP_C,
+  AUX_REG_GROUP_D,
+  NO_AUX_REG_GROUP,
+} aux_reg_group_select_t; // AUX_GRP
+
+typedef enum {
+  PWM_REG_GROUP_A = 0x0,
+  PWM_REG_GROUP_B,
+} pwm_reg_group_select_t; // AUX_GRP
 
 typedef enum {
   /* Register groups ----------------------------------------------------- */
