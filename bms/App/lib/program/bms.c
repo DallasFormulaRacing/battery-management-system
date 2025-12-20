@@ -22,7 +22,8 @@ void bms_sm_init(bms_handler_t *hbms) {
 }
 
 void bms_sm_run(bms_handler_t *hbms) {
-  if (hbms->state.current_state != BMS_STATE_FAULT && bms_check_for_fault(hbms)) {
+  if (hbms->state.current_state != BMS_STATE_FAULT &&
+      bms_check_for_fault(hbms)) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
     return;
   }
@@ -34,7 +35,31 @@ void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
   hbms->state.previous_state = hbms->state.current_state;
   hbms->state.current_state = new_state;
   hbms->state.state_entry_tick = HAL_GetTick();
- 
-//todo: maybe reset flags here on transition
+
+  if (new_state != BMS_STATE_MEASURE) {
+    hbms->config->adc->continuous_measurement = SINGLE;
+  }
+  if (new_state != BMS_STATE_FAULT) {
+    hbms->state.error_code = BMS_ERR_NONE;
+    hbms->state.fault_flags = 0;
+  }
 }
 
+void bms_state_entry(bms_handler_t *hbms) {
+  /*
+  this function needs to wake up all internal STM32 hardware peripherals
+
+
+  mcu_peripheral_init() <- need to be implemented
+  transition state: entry -> init
+
+  why is this a separate state from init?
+  we want to separate ADBMS and MCU initialization
+  */
+}
+
+void bms_state_init(bms_handler_t *hbms) {
+  /*
+  this function needs to initialize the ADBMS
+  */
+}

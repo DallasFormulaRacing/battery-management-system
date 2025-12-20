@@ -2,6 +2,7 @@ Checks: >
   -*,
   readability-*,
   bugprone-*,
+  -bugprone-easily-swappable-parameters,
   clang-analyzer-*,
   clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   readability-misleading-indentation,
