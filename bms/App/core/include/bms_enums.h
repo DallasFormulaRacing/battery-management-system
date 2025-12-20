@@ -31,7 +31,7 @@ typedef enum {
 typedef enum {
   RD_OFF = 0,
   RD_ON = 1,
-} read_device_enable_t; // RD
+} redundant_enable_t; // RD
 
 typedef enum {
   SINGLE = 0,
@@ -234,6 +234,19 @@ typedef enum {
   CFG_REG_GROUP_F,
   NO_CFG_REG_GROUP,
 } cfg_reg_group_select_t; // GRP
+
+typedef enum {
+  AUX_REG_GROUP_A = 0x0,
+  AUX_REG_GROUP_B,
+  AUX_REG_GROUP_C,
+  AUX_REG_GROUP_D,
+  NO_AUX_REG_GROUP,
+} aux_reg_group_select_t; // AUX_GRP
+
+typedef enum {
+  PWM_REG_GROUP_A = 0x0,
+  PWM_REG_GROUP_B,
+} pwm_reg_group_select_t; // AUX_GRP
 
 typedef enum {
   /* Register groups ----------------------------------------------------- */

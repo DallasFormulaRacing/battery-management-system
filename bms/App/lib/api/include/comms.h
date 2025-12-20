@@ -29,11 +29,13 @@ typedef enum {
 
 void bms_send_command(const command_t tx_cmd);
 
-comm_status_t bms_read_data_register(uint8_t ic_count, command_t command_bytes,
-                                     asic_status_buffers_t *asic_status_buffers,
-                                     uint8_t bytes_per_asic_register);
+comm_status_t bms_read_register_spi(uint8_t ic_count, command_t command_bytes,
+                                    asic_status_buffers_t *asic_status_buffers,
+                                    uint8_t bytes_per_asic_register);
 
-comm_status_t bms_write_data_register(uint8_t ic_count, command_t command_bytes,
-                                      uint8_t *data);
+comm_status_t bms_write_register_spi(uint8_t ic_count,
+                                     const command_t command_bytes,
+                                     const uint8_t *per_asic_data,
+                                     uint8_t bytes_per_asic_data);
 
 #endif

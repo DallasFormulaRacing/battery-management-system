@@ -14,6 +14,11 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
+
+set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
+set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
+
 # Sources
 
 add_subdirectory(App)
@@ -38,7 +43,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        bms_core
+        bms_api
 )
 
 
@@ -65,6 +70,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -mfloat-abi=hard
     -ffunction-sections
     -fdata-sections
+    --sysroot=/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
