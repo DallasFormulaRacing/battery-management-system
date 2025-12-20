@@ -41,23 +41,23 @@ void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
 
 void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_cfg_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
-void bms_parse_cfg_grp(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
-                       uint8_t *data);
+void bms_parse_cfg_group(cell_asic_ctx_t *asic_ctx,
+                         cfg_reg_group_select_t group, uint8_t *data);
 
 // --- cell & voltage parses ---
-void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                     uint8_t *cv_data);
-void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                         uint8_t *acv_data);
-void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                       uint8_t *scv_data);
-void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                       uint8_t *fcv_data);
 
-void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
+void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t group,
                    uint8_t *aux_data);
-void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
-                         uint8_t *raux_data);
+void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx,
+                         aux_reg_group_select_t group, uint8_t *raux_data);
 
 // --- status parses ---
 void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
@@ -66,14 +66,14 @@ void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
-                             cfg_reg_group_select_t grp, uint8_t *data);
+                             cfg_reg_group_select_t group, uint8_t *data);
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 
 // --- pwm parses ---
 void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
-void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data);
 
 // --- create helpers ---

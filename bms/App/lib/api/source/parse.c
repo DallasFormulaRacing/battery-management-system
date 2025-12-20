@@ -3,7 +3,7 @@
 #include "bms_types.h"
 
 static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
-                                       cfg_reg_group_select_t grp,
+                                       cfg_reg_group_select_t group,
                                        const uint8_t *data, uint8_t curr_ic,
                                        parse_measurement_type_t m_type);
 
@@ -58,19 +58,22 @@ uint16_t make_cfg_b_dcc_bit(discharge_cell_x_ctl_t dcc, dcc_bit_ctl_t dccbit) {
   return dcc_value;
 }
 
-void set_cfg_b_discharge_time_out_value(
-    cell_asic_ctx_t *asic_ctx, discharge_timer_range_t timer_rang,
-    discharge_timer_timeout_t timeout_value) {
+void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
+                                        discharge_timer_range_t range,
+                                        discharge_timer_timeout_t value) {
+
+  bms_cfg_reg_b_t *cfg_b;
   for (uint8_t current_ic_idx = 0; current_ic_idx < asic_ctx->ic_count;
        current_ic_idx++) {
-    asic_ctx[current_ic_idx].tx_cfg_b.DTRNG = timer_rang;
+    cfg_b = &asic_ctx[current_ic_idx].tx_cfg_b;
+    cfg_b->DTRNG = range;
 
-    if (timer_rang == RANG_0_TO_63_MIN) {
-      asic_ctx[current_ic_idx].tx_cfg_b.DCTO = timeout_value;
+    if (range == RANG_0_TO_63_MIN) {
+      cfg_b->DCTO = value;
     }
 
-    else if (timer_rang == RANG_0_TO_16_8_HR) {
-      asic_ctx[current_ic_idx].tx_cfg_b.DCTO = timeout_value;
+    else if (range == RANG_0_TO_16_8_HR) {
+      cfg_b->DCTO = value;
     }
   }
 }
@@ -87,97 +90,68 @@ void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
          current_pwm_channel_idx < ADBMS_NUM_PWMA_CHANNELS;
          current_pwm_channel_idx++) {
       asic_ctx[current_ic_idx]
-          .pwm_ctl_a.pwm_channel_a_ctl_array[current_pwm_channel_idx] =
-          duty_cycle;
+          .pwm_ctl_a.pwm_a_ctl_array[current_pwm_channel_idx] = duty_cycle;
     }
     for (uint8_t current_pwm_channel_idx = 0;
          current_pwm_channel_idx < ADBMS_NUM_PWMB_CHANNELS;
          current_pwm_channel_idx++) {
       asic_ctx[current_ic_idx]
-          .pwm_ctl_b.pwm_channel_b_ctl_array[current_pwm_channel_idx] =
-          duty_cycle;
+          .pwm_ctl_b.pwm_b_ctl_array[current_pwm_channel_idx] = duty_cycle;
     }
   }
 }
 
 void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   uint8_t address = 0;
+  bms_cfg_reg_a_t *cfg_a;
+  asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    memcpy(&asic_ctx[curr_ic].configa.rx_data_array[0], &data[address],
-           ADBMS_RX_FRAME_BYTES);
+    cfg_a = &asic_ctx[curr_ic].rx_cfg_a; // nickname
+    mailbox = &asic_ctx[curr_ic].configa;
+    memcpy(&mailbox->rx_data_array[0], &data[address], ADBMS_RX_FRAME_BYTES);
     address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
 
-    asic_ctx[curr_ic].rx_cfg_a.CTH =
-        (asic_ctx[curr_ic].configa.rx_data_array[0] & 0x07) >> 0;
-
-    asic_ctx[curr_ic].rx_cfg_a.REFON =
-        (asic_ctx[curr_ic].configa.rx_data_array[0] & 0x80) >> 7;
-
-    asic_ctx[curr_ic].rx_cfg_a.FLAG_D =
-        (asic_ctx[curr_ic].configa.rx_data_array[1] & 0xFF) >> 0;
-
-    asic_ctx[curr_ic].rx_cfg_a.SOAKON =
-        (asic_ctx[curr_ic].configa.rx_data_array[2] & 0x80) >> 7;
-
-    asic_ctx[curr_ic].rx_cfg_a.OWRNG =
-        (asic_ctx[curr_ic].configa.rx_data_array[2] & 0x40) >> 7;
-
-    asic_ctx[curr_ic].rx_cfg_a.OWA =
-        (asic_ctx[curr_ic].configa.rx_data_array[2] & 0x38) >> 3;
-
-    asic_ctx[curr_ic].rx_cfg_a.GPIOx =
-        (asic_ctx[curr_ic].configa.rx_data_array[3] & 0xFF) |
-        ((asic_ctx[curr_ic].configa.rx_data_array[4] & 0x03) << 8);
-
-    asic_ctx[curr_ic].rx_cfg_a.SNAP_ST =
-        (asic_ctx[curr_ic].configa.rx_data_array[5] & 0x20) >> 5;
-
-    asic_ctx[curr_ic].rx_cfg_a.MUTE_ST =
-        (asic_ctx[curr_ic].configa.rx_data_array[5] & 0x10) >> 4;
-
-    asic_ctx[curr_ic].rx_cfg_a.COMM_BK =
-        (asic_ctx[curr_ic].configa.rx_data_array[5] & 0x08) >> 3;
-
-    asic_ctx[curr_ic].rx_cfg_a.FC =
-        (asic_ctx[curr_ic].configa.rx_data_array[5] & 0x07) >> 0;
+    cfg_a->CTH = (mailbox->rx_data_array[0] & 0x07) >> 0;
+    cfg_a->REFON = (mailbox->rx_data_array[0] & 0x80) >> 7;
+    cfg_a->FLAG_D = (mailbox->rx_data_array[1] & 0xFF) >> 0;
+    cfg_a->SOAKON = (mailbox->rx_data_array[2] & 0x80) >> 7;
+    cfg_a->OWRNG = (mailbox->rx_data_array[2] & 0x40) >> 7;
+    cfg_a->OWA = (mailbox->rx_data_array[2] & 0x38) >> 3;
+    cfg_a->GPIOx = (mailbox->rx_data_array[3] & 0xFF) |
+                   ((mailbox->rx_data_array[4] & 0x03) << 8);
+    cfg_a->SNAP_ST = (mailbox->rx_data_array[5] & 0x20) >> 5;
+    cfg_a->MUTE_ST = (mailbox->rx_data_array[5] & 0x10) >> 4;
+    cfg_a->COMM_BK = (mailbox->rx_data_array[5] & 0x08) >> 3;
+    cfg_a->FC = (mailbox->rx_data_array[5] & 0x07) >> 0;
   }
 }
 
 void bms_parse_cfg_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   uint8_t address = 0;
+  bms_cfg_reg_b_t *cfg_b;
+  asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    memcpy(&asic_ctx[curr_ic].configb.rx_data_array[0], &data[address],
-           ADBMS_RX_FRAME_BYTES);
+    cfg_b = &asic_ctx[curr_ic].rx_cfg_b; // nickname
+    mailbox = &asic_ctx[curr_ic].configb;
+    memcpy(&mailbox->rx_data_array[0], &data[address], ADBMS_RX_FRAME_BYTES);
 
     address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
 
-    asic_ctx[curr_ic].rx_cfg_b.VUV =
-        ((asic_ctx[curr_ic].configb.rx_data_array[0]) |
-         ((asic_ctx[curr_ic].configb.rx_data_array[1] & 0x0F) << 8));
-
-    asic_ctx[curr_ic].rx_cfg_b.VOV =
-        (asic_ctx[curr_ic].configb.rx_data_array[2] << 4) +
-        ((asic_ctx[curr_ic].configb.rx_data_array[1] & 0xF0) >> 4);
-
-    asic_ctx[curr_ic].rx_cfg_b.DTMEN =
-        (((asic_ctx[curr_ic].configb.rx_data_array[3] & 0x80) >> 7));
-
-    asic_ctx[curr_ic].rx_cfg_b.DTRNG =
-        ((asic_ctx[curr_ic].configb.rx_data_array[3] & 0x40) >> 6);
-
-    asic_ctx[curr_ic].rx_cfg_b.DCTO =
-        ((asic_ctx[curr_ic].configb.rx_data_array[3] & 0x3F));
-
-    asic_ctx[curr_ic].rx_cfg_b.DCCx =
-        ((asic_ctx[curr_ic].configb.rx_data_array[4]) |
-         ((asic_ctx[curr_ic].configb.rx_data_array[5] & 0xFF) << 8));
+    cfg_b->VUV = ((mailbox->rx_data_array[0]) |
+                  ((mailbox->rx_data_array[1] & 0x0F) << 8));
+    cfg_b->VOV = (mailbox->rx_data_array[2] << 4) +
+                 ((mailbox->rx_data_array[1] & 0xF0) >> 4);
+    cfg_b->DTMEN = (((mailbox->rx_data_array[3] & 0x80) >> 7));
+    cfg_b->DTRNG = ((mailbox->rx_data_array[3] & 0x40) >> 6);
+    cfg_b->DCTO = ((mailbox->rx_data_array[3] & 0x3F));
+    cfg_b->DCCx = ((mailbox->rx_data_array[4]) |
+                   ((mailbox->rx_data_array[5] & 0xFF) << 8));
   }
 }
 
-void bms_parse_cfg_grp(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
-                       uint8_t *data) {
-  // TODO
-  switch (grp) {
+void bms_parse_cfg_group(cell_asic_ctx_t *asic_ctx,
+                         cfg_reg_group_select_t group, uint8_t *data) {
+  switch (group) {
   case CFG_REG_GROUP_A:
     bms_parse_cfg_a(asic_ctx, data);
     break;
@@ -192,10 +166,9 @@ void bms_parse_cfg_grp(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
 }
 
 static inline void parse_aux_register(cell_asic_ctx_t *asic_ctx,
-                                      aux_reg_group_select_t grp,
+                                      aux_reg_group_select_t group,
                                       const uint8_t *data, uint8_t curr_ic,
                                       parse_adc_measurement_type_t atype) {
-  // todo
   voltage_readings_t *readings;
 
   switch (atype) {
@@ -206,7 +179,7 @@ static inline void parse_aux_register(cell_asic_ctx_t *asic_ctx,
     readings = &asic_ctx[curr_ic].rednt_aux.rednt_aux_voltages_array[0];
     break;
   }
-  switch (grp) {
+  switch (group) {
   case AUX_REG_GROUP_A: /* Aux Register group A */
     readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
     readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
@@ -252,10 +225,9 @@ static inline void parse_aux_register(cell_asic_ctx_t *asic_ctx,
 }
 
 static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
-                                       cfg_reg_group_select_t grp,
+                                       cfg_reg_group_select_t group,
                                        const uint8_t *data, uint8_t curr_ic,
                                        parse_measurement_type_t mtype) {
-  // todo
   voltage_readings_t *readings;
 
   switch (mtype) {
@@ -275,7 +247,7 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     break;
   }
 
-  switch (grp) {
+  switch (group) {
   case CFG_REG_GROUP_A: /* Cell Register group A */
     readings[0] = (voltage_readings_t)(data[0] + (data[1] << 8));
     readings[1] = (voltage_readings_t)(data[2] + (data[3] << 8));
@@ -335,12 +307,11 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
 }
 
 // --- cell & voltage parses ---
-void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                     uint8_t *cv_data) {
-  // TODO
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == ALL_CFG_REG_GROUPS) {
+  if (group == ALL_CFG_REG_GROUPS) {
     data_size = ADBMS_RDCVALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -351,16 +322,15 @@ void bms_parse_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &cv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_RAW);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_RAW);
   }
 }
 
-void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                         uint8_t *acv_data) {
-  // TODO
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == ALL_CFG_REG_GROUPS) {
+  if (group == ALL_CFG_REG_GROUPS) {
     data_size = ADBMS_RDACALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -371,16 +341,15 @@ void bms_parse_avg_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &acv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_AVG);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_AVG);
   }
 }
 
-void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                       uint8_t *scv_data) {
-  // TODO
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == ALL_CFG_REG_GROUPS) {
+  if (group == ALL_CFG_REG_GROUPS) {
     data_size = ADBMS_RDSALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -391,17 +360,15 @@ void bms_parse_s_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &scv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_S);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_S);
   }
 }
 
-void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
                       uint8_t *fcv_data) {
-  // TODO
-
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == ALL_CFG_REG_GROUPS) {
+  if (group == ALL_CFG_REG_GROUPS) {
     data_size = ADBMS_RDFCALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -412,16 +379,15 @@ void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &fcv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, grp, data, curr_ic, MEASURE_F);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_F);
   }
 }
 
-void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
+void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t group,
                    uint8_t *aux_data) {
-  // TODO
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == NO_AUX_REG_GROUP) {
+  if (group == NO_AUX_REG_GROUP) {
     data_size = ADBMS_RDASALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -432,15 +398,15 @@ void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &aux_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_aux_register(asic_ctx, grp, data, curr_ic, MEASURE_AUX_ADC);
+    parse_aux_register(asic_ctx, group, data, curr_ic, MEASURE_AUX_ADC);
   }
 }
 
-void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
-                         uint8_t *raux_data) {
+void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx,
+                         aux_reg_group_select_t group, uint8_t *raux_data) {
   uint8_t data_size;
   uint8_t address = 0;
-  if (grp == NO_AUX_REG_GROUP) {
+  if (group == NO_AUX_REG_GROUP) {
     data_size = ADBMS_RDASALL_FRAME_SIZE;
   } else {
     data_size = ADBMS_RX_FRAME_BYTES;
@@ -451,13 +417,12 @@ void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t grp,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &raux_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_aux_register(asic_ctx, grp, data, curr_ic, MEASURE_AUX_ADC_REDNT);
+    parse_aux_register(asic_ctx, group, data, curr_ic, MEASURE_AUX_ADC_REDNT);
   }
 }
 
 // --- status parses ---
 void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
   uint8_t address = 0;
   bms_stat_reg_a_t *status;
   asic_mailbox_t *mailbox;
@@ -481,7 +446,6 @@ void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
   uint8_t address = 0;
   bms_stat_reg_b_t *status;
   asic_mailbox_t *mailbox;
@@ -504,7 +468,6 @@ void bms_parse_status_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
 
   uint8_t address = 0;
 
@@ -541,8 +504,6 @@ void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
-
   uint8_t address = 0;
   bms_stat_reg_d_t *status;
   asic_mailbox_t *mailbox;
@@ -627,7 +588,6 @@ void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
   uint8_t address = 0;
   bms_stat_reg_e_t *status;
   asic_mailbox_t *mailbox;
@@ -647,11 +607,10 @@ void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
-                             cfg_reg_group_select_t grp, uint8_t *data) {
-  // TODO
+                             cfg_reg_group_select_t group, uint8_t *data) {
   uint8_t status_c[ADBMS_RX_FRAME_BYTES];
   uint8_t status_e[ADBMS_RX_FRAME_BYTES];
-  switch (grp) {
+  switch (group) {
   case CFG_REG_GROUP_A:
     bms_parse_status_a(asic_ctx, &data[0]);
     break;
@@ -675,7 +634,7 @@ void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
   case ALL_CFG_REG_GROUPS:
     bms_parse_status_a(asic_ctx, &data[0]);
     bms_parse_status_b(asic_ctx, &data[6]);
-    status_c[0] = data[12];
+    status_c[0] = data[12]; // why
     status_c[1] = data[13];
     status_c[4] = data[14];
     status_c[5] = data[15];
@@ -693,47 +652,228 @@ void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  comms_reg_t *comms;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    comms = &asic_ctx[curr_ic].comm;
+    mailbox = &asic_ctx[curr_ic].com;
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    comms->initial_comm_array[0] = ((mailbox->rx_data_array[0] & 0xF0) >> 4);
+    comms->final_comm_array[0] = (mailbox->rx_data_array[0] & 0x0F);
+    comms->comm_data_array[0] = (mailbox->rx_data_array[1]);
+    comms->initial_comm_array[1] = ((mailbox->rx_data_array[2] & 0xF0) >> 4);
+    comms->final_comm_array[1] = (mailbox->rx_data_array[2] & 0x0F);
+    comms->comm_data_array[1] = (mailbox->rx_data_array[3]);
+    comms->initial_comm_array[2] = ((mailbox->rx_data_array[4] & 0xF0) >> 4);
+    comms->final_comm_array[2] = (mailbox->rx_data_array[4] & 0x0F);
+    comms->comm_data_array[2] = (mailbox->rx_data_array[5]);
+    comms->final_comm_array[2] = (mailbox->rx_data_array[4] & 0x0F);
+  }
 }
 
 // --- pwm parses ---
 void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  pwm_reg_a_t *pwm;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    pwm = &asic_ctx[curr_ic].pwm_ctl_a;
+    mailbox = &asic_ctx[curr_ic].stat;
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    pwm->pwm_a_ctl_array[0] = (mailbox->rx_data_array[0] & 0x0F);
+    pwm->pwm_a_ctl_array[1] = ((mailbox->rx_data_array[0] & 0xF0) >> 4);
+    pwm->pwm_a_ctl_array[2] = (mailbox->rx_data_array[1] & 0x0F);
+    pwm->pwm_a_ctl_array[3] = ((mailbox->rx_data_array[1] & 0xF0) >> 4);
+    pwm->pwm_a_ctl_array[4] = (mailbox->rx_data_array[2] & 0x0F);
+    pwm->pwm_a_ctl_array[5] = ((mailbox->rx_data_array[2] & 0xF0) >> 4);
+    pwm->pwm_a_ctl_array[6] = (mailbox->rx_data_array[3] & 0x0F);
+    pwm->pwm_a_ctl_array[7] = ((mailbox->rx_data_array[3] & 0xF0) >> 4);
+    pwm->pwm_a_ctl_array[8] = (mailbox->rx_data_array[4] & 0x0F);
+    pwm->pwm_a_ctl_array[9] = ((mailbox->rx_data_array[4] & 0xF0) >> 4);
+    pwm->pwm_a_ctl_array[10] = (mailbox->rx_data_array[5] & 0x0F);
+    pwm->pwm_a_ctl_array[11] = ((mailbox->rx_data_array[5] & 0xF0) >> 4);
+  }
 }
 
 void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+  uint8_t address = 0;
+  pwm_reg_b_t *pwm;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    pwm = &asic_ctx[curr_ic].pwm_ctl_b;
+    mailbox = &asic_ctx[curr_ic].pwmb;
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    pwm->pwm_b_ctl_array[0] = (mailbox->rx_data_array[0] & 0x0F);
+    pwm->pwm_b_ctl_array[1] = ((mailbox->rx_data_array[0] & 0xF0) >> 4);
+    pwm->pwm_b_ctl_array[2] = (mailbox->rx_data_array[1] & 0x0F);
+    pwm->pwm_b_ctl_array[3] = ((mailbox->rx_data_array[1] & 0xF0) >> 4);
+  }
 }
 
-void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t grp,
+void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data) {
   // TODO
+  switch (group) {
+  case PWM_REG_GROUP_A:
+    bms_parse_pwm_a(asic_ctx, data);
+    break;
+
+  case PWM_REG_GROUP_B:
+    bms_parse_pwm_b(asic_ctx, data);
+    break;
+
+  default:
+    break;
+  }
 }
 
 // --- create helpers ---
 void bms_create_cfg_a(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+  bms_cfg_reg_a_t *cfg_a;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    cfg_a = &asic_ctx[curr_ic].rx_cfg_a;
+    mailbox = &asic_ctx[curr_ic].configa;
+
+    mailbox->tx_data_array[0] =
+        (((cfg_a->REFON & 0x01) << 7) | (cfg_a->CTH & 0x07));
+    mailbox->tx_data_array[1] = (cfg_a->FLAG_D & 0xFF);
+    mailbox->tx_data_array[2] =
+        (((cfg_a->SOAKON & 0x01) << 7) | ((cfg_a->OWRNG & 0x01) << 6) |
+         ((cfg_a->OWA & 0x07) << 3));
+    mailbox->tx_data_array[3] = ((cfg_a->GPIOx & 0x00FF));
+    mailbox->tx_data_array[4] = ((cfg_a->GPIOx & 0x0300) >> 8);
+    mailbox->tx_data_array[5] =
+        (((cfg_a->SNAP_ST & 0x01) << 5) | ((cfg_a->MUTE_ST & 0x01) << 4) |
+         ((cfg_a->COMM_BK & 0x01) << 3) | (cfg_a->FC & 0x07));
+  }
 }
 
 void bms_create_cfg_b(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+  bms_cfg_reg_b_t *cfg_b;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    cfg_b = &asic_ctx[curr_ic].rx_cfg_b;
+    mailbox = &asic_ctx[curr_ic].configb;
+
+    mailbox->tx_data_array[0] = cfg_b->VUV;
+
+    mailbox->tx_data_array[1] =
+        (((cfg_b->VOV & 0x000F) << 4) | (((cfg_b->VUV) >> 8) & 0x0FF));
+    mailbox->tx_data_array[2] = ((cfg_b->VOV >> 4) & 0x0FF);
+    mailbox->tx_data_array[3] =
+        (((cfg_b->DTMEN & 0x01) << 7) | ((cfg_b->DTRNG & 0x01) << 6) |
+         ((cfg_b->DCTO & 0x3F) << 0));
+
+    mailbox->tx_data_array[4] = cfg_b->DCCx & 0xFF;
+    mailbox->tx_data_array[5] = cfg_b->DCCx >> 8;
+  }
 }
 
 void bms_create_clrflag_data(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+  clearflag_reg_t *clr_flag;
+  asic_mailbox_t *mailbox;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    clr_flag = &asic_ctx[curr_ic].clr_flag;
+    mailbox = &asic_ctx[curr_ic].clrflag;
+
+    mailbox->tx_data_array[0] = (clr_flag->CL_CSxFLT & 0x00FF);
+    mailbox->tx_data_array[1] = ((clr_flag->CL_CSxFLT & 0xFF00) >> 8);
+    mailbox->tx_data_array[2] = 0x00;
+    mailbox->tx_data_array[3] = 0x00;
+    mailbox->tx_data_array[4] =
+        ((clr_flag->CL_VAOV << 7) | (clr_flag->CL_VAUV << 6) |
+         (clr_flag->CL_VDUV << 5) | (clr_flag->CL_VDOV << 4) |
+         (clr_flag->CL_CED << 3) | (clr_flag->CL_CMED << 2) |
+         (clr_flag->CL_SED << 1) | (clr_flag->CL_SMED));
+    mailbox->tx_data_array[5] =
+        ((clr_flag->CL_VDE << 7) | (clr_flag->CL_VDEL << 6) |
+         (clr_flag->CL_SPIFLT << 4) | (clr_flag->CL_SPIFLT << 4) |
+         (clr_flag->CL_SLEEP << 3) | (clr_flag->CL_THSD << 2) |
+         (clr_flag->CL_TMODE << 1) | (clr_flag->CL_OSCCHK));
+  }
 }
 
 void bms_create_comm(cell_asic_ctx_t *asic_ctx) {
   // TODO
+  comms_reg_t *comms;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    comms = &asic_ctx[curr_ic].comm;
+    mailbox = &asic_ctx[curr_ic].com;
+    mailbox->tx_data_array[0] = ((comms->initial_comm_array[0] & 0x0F) << 4 |
+                                 (comms->final_comm_array[0] & 0x0F));
+    mailbox->tx_data_array[1] = (comms->comm_data_array[0]);
+    mailbox->tx_data_array[2] = ((comms->initial_comm_array[1] & 0x0F) << 4 |
+                                 (comms->final_comm_array[1] & 0x0F));
+    mailbox->tx_data_array[3] = (comms->comm_data_array[1]);
+    mailbox->tx_data_array[4] = ((comms->initial_comm_array[2] & 0x0F) << 4 |
+                                 (comms->final_comm_array[2] & 0x0F));
+    mailbox->tx_data_array[5] = (comms->comm_data_array[2]);
+  }
 }
 
 void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+  pwm_reg_a_t *pwm;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    pwm = &asic_ctx[curr_ic].pwm_ctl_a;
+    mailbox = &asic_ctx[curr_ic].pwma;
+    mailbox->tx_data_array[0] = ((pwm->pwm_a_ctl_array[1] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[0] & 0x0F));
+    mailbox->tx_data_array[1] = ((pwm->pwm_a_ctl_array[3] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[2] & 0x0F));
+    mailbox->tx_data_array[2] = ((pwm->pwm_a_ctl_array[5] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[4] & 0x0F));
+    mailbox->tx_data_array[3] = ((pwm->pwm_a_ctl_array[7] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[6] & 0x0F));
+    mailbox->tx_data_array[4] = ((pwm->pwm_a_ctl_array[9] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[8] & 0x0F));
+    mailbox->tx_data_array[5] = ((pwm->pwm_a_ctl_array[11] & 0x0F) << 4 |
+                                 (pwm->pwm_a_ctl_array[10] & 0x0F));
+  }
 }
 
 void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
   // TODO
+  pwm_reg_b_t *pwm;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    pwm = &asic_ctx[curr_ic].pwm_ctl_b;
+    mailbox = &asic_ctx[curr_ic].pwmb;
+    mailbox->tx_data_array[0] = ((pwm->pwm_b_ctl_array[1] & 0x0F) << 4 |
+                                 (pwm->pwm_b_ctl_array[0] & 0x0F));
+    mailbox->tx_data_array[1] = ((pwm->pwm_b_ctl_array[3] & 0x0F) << 4 |
+                                 (pwm->pwm_b_ctl_array[2] & 0x0F));
+  }
 }
 
 void bms_parse_sid(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
+
+  uint8_t address = 0;
+  serial_id_reg_t *sid;
+  asic_mailbox_t *mailbox;
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    sid = &asic_ctx[curr_ic].sid;
+    mailbox = &asic_ctx[curr_ic].rsid;
+    memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
+    address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
+
+    for (uint8_t i = 0; i < 5; i++) {
+      sid->serial_id_array[i] = mailbox->rx_data_array[i];
+    }
+  }
 }

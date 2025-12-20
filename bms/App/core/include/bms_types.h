@@ -181,11 +181,11 @@ typedef struct {
 } bms_stat_reg_e_t;
 
 typedef struct {
-  uint8_t pwm_channel_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
+  uint8_t pwm_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
 } pwm_reg_a_t;
 
 typedef struct {
-  uint8_t pwm_channel_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
+  uint8_t pwm_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
 } pwm_reg_b_t;
 
 typedef struct {
@@ -279,7 +279,7 @@ typedef struct {
   asic_mailbox_t pwmb;
   asic_mailbox_t rsid;
 
-  error_detection_t cccrc;
+  error_detection_t crc_err;
   aux_openwire_t gpio;
   cell_openwire_t owcell;
   diag_test_t diag_result;
