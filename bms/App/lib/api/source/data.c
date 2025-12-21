@@ -21,11 +21,10 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
  * @param ic_count
  * @param asic_ctx
  * @param type
- * @param data
  * @return comm_status_t
  */
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                            cfg_reg_group_select_t group, uint8_t *data) {
+                            cfg_reg_group_select_t group) {
   // TODO:
   return COMM_ERROR;
 }
@@ -35,7 +34,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
  *
  * @param asic_ctx
  * @param type
- * @param data
  * @param group
  * @return comm_status_t
  */

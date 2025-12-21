@@ -99,7 +99,7 @@ void adBmsWriteData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,
 */
 
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                            cfg_reg_group_select_t group, uint8_t *data);
+                            cfg_reg_group_select_t group);
 
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                              uint8_t group);
