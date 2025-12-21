@@ -36,19 +36,17 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
  * @param asic_ctx
  * @param type
  * @param data
- * // FIX: find way to switch between cfg and pwm groups
  * @param group
  * @return comm_status_t
  */
+
+// WARN: parameters are not typesafe
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                             cfg_reg_group_select_t group, uint8_t *data) {
-  // NOTE: *data may not be needed???
-  // TODO: figure out what to do with *data
+                             uint8_t group) {
 
   switch (type) {
   case BMS_REG_CONFIG:
-    // FIX: group needs to be switchable
-    if (config_a_b(asic_ctx, group) != COMM_OK) {
+    if (config_a_b(asic_ctx, (cfg_reg_group_select_t)group) != COMM_OK) {
       return COMM_ERROR;
     };
     return COMM_OK;
@@ -59,8 +57,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     return COMM_OK;
     break;
   case BMS_REG_PWM:
-    // FIX: group needs to be switchable
-    if (pwm_a_b(asic_ctx, group) != COMM_OK) {
+    if (pwm_a_b(asic_ctx, (pwm_reg_group_select_t)group) != COMM_OK) {
       return COMM_ERROR;
     }
     return COMM_OK;
