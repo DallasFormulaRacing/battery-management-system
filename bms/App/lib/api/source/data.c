@@ -2,6 +2,7 @@
 #include "bms_driver.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "command_list.h"
 #include "comms.h"
 #include "config.h"
 #include "parse.h"
@@ -16,6 +17,12 @@ static asic_mailbox_t *get_mailbox_type(cell_asic_ctx_t *asic_ctx,
 static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
                              pwm_reg_group_select_t group);
 
+static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
+                                           cfg_reg_group_select_t group,
+                                           bms_op_t type,
+                                           uint16_t *read_buffer_size,
+                                           uint8_t *reg_data_size);
+
 /**
  * @brief Read data from the BMS
  *
@@ -24,9 +31,81 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
  * @return comm_status_t
  */
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                            cfg_reg_group_select_t group) {
-  // TODO:
+                            command_t cmd_arg, cfg_reg_group_select_t group) {
+  uint16_t read_buffer_size;
+  uint8_t reg_data_size;
+
+  comm_status_t status;
+  status = get_read_buffer_sizes(asic_ctx, group, type, &read_buffer_size,
+                                 &reg_data_size);
+
+  if (status != COMM_OK) {
+    return COMM_INVALID_COMMAND;
+  }
+
+  // NOTE: Might be able to make this all one function
+  uint8_t read_buffer[read_buffer_size];
+  uint8_t pec_error[asic_ctx->ic_count];
+  uint8_t cmd_count[asic_ctx->ic_count];
+
+  asic_status_buffers_t *status_buffers = NULL;
+  status_buffers->register_data = read_buffer;
+  status_buffers->pec_error_flags = pec_error;
+  status_buffers->command_counter = cmd_count;
+  // NOTE: END NOTE
+
+  bms_read_register_spi(asic_ctx->ic_count, cmd_arg, status_buffers,
+                        reg_data_size);
+
   return COMM_ERROR;
+}
+
+static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
+                                           cfg_reg_group_select_t group,
+                                           bms_op_t type,
+                                           uint16_t *read_buffer_size,
+                                           uint8_t *reg_data_size) {
+  switch (group) {
+  case ALL_CFG_REG_GROUPS:
+    switch (type) {
+    case BMS_CMD_RDCVALL:
+      *read_buffer_size = ADBMS_RDCVALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDCVALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDSALL:
+      *read_buffer_size = ADBMS_RDSALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDSALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDACALL:
+      *read_buffer_size = ADBMS_RDACALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDACALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDFCALL:
+      *read_buffer_size = ADBMS_RDFCALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDFCALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDCSALL:
+      *read_buffer_size = ADBMS_RDCSALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDCSALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDASALL:
+      *read_buffer_size = ADBMS_RDASALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDASALL_FRAME_SIZE;
+      break;
+    case BMS_CMD_RDACSALL:
+      *read_buffer_size = ADBMS_RDACSALL_FRAME_SIZE;
+      *reg_data_size = ADBMS_RDACSALL_FRAME_SIZE;
+      break;
+    default:
+      return COMM_INVALID_COMMAND;
+      break;
+    }
+
+  default:
+    *read_buffer_size = (asic_ctx->ic_count * READ_SIZE);
+    *reg_data_size = READ_SIZE;
+    return COMM_OK;
+  }
 }
 
 /**
