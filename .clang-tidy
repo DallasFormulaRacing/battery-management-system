@@ -1,0 +1,21 @@
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-reserved-identifier,
+  -bugprone-macro-parentheses,
+  performance-*,
+  readability-implicit-bool-conversion,
+  readability-misleading-indentation,
+  -readability-function-size,
+  -readability-cognitive-complexity,
+  -modernize-*,
+  -cppcoreguidelines-*,
+  -hicpp-*,
+  -llvm-*,
+  -misc-*
+
+WarningsAsErrors: >
+  clang-analyzer-*,
+  bugprone-*
+
+HeaderFilterRegex: '.*/App/.*'
