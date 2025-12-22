@@ -23,6 +23,9 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size);
 
+static void init_status_buffers(asic_status_buffers_t *status_buffers,
+                                uint16_t read_buffer_size);
+
 /**
  * @brief Read data from the BMS
  *
@@ -30,6 +33,8 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
  * @param type
  * @return comm_status_t
  */
+// WARN: type of group is currently a placeholder, still wondering how
+// to replace it with something more clearer
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                             command_t cmd_arg, cfg_reg_group_select_t group) {
   uint16_t read_buffer_size;
@@ -43,21 +48,23 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     return COMM_INVALID_COMMAND;
   }
 
-  // NOTE: Might be able to make this all one function
-  uint8_t read_buffer[read_buffer_size];
-  uint8_t pec_error[asic_ctx->ic_count];
-  uint8_t cmd_count[asic_ctx->ic_count];
+  asic_status_buffers_t status_buffers;
+  init_status_buffers(&status_buffers, read_buffer_size);
 
-  asic_status_buffers_t *status_buffers = NULL;
-  status_buffers->register_data = read_buffer;
-  status_buffers->pec_error_flags = pec_error;
-  status_buffers->command_counter = cmd_count;
-  // NOTE: END NOTE
-
-  bms_read_register_spi(asic_ctx->ic_count, cmd_arg, status_buffers,
+  bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
   return COMM_ERROR;
+}
+
+static void init_status_buffers(asic_status_buffers_t *status_buffers,
+                                uint16_t read_buffer_size) {
+  uint8_t read_buffer[read_buffer_size];
+  uint8_t pec_error[asic_ctx->ic_count];
+  uint8_t cmd_count[asic_ctx->ic_count];
+  status_buffers->register_data = read_buffer;
+  status_buffers->pec_error_flags = pec_error;
+  status_buffers->command_counter = cmd_count;
 }
 
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
