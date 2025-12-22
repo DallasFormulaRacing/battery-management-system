@@ -45,23 +45,19 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     if (config_a_b(asic_ctx, (cfg_reg_group_select_t)group) != COMM_OK) {
       return COMM_ERROR;
     };
-    return COMM_OK;
     break;
   case BMS_REG_COMM:
     bms_create_comm(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_COM);
-    return COMM_OK;
     break;
   case BMS_REG_PWM:
     if (pwm_a_b(asic_ctx, (pwm_reg_group_select_t)group) != COMM_OK) {
       return COMM_ERROR;
     }
-    return COMM_OK;
     break;
   case BMS_CMD_CLRFLAG:
     bms_create_clrflag_data(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_CLR_FLAG);
-    return COMM_OK;
     break;
   default:
     return COMM_INVALID_COMMAND;
@@ -70,6 +66,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
   asic_wakeup(asic_ctx->ic_count);
   bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer, WRITE_SIZE);
+  return COMM_OK;
 }
 
 static comm_status_t config_a_b(cell_asic_ctx_t *asic_ctx,
