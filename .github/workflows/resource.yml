@@ -1,0 +1,166 @@
+name: resource-checks
+
+on:
+  push:
+    paths:
+      - "bms/**"
+      - ".github/workflows/linux.yaml"
+  pull_request:
+    paths:
+      - "bms/**"
+      - ".github/workflows/linux.yaml"
+
+jobs:
+  resources:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi cmake ninja-build
+
+      - name: Configure
+        run: |
+          set -e
+          cmake -S bms -B build \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
+            -DCMAKE_C_FLAGS="-fstack-usage" \
+            -DCMAKE_ASM_FLAGS="-fstack-usage"
+
+      - name: Build
+        run: |
+          set -e
+          cmake --build build
+
+      # --------------------------------------------------
+      # Stack usage analysis
+      # --------------------------------------------------
+      - name: Stack usage report
+        run: |
+          set -eu
+
+          MAX_FUNC=1024
+          MAX_ISR=512
+
+          MAX_FUNC_SEEN=0
+          MAX_ISR_SEEN=0
+          FAIL=0
+
+          echo "Stack usage report"
+          echo "------------------"
+
+          SU_FILES=$(find build -name "*.su")
+
+          if [ -z "$SU_FILES" ]; then
+            echo "No .su files found – stack analysis not produced"
+            exit 1
+          fi
+
+          for f in $SU_FILES; do
+            while read -r line; do
+              FUNC=$(echo "$line" | awk '{print $1}')
+
+              # Ignore CMake internal compiler ID code
+              case "$FUNC" in
+                *CMakeCCompilerId*|*CMakeCXXCompilerId*)
+                  continue
+                  ;;
+              esac
+
+              SIZE=$(echo "$line" | grep -oE '[0-9]+' | head -n1 || true)
+
+              if [ -z "$SIZE" ]; then
+                echo "Unknown stack usage: $FUNC"
+                FAIL=1
+                continue
+              fi
+
+              if echo "$FUNC" | grep -qiE '(^|_)(isr|irq)(_|\b)'; then
+                [ "$SIZE" -gt "$MAX_ISR_SEEN" ] && MAX_ISR_SEEN=$SIZE
+                if [ "$SIZE" -gt "$MAX_ISR" ]; then
+                  echo "ISR stack overflow: $FUNC uses $SIZE bytes"
+                  FAIL=1
+                fi
+              else
+                [ "$SIZE" -gt "$MAX_FUNC_SEEN" ] && MAX_FUNC_SEEN=$SIZE
+                if [ "$SIZE" -gt "$MAX_FUNC" ]; then
+                  echo "Function stack overflow: $FUNC uses $SIZE bytes"
+                  FAIL=1
+                fi
+              fi
+            done < "$f"
+          done
+          echo ""
+          echo "Maximum function stack: $MAX_FUNC_SEEN bytes (limit $MAX_FUNC)"
+          echo "Maximum ISR stack:      $MAX_ISR_SEEN bytes (limit $MAX_ISR)"
+          echo ""
+
+          if [ "$FAIL" -ne 0 ]; then
+            echo "Stack usage check failed"
+            exit 1
+          fi
+
+          echo "Stack usage check passed"
+
+      # --------------------------------------------------
+      # Binary size analysis
+      # --------------------------------------------------
+      - name: Binary size report
+        run: |
+          set -eu
+
+          MAX_TEXT=262144
+          MAX_RAM=65536
+
+          ELFS=$(find build -name "*.elf")
+
+          if [ -z "$ELFS" ]; then
+            echo "No ELF files found"
+            exit 1
+          fi
+
+          echo "Binary size report"
+          echo "------------------"
+
+          FAIL=0
+
+          for ELF in $ELFS; do
+            echo ""
+            echo "ELF: $ELF"
+
+            OUT=$(arm-none-eabi-size "$ELF" | awk 'NR==2')
+            TEXT=$(echo "$OUT" | awk '{print $1}')
+            DATA=$(echo "$OUT" | awk '{print $2}')
+            BSS=$(echo "$OUT" | awk '{print $3}')
+
+            RAM=$((DATA + BSS))
+
+            FLASH_PCT=$(awk "BEGIN {printf \"%.1f\", ($TEXT/$MAX_TEXT)*100}")
+            RAM_PCT=$(awk "BEGIN {printf \"%.1f\", ($RAM/$MAX_RAM)*100}")
+
+            echo "Flash: $TEXT / $MAX_TEXT bytes (${FLASH_PCT}%)"
+            echo "RAM:   $RAM  / $MAX_RAM  bytes (${RAM_PCT}%)"
+
+            if [ "$TEXT" -gt "$MAX_TEXT" ]; then
+              echo "Flash size limit exceeded"
+              FAIL=1
+            fi
+
+            if [ "$RAM" -gt "$MAX_RAM" ]; then
+              echo "RAM size limit exceeded"
+              FAIL=1
+            fi
+          done
+
+          if [ "$FAIL" -ne 0 ]; then
+            echo ""
+            echo "Binary size check failed"
+            exit 1
+          fi
+
+          echo ""
+          echo "Binary size check passed"
