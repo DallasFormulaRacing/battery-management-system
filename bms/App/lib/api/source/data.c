@@ -38,7 +38,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
  * @return comm_status_t
  */
 
-// WARN: parameters are not typesafe
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                              command_t cmd_arg, uint8_t group) {
   switch (type) {
