@@ -40,7 +40,7 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
 // WARN: parameters are not typesafe
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                             uint8_t group) {
+                             command_t cmd_arg, uint8_t group) {
   switch (type) {
   case BMS_REG_CONFIG:
     if (config_a_b(asic_ctx, (cfg_reg_group_select_t)group) != COMM_OK) {
@@ -70,9 +70,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   }
 
   asic_wakeup(asic_ctx->ic_count);
-  // TODO: Look into how the SPI write function works
-  // bms_write_register_spi(asic_ctx->ic_count, data, write_buffer,
-  // WRITE_SIZE);
+  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer, WRITE_SIZE);
 }
 
 static comm_status_t config_a_b(cell_asic_ctx_t *asic_ctx,
