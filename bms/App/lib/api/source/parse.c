@@ -2,6 +2,69 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 
+static void bms_parse_aux_rednt_aux_status(cell_asic_ctx_t *asic_ctx,
+                                           cfg_reg_group_select_t group,
+                                           uint8_t *data);
+
+static void bms_parse_cell_s_cell(cell_asic_ctx_t *asic_ctx,
+                                  cfg_reg_group_select_t group, uint8_t *data);
+
+static void bms_parse_avg_s_cell(cell_asic_ctx_t *asic_ctx,
+                                 cfg_reg_group_select_t group, uint8_t *data);
+
+typedef void (*parse_handlers_t)(cell_asic_ctx_t *asic_ctx,
+                                 cfg_reg_group_select_t group, uint8_t *data);
+
+// FIX: Some of these handler functions use different types
+static const parse_handlers_t parse_handlers[] = {
+    [BMS_REG_CONFIG] = bms_parse_cfg_group,
+    [BMS_REG_CELL_VOLT] = bms_parse_cell,
+    [BMS_REG_AVG_CELL_VOLT] = bms_parse_avg_cell,
+    [BMS_REG_S_VOLT] = bms_parse_s_cell,
+    [BMS_REG_FILTERED_CELL_VOLT] = bms_parse_f_cell,
+    //    [BMS_REG_AUX_VOLT] = bms_parse_aux,
+    //    [BMS_REG_REDUNDANT_AUX_VOLT] = bms_parse_rednt_aux,
+
+    // NOTE: Check this one later, seems odd
+    [BMS_REG_STATUS] = bms_parse_status_select,
+    //   [BMS_REG_COMM] = bms_parse_comm,
+    //   [BMS_REG_PWM] = bms_parse_pwm,
+    //   [BMS_REG_SID] = bms_parse_sid,
+
+    [BMS_CMD_RDCVALL] = bms_parse_cell,
+    [BMS_CMD_RDACALL] = bms_parse_avg_cell,
+    [BMS_CMD_RDSALL] = bms_parse_s_cell,
+    [BMS_CMD_RDFCALL] = bms_parse_f_cell,
+    [BMS_CMD_RDCSALL] = bms_parse_cell_s_cell,
+    [BMS_CMD_RDACSALL] = bms_parse_avg_s_cell,
+    [BMS_CMD_RDASALL] = bms_parse_aux_rednt_aux_status,
+};
+
+// NOTE: Might need to make these functions public, up to reviewers
+static void bms_parse_cell_s_cell(cell_asic_ctx_t *asic_ctx,
+                                  cfg_reg_group_select_t group, uint8_t *data) {
+  bms_parse_cell(asic_ctx, group, data);
+  bms_parse_s_cell(asic_ctx, group, data);
+}
+
+static void bms_parse_avg_s_cell(cell_asic_ctx_t *asic_ctx,
+                                 cfg_reg_group_select_t group, uint8_t *data) {
+  bms_parse_avg_cell(asic_ctx, group, data);
+  bms_parse_s_cell(asic_ctx, group, data);
+}
+
+static void bms_parse_aux_rednt_aux_status(cell_asic_ctx_t *asic_ctx,
+                                           cfg_reg_group_select_t group,
+                                           uint8_t *data) {
+  // WARN: Implicit conversion between types
+  bms_parse_aux(asic_ctx, group, data);
+  bms_parse_rednt_aux(asic_ctx, group, data);
+  // NOTE: Check this one later, seems odd
+  bms_parse_status_select(asic_ctx, group, data);
+}
+// NOTE: END NOTE
+// ============================================================================================
+
 static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
                                        cfg_reg_group_select_t group,
                                        const uint8_t *data, uint8_t curr_ic,
