@@ -5,6 +5,7 @@
 #include "command_list.h"
 #include "comms.h"
 #include "config.h"
+#include "data_read_handlers.h"
 #include "parse.h"
 #include <stdint.h>
 
@@ -18,13 +19,60 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
                              pwm_reg_group_select_t group);
 
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
-                                           cfg_reg_group_select_t group,
+                                           bms_group_select_t group,
                                            bms_op_t type,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size);
 
 static void init_status_buffers(asic_status_buffers_t *status_buffers,
                                 uint16_t read_buffer_size);
+
+cfg_reg_group_select_t switch_group_cfg(bms_group_select_t group) {
+  switch (group) {
+  case ALL_REG_GROUPS:
+    return ALL_CFG_REG_GROUPS;
+  case REG_GROUP_A:
+    return CFG_REG_GROUP_A;
+  case REG_GROUP_B:
+    return CFG_REG_GROUP_B;
+  case REG_GROUP_C:
+    return CFG_REG_GROUP_C;
+  case REG_GROUP_D:
+    return CFG_REG_GROUP_D;
+  case REG_GROUP_E:
+    return CFG_REG_GROUP_E;
+  case REG_GROUP_F:
+    return CFG_REG_GROUP_F;
+  default:
+    return NO_CFG_REG_GROUP;
+  };
+}
+
+aux_reg_group_select_t switch_group_aux(bms_group_select_t group) {
+  switch (group) {
+  case REG_GROUP_A:
+    return AUX_REG_GROUP_A;
+  case REG_GROUP_B:
+    return AUX_REG_GROUP_B;
+  case REG_GROUP_C:
+    return AUX_REG_GROUP_C;
+  case REG_GROUP_D:
+    return AUX_REG_GROUP_D;
+  default:
+    return NO_AUX_REG_GROUP;
+  };
+}
+
+pwm_reg_group_select_t switch_group_pwm(bms_group_select_t group) {
+  switch (group) {
+  case REG_GROUP_A:
+    return PWM_REG_GROUP_A;
+  case REG_GROUP_B:
+    return PWM_REG_GROUP_B;
+  default:
+    return NO_PWM_REG_GROUP;
+  };
+}
 
 /**
  * @brief Read data from the BMS
@@ -36,7 +84,7 @@ static void init_status_buffers(asic_status_buffers_t *status_buffers,
 // WARN: type of group is currently a placeholder, still wondering how
 // to replace it with something more clearer
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                            command_t cmd_arg, cfg_reg_group_select_t group) {
+                            command_t cmd_arg, bms_group_select_t group) {
   uint16_t read_buffer_size;
   uint8_t reg_data_size;
 
@@ -54,7 +102,18 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
+  // TODO: Switch the type and read
+  handle_read_type(type, asic_ctx, group, &status_buffers);
+
   return COMM_ERROR;
+}
+
+static comm_status_t handle_type(cell_asic_ctx_t *asic_ctx, bms_op_t type) {
+  switch (type) {
+  default:
+    return COMM_INVALID_COMMAND;
+    break;
+  }
 }
 
 static void init_status_buffers(asic_status_buffers_t *status_buffers,
@@ -68,12 +127,12 @@ static void init_status_buffers(asic_status_buffers_t *status_buffers,
 }
 
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
-                                           cfg_reg_group_select_t group,
+                                           bms_group_select_t group,
                                            bms_op_t type,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size) {
   switch (group) {
-  case ALL_CFG_REG_GROUPS:
+  case ALL_REG_GROUPS:
     switch (type) {
     case BMS_CMD_RDCVALL:
       *read_buffer_size = ADBMS_RDCVALL_FRAME_SIZE;
@@ -125,10 +184,10 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
  */
 
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                             command_t cmd_arg, uint8_t group) {
+                             command_t cmd_arg, bms_group_select_t group) {
   switch (type) {
   case BMS_REG_CONFIG:
-    if (config_a_b(asic_ctx, (cfg_reg_group_select_t)group) != COMM_OK) {
+    if (config_a_b(asic_ctx, switch_group_cfg(group)) != COMM_OK) {
       return COMM_ERROR;
     };
     break;
@@ -137,7 +196,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_COM);
     break;
   case BMS_REG_PWM:
-    if (pwm_a_b(asic_ctx, (pwm_reg_group_select_t)group) != COMM_OK) {
+    if (pwm_a_b(asic_ctx, switch_group_pwm(group)) != COMM_OK) {
       return COMM_ERROR;
     }
     break;
@@ -198,6 +257,11 @@ static void write_to_all_ics(cell_asic_ctx_t *asic_ctx,
   uint8_t data_len = ADBMS_TX_FRAME_BYTES;
   for (uint8_t cic = 0; cic < asic_ctx->ic_count; cic++) {
     asic_mailbox_t *mailbox_id = get_mailbox_type(asic_ctx, mailbox);
+    // NOTE: There might be a better way for letting the user know if
+    // get_mailbox_type returned null or not
+    if (mailbox_id == NULL) {
+      return;
+    }
     for (uint8_t data = 0; data < data_len; data++) {
       write_buffer[(cic * data_len) + data] = mailbox_id->tx_data_array[data];
     }
