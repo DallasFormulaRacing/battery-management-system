@@ -1,14 +1,18 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "bms_types.h"
 #include "bms_enums.h"
+#include "bms_types.h"
+#include "comms.h"
+#include <stdint.h>
 
 #define IC_COUNT_CHAIN 1 // this has to be at compile time.
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
+#define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
 
 cell_asic_ctx_t asic_ctx[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
+// asic_status_buffers_t read_buffer[IC_COUNT_CHAIN];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;
