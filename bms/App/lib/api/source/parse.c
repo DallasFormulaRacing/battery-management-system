@@ -74,25 +74,51 @@ void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
   }
 }
 
-void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx) {
-  // TODO stdargs
+void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
+                                      uint8_t asic_idx,
+                                      pwm_duty_cycle_t duty_cycle,
+                                      pwm_reg_group_select_t group,
+                                      uint8_t pwm_channel_idx) {
+  if (asic_idx >= asic_ctx->ic_count) {
+    return;
+  }
+
+  pwm_reg_a_t *pwm_a;
+  pwm_reg_b_t *pwm_b;
+
+  switch (group) {
+  case PWM_REG_GROUP_A:
+    if (pwm_channel_idx >= ADBMS_NUM_PWMA_CHANNELS) {
+      return;
+    }
+    pwm_a = &asic_ctx[asic_idx].pwm_ctl_a;
+    pwm_a->pwm_a_ctl_array[pwm_channel_idx] = duty_cycle;
+    break;
+
+  case PWM_REG_GROUP_B:
+    if (pwm_channel_idx >= ADBMS_NUM_PWMB_CHANNELS) {
+      return;
+    }
+    pwm_b = &asic_ctx[asic_idx].pwm_ctl_b;
+    pwm_b->pwm_b_ctl_array[pwm_channel_idx] = duty_cycle;
+    break;
+  }
 }
 
 void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
                             pwm_duty_cycle_t duty_cycle) {
-  for (uint8_t current_ic_idx = 0; current_ic_idx < asic_ctx->ic_count;
-       current_ic_idx++) {
-    for (uint8_t current_pwm_channel_idx = 0;
-         current_pwm_channel_idx < ADBMS_NUM_PWMA_CHANNELS;
-         current_pwm_channel_idx++) {
-      asic_ctx[current_ic_idx]
-          .pwm_ctl_a.pwm_a_ctl_array[current_pwm_channel_idx] = duty_cycle;
+
+  pwm_reg_a_t *pwm_a;
+  pwm_reg_b_t *pwm_b;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMA_CHANNELS; pwm_idx++) {
+      pwm_a = &asic_ctx[curr_ic].pwm_ctl_a;
+      pwm_a->pwm_a_ctl_array[pwm_idx] = duty_cycle;
     }
-    for (uint8_t current_pwm_channel_idx = 0;
-         current_pwm_channel_idx < ADBMS_NUM_PWMB_CHANNELS;
-         current_pwm_channel_idx++) {
-      asic_ctx[current_ic_idx]
-          .pwm_ctl_b.pwm_b_ctl_array[current_pwm_channel_idx] = duty_cycle;
+    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMB_CHANNELS; pwm_idx++) {
+      pwm_b = &asic_ctx[curr_ic].pwm_ctl_b;
+      pwm_b->pwm_b_ctl_array[pwm_idx] = duty_cycle;
     }
   }
 }
