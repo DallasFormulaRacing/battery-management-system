@@ -79,18 +79,17 @@ pwm_reg_group_select_t switch_group_pwm(bms_group_select_t group) {
  *
  * @param asic_ctx
  * @param type
+ * @param cmd_arg
+ * @param group
  * @return comm_status_t
  */
-// WARN: type of group is currently a placeholder, still wondering how
-// to replace it with something more clearer
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                             command_t cmd_arg, bms_group_select_t group) {
   uint16_t read_buffer_size;
   uint8_t reg_data_size;
 
-  comm_status_t status;
-  status = get_read_buffer_sizes(asic_ctx, group, type, &read_buffer_size,
-                                 &reg_data_size);
+  comm_status_t status = get_read_buffer_sizes(
+      asic_ctx, group, type, &read_buffer_size, &reg_data_size);
 
   if (status != COMM_OK) {
     return COMM_INVALID_COMMAND;
@@ -102,10 +101,9 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
-  // TODO: Switch the type and read
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
-  return COMM_ERROR;
+  return COMM_OK;
 }
 
 static comm_status_t handle_type(cell_asic_ctx_t *asic_ctx, bms_op_t type) {
@@ -179,6 +177,7 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
  *
  * @param asic_ctx
  * @param type
+ * @param cmd_arg
  * @param group
  * @return comm_status_t
  */

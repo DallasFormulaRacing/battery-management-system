@@ -24,8 +24,6 @@ static const read_handlers_t read_handlers[] = {
     [BMS_REG_FILTERED_CELL_VOLT] = read_filtered_cell_voltage,
     [BMS_REG_AUX_VOLT] = read_aux_voltage,
     [BMS_REG_REDUNDANT_AUX_VOLT] = read_rednt_aux_voltage,
-
-    // NOTE: Check this one later, seems odd
     [BMS_REG_STATUS] = read_status_select,
     [BMS_REG_COMM] = read_comm,
     [BMS_REG_PWM] = read_pwm,
@@ -98,7 +96,6 @@ void read_rednt_aux_voltage(cell_asic_ctx_t *asic_ctx, bms_group_select_t group,
   check_crc_errors(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, status_buffers);
 }
 
-// WARN: Check on this one, something seems off about this
 void read_status_select(cell_asic_ctx_t *asic_ctx, bms_group_select_t group,
                         asic_status_buffers_t *status_buffers) {
   bms_parse_status_select(asic_ctx, switch_group_cfg(group),
