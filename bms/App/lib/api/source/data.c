@@ -106,14 +106,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   return COMM_OK;
 }
 
-static comm_status_t handle_type(cell_asic_ctx_t *asic_ctx, bms_op_t type) {
-  switch (type) {
-  default:
-    return COMM_INVALID_COMMAND;
-    break;
-  }
-}
-
 static void init_status_buffers(asic_status_buffers_t *status_buffers,
                                 uint16_t read_buffer_size) {
   uint8_t read_buffer[read_buffer_size];
