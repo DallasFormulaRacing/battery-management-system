@@ -233,7 +233,7 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
     return COMM_OK;
     break;
   case PWM_REG_GROUP_B:
-    bms_create_pwm_b(asic_ctx);
+    bms_create_pwm_a(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_PWM_B);
     return COMM_OK;
     break;
