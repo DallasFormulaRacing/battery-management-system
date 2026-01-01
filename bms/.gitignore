@@ -14,6 +14,7 @@ CMakeUserPresets.json
 
 # CMake build dir
 build/
+build_test/
 
 # VSCode configs
 mx.scratch
