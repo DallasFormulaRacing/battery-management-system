@@ -21,3 +21,5 @@ mx.scratch
 .settings
 .vscode
 
+.clangd
+.clang-tidy

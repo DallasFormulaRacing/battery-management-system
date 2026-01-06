@@ -32,10 +32,12 @@ endif()
 
 message(STATUS ">>> Building for ARM target <<<")
 
+# ! Change this as necessary for your system
+
 # Sysroot for macOS users
-#set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
+set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
 # Sysroot for linux users
-set(CMAKE_SYSROOT /usr/arm-none-eabi/)
+# set(CMAKE_SYSROOT /usr/arm-none-eabi/)
 
 set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
 set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")

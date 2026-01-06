@@ -1,11 +1,21 @@
 CompileFlags:
-  Add:
-    - '-ferror-limit=0'
-    - '-Wno-implicit-int'
-  CompilationDatabase: build/
+    Add:
+        - "-ferror-limit=0"
+
+        - "-Wno-implicit-int"
+
+        - "--sysroot=/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi"
+
+        - "-isystem/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi/include"
+
+    CompilationDatabase: build/Debug
+
 Diagnostics:
-  Suppress:
-    - unused-includes
-    - unknown_typename
-    - unknown_typename_suggest
-    - typename_requires_specqual
+    Suppress:
+        - unused-includes
+
+        - unknown_typename
+
+        - unknown_typename_suggest
+
+        - typename_requires_specqual
