@@ -106,10 +106,10 @@ aux_reg_group_select_t switch_group_aux(bms_group_select_t group);
 pwm_reg_group_select_t switch_group_pwm(bms_group_select_t group);
 
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                            command_t cmd_arg, bms_group_select_t group);
+                            const command_t cmd_arg, bms_group_select_t group);
 
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
-                             command_t cmd_arg, bms_group_select_t group);
+                             const command_t cmd_arg, bms_group_select_t group);
 
 /*
 void adBmsReadData(uint8_t tIC, cell_asic *ic, uint8_t cmd_arg[2], TYPE type,
