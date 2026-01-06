@@ -155,6 +155,17 @@ typedef enum {
 } comm_break_enable_t; // COMM_BK
 
 typedef enum {
+  COMM_OK,
+  COMM_ERROR,
+  COMM_TIMEOUT,
+  COMM_INVALID_NUMBER_OF_ICS,
+  COMM_INVALID_COMMAND,
+  COMM_INVALID_COMMAND_COUNTER,
+  COMM_INVALID_PEC_ERROR_FLAG,
+  COMM_INVALID_PARAMETERS,
+} comm_status_t;
+
+typedef enum {
   SNAP_OFF = 0x0,
   SNAP_ON = 0x1,
 } snapshot_enable_t; // SNAPSHOT
@@ -225,6 +236,17 @@ typedef enum {
 } dcc_bit_ctl_t; // DCC_BIT
 
 typedef enum {
+  ALL_REG_GROUPS = 0x0,
+  REG_GROUP_A,
+  REG_GROUP_B,
+  REG_GROUP_C,
+  REG_GROUP_D,
+  REG_GROUP_E,
+  REG_GROUP_F,
+  NO_REG_GROUP,
+} bms_group_select_t;
+
+typedef enum {
   ALL_CFG_REG_GROUPS = 0x0,
   CFG_REG_GROUP_A,
   CFG_REG_GROUP_B,
@@ -246,7 +268,19 @@ typedef enum {
 typedef enum {
   PWM_REG_GROUP_A = 0x0,
   PWM_REG_GROUP_B,
+  NO_PWM_REG_GROUP,
 } pwm_reg_group_select_t; // AUX_GRP
+
+typedef enum {
+  ASIC_MAILBOX_CONFIG_A = 0x0,
+  ASIC_MAILBOX_CONFIG_B,
+  ASIC_MAILBOX_CLR_FLAG,
+  ASIC_MAILBOX_STAT,
+  ASIC_MAILBOX_COM,
+  ASIC_MAILBOX_PWM_A,
+  ASIC_MAILBOX_PWM_B,
+  ASIC_MAILBOX_RSID,
+} asic_mailbox_id_select_t;
 
 typedef enum {
   /* Register groups ----------------------------------------------------- */

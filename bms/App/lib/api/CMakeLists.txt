@@ -3,7 +3,7 @@
 target_sources(bms_api
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source/api.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/source/comms.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/source/data_read_handlers.c
         ${CMAKE_CURRENT_SOURCE_DIR}/source/parse.c
         ${CMAKE_CURRENT_SOURCE_DIR}/source/data.c
 )
@@ -16,5 +16,5 @@ target_include_directories(bms_api
 
 target_link_libraries(bms_api
     PRIVATE
-        bms_pec     
+        bms_pec
 )

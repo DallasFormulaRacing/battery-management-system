@@ -1,11 +1,13 @@
 # ! /CMakeLists.txt -- Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.22)
 
-if (NOT CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE
+option(BUILD_TESTING "Build native executable for unit testing" OFF)
+
+if(NOT CMAKE_TOOLCHAIN_FILE AND NOT BUILD_TESTING)
+  set(CMAKE_TOOLCHAIN_FILE
         "${CMAKE_CURRENT_LIST_DIR}/cmake/gcc-arm-none-eabi.cmake"
         CACHE FILEPATH "Toolchain file"
-    )
+  )
 endif()
 
 project(bms C ASM)
@@ -14,14 +16,29 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
+# Platform-independent sources (Always build)
+add_subdirectory(App)
+add_subdirectory(DumbExample)
+
+# For native unit testing
+if(BUILD_TESTING)
+  message(STATUS ">>> Building for TESTING - skipping ARM target <<<")
+  include(CTest)
+  enable_testing()
+  add_subdirectory(submodules/external/unity_cmake)
+  add_subdirectory(Tests)
+  return()
+endif()
+
+message(STATUS ">>> Building for ARM target <<<")
+
+# Sysroot for macOS users
+#set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
+# Sysroot for linux users
+set(CMAKE_SYSROOT /usr/arm-none-eabi/)
 
 set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
 set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
-
-# Sources
-
-add_subdirectory(App)
 
 # CubeMX-generated application sources
 file(GLOB CORE_SOURCES
@@ -46,7 +63,6 @@ target_link_libraries(${PROJECT_NAME}
         bms_api
 )
 
-
 # Compiler defines
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     STM32G474xx
@@ -70,7 +86,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -mfloat-abi=hard
     -ffunction-sections
     -fdata-sections
-    --sysroot=/Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi/arm-none-eabi
+    --sysroot=${CMAKE_SYSROOT}
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
