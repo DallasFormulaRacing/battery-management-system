@@ -26,17 +26,17 @@ typedef struct {
 } adc_config_t;
 
 typedef struct {
-  const float overvoltage_threshold;
-  const float undervoltage_threshold;
+  const float overvoltage_threshold_v;
+  const float undervoltage_threshold_v;
 
-  const int OW_cell_threshold;
-  const int OW_aux_threshold;
+  const int openwire_cell_threshold_mv;
+  const int openwire_aux_threshold_mv;
 
-  const uint32_t loop_measurement_count;
-  const uint16_t measurement_loop_time;
+  const uint32_t loop_meas_count;
+  const uint16_t meas_loop_time_ms;
 
-  uint32_t loop_count;
-  uint32_t pladc_count;
+  uint32_t loop_counter;
+  uint32_t periodic_adc_count;
 } voltage_config_t;
 
 typedef struct {

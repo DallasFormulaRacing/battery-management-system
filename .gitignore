@@ -37,3 +37,5 @@ compile_commands.json
 *.project
 *.bak
 *.yaml
+
+.vscode 
