@@ -3,7 +3,6 @@
 
 #include "bms_enums.h"
 #include "bms_types.h"
-#include "comms.h"
 #include <stdint.h>
 
 #define IC_COUNT_CHAIN 1 // this has to be at compile time.
