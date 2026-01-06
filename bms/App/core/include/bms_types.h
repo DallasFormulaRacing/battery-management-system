@@ -195,6 +195,12 @@ typedef struct {
 } comms_reg_t;
 
 typedef struct {
+  uint8_t *register_data;
+  uint8_t *pec_error_flags;
+  uint8_t *command_counter;
+} asic_status_buffers_t;
+
+typedef struct {
   uint8_t serial_id_array[ADBMS_NUM_SERIAL_ID_BYTES];
 } serial_id_reg_t;
 

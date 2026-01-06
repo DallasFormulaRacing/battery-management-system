@@ -155,6 +155,17 @@ typedef enum {
 } comm_break_enable_t; // COMM_BK
 
 typedef enum {
+  COMM_OK,
+  COMM_ERROR,
+  COMM_TIMEOUT,
+  COMM_INVALID_NUMBER_OF_ICS,
+  COMM_INVALID_COMMAND,
+  COMM_INVALID_COMMAND_COUNTER,
+  COMM_INVALID_PEC_ERROR_FLAG,
+  COMM_INVALID_PARAMETERS,
+} comm_status_t;
+
+typedef enum {
   SNAP_OFF = 0x0,
   SNAP_ON = 0x1,
 } snapshot_enable_t; // SNAPSHOT
