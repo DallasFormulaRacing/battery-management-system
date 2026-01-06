@@ -3,7 +3,8 @@
 
 #include "bms_enums.h"
 #include "bms_types.h"
-#include "comms.h"
+#include "command_list.h"
+// #include "comms.h"
 #include <stdint.h>
 
 /**
