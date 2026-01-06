@@ -38,4 +38,22 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
                                      const uint8_t *per_asic_data,
                                      uint8_t bytes_per_asic_data);
 
+void spi_adcv_command(redundant_enable_t rd, cont_measurement_mode_t cont,
+                      discharge_permitted_mode_t dcp, reset_filter_mode_t rstf,
+                      open_wire_detection_mode_t owcs);
+
+void spi_adsv_command(cont_measurement_mode_t cont,
+                      discharge_permitted_mode_t dcp,
+                      open_wire_detection_mode_t owcs);
+
+void spi_adax_command(aux_open_wire_detection_mode_t owaux,
+                      pull_down_current_mode_t pup,
+                      aux_adc_input_channel_select_t ch);
+
+void spi_adax2_command(aux_adc_input_channel_select_t ch);
+
+void spi_adc_snap_command(void);
+
+void spi_adc_unsnap_command(void);
+
 #endif
