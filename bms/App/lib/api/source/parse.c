@@ -1,6 +1,7 @@
 #include "parse.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include <assert.h>
 
 // ! This file needs to be verified
 
@@ -274,6 +275,8 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     readings = &asic_ctx[curr_ic].s_cell.s_cell_voltages_array[0];
     break;
   default:
+    // WARN: Will only throw error at runtime
+    assert(0 && "Unexpected mtype in parse_cell_register.");
     break;
   }
 
@@ -409,7 +412,7 @@ void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &fcv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_F);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_FILTERED);
   }
 }
 
