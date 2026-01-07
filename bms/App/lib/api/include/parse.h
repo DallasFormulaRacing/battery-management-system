@@ -19,7 +19,6 @@ typedef enum {
   MEASURE_FILTERED,
   MEASURE_AVG,
   MEASURE_S,
-  MEASURE_F,
 } parse_measurement_type_t;
 
 typedef enum {
