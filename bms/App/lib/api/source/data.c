@@ -117,6 +117,34 @@ static void read_aux_rednt_aux_status(cell_asic_ctx_t *asic_ctx,
   read_rednt_aux_voltage(asic_ctx, group, status_buffers);
   read_status_select(asic_ctx, group, status_buffers);
 }
+static const read_handlers_t read_handlers[] = {
+    [BMS_REG_CONFIG] = read_cfg_group,
+    [BMS_REG_CELL_VOLT] = read_cell_voltage,
+    [BMS_REG_AVG_CELL_VOLT] = read_avg_cell_voltage,
+    [BMS_REG_S_VOLT] = read_s_cell_voltage,
+    [BMS_REG_FILTERED_CELL_VOLT] = read_filtered_cell_voltage,
+    [BMS_REG_AUX_VOLT] = read_aux_voltage,
+    [BMS_REG_REDUNDANT_AUX_VOLT] = read_rednt_aux_voltage,
+    [BMS_REG_STATUS] = read_status_select,
+    [BMS_REG_COMM] = read_comm,
+    [BMS_REG_PWM] = read_pwm,
+    [BMS_REG_SID] = read_sid,
+
+    [BMS_CMD_RDCVALL] = read_cell_voltage,
+    [BMS_CMD_RDACALL] = read_avg_cell_voltage,
+    [BMS_CMD_RDSALL] = read_s_cell_voltage,
+    [BMS_CMD_RDFCALL] = read_filtered_cell_voltage,
+    [BMS_CMD_RDCSALL] = read_cell_and_s_cell,
+    [BMS_CMD_RDACSALL] = read_avg_and_s_cell,
+    [BMS_CMD_RDASALL] = read_aux_rednt_aux_status,
+};
+
+comm_status_t handle_read_type(bms_op_t type, cell_asic_ctx_t *asic_ctx,
+                               bms_group_select_t group,
+                               asic_status_buffers_t *status_buffers) {
+  read_handlers[type](asic_ctx, group, status_buffers);
+  return COMM_OK;
+}
 
 static const read_handlers_t read_handlers[] = {
     [BMS_REG_CONFIG] = read_cfg_group,
