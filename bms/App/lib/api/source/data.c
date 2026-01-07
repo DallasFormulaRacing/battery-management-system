@@ -1,6 +1,7 @@
 #include "data.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "comms.h"
 #include "config.h"
 #include "parse.h"
 #include <stdint.h>
@@ -279,8 +280,8 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   asic_status_buffers_t status_buffers;
   init_status_buffers(&status_buffers, read_buffer_size);
 
-  // bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
-  //                       reg_data_size);
+  bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
+                        reg_data_size);
 
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
@@ -382,9 +383,9 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     break;
   }
 
-  // asic_wakeup(asic_ctx->ic_count);
-  // bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer,
-  // WRITE_SIZE);
+  asic_wakeup(asic_ctx->ic_count);
+  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer, WRITE_SIZE);
+
   return COMM_OK;
 }
 
