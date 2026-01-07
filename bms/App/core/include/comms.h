@@ -29,7 +29,8 @@ typedef uint8_t command_msg_t[4];
 
 void bms_send_command(const command_t tx_cmd);
 
-comm_status_t bms_read_register_spi(uint8_t ic_count, command_t command_bytes,
+comm_status_t bms_read_register_spi(uint8_t ic_count,
+                                    const command_t command_bytes,
                                     asic_status_buffers_t *asic_status_buffers,
                                     uint8_t bytes_per_asic_register);
 
