@@ -117,6 +117,7 @@ static void read_aux_rednt_aux_status(cell_asic_ctx_t *asic_ctx,
   read_rednt_aux_voltage(asic_ctx, group, status_buffers);
   read_status_select(asic_ctx, group, status_buffers);
 }
+
 static const read_handlers_t read_handlers[] = {
     [BMS_REG_CONFIG] = read_cfg_group,
     [BMS_REG_CELL_VOLT] = read_cell_voltage,
