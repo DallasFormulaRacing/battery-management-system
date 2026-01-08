@@ -34,6 +34,12 @@ measurement_config_t g_meas_cfg = {
 };
 // --------------------------------------------------
 
+#define RETURN_IF_ERROR(status)                                                \
+  do {                                                                         \
+    comm_status_t _s = (status);                                               \
+    if (_s != COMM_OK)                                                         \
+      return _s;                                                               \
+  } while (0)
 comm_status_t adbms_init_config(cell_asic_ctx_t *asic_ctx) {
   bms_cfg_reg_a_t *cfg_a;
   bms_cfg_reg_b_t *cfg_b;
