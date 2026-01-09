@@ -1,3 +1,4 @@
+# ! /CMakeLists.txt -- Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.22)
 
 option(BUILD_TESTING "Build native executable for unit testing" OFF)
@@ -8,7 +9,6 @@ if(NOT CMAKE_TOOLCHAIN_FILE AND NOT BUILD_TESTING)
         CACHE FILEPATH "Toolchain file"
   )
 endif()
-
 
 project(bms C ASM)
 
@@ -47,22 +47,22 @@ file(GLOB CORE_SOURCES
     Core/Src/*.c
 )
 
-file(GLOB HAL_SOURCES
-    Drivers/STM32G4xx_HAL_Driver/Src/*.c
-)
-
 add_executable(${PROJECT_NAME}
     ${CORE_SOURCES}
-    ${HAL_SOURCES}
+    startup_stm32g474xx.s
 )
 
-target_include_directories(${PROJECT_NAME}
+# MCU / HAL / CMSIS include directories
+target_include_directories(${PROJECT_NAME} PRIVATE
+    Core/Inc
+    Drivers/CMSIS/Include
+    Drivers/CMSIS/Device/ST/STM32G4xx/Include
+    Drivers/STM32G4xx_HAL_Driver/Inc
+)
+
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        Core/Inc
-        Drivers/CMSIS/Include
-        Drivers/CMSIS/Device/ST/STM32G4xx/Include
-    SYSTEM PRIVATE
-        Drivers/STM32G4xx_HAL_Driver/Inc
+        bms_api
 )
 
 # Compiler defines
@@ -71,6 +71,16 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     USE_HAL_DRIVER
 )
 
+# Linker script
+target_link_options(${PROJECT_NAME} PRIVATE
+    "-T${CMAKE_SOURCE_DIR}/STM32G474XX_FLASH.ld"
+)
+
+# HAL + CMSIS driver sources
+file(GLOB HAL_SOURCES Drivers/STM32G4xx_HAL_Driver/Src/*.c)
+target_sources(${PROJECT_NAME} PRIVATE ${HAL_SOURCES})
+
+# Optimization flags
 target_compile_options(${PROJECT_NAME} PRIVATE
     -mcpu=cortex-m4
     -mthumb
@@ -81,20 +91,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     --sysroot=${CMAKE_SYSROOT}
 )
 
-if (NOT STATIC_ANALYSIS)
-
-    target_sources(${PROJECT_NAME} PRIVATE
-        startup_stm32g474xx.s
-    )
-
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-            bms_api
-    )
-
-    target_link_options(${PROJECT_NAME} PRIVATE
-        "-T${CMAKE_SOURCE_DIR}/STM32G474XX_FLASH.ld"
-        -Wl,--gc-sections
-    )
-
-endif()
+target_link_options(${PROJECT_NAME} PRIVATE
+    -Wl,--gc-sections
+)
