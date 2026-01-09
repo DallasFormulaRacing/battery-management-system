@@ -41,7 +41,8 @@ void bms_send_command(const command_t tx_cmd) {
  * @param bytes_per_asic_register
  * @return comm_status_t
  */
-comm_status_t bms_read_register_spi(uint8_t ic_count, command_t command_bytes,
+comm_status_t bms_read_register_spi(uint8_t ic_count,
+                                    const command_t command_bytes,
                                     asic_status_buffers_t *asic_status_buffers,
                                     uint8_t bytes_per_asic_register) {
 
@@ -232,3 +233,33 @@ static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
 
   return command_status;
 }
+
+void spi_adcv_command(redundant_enable_t rd, cont_measurement_mode_t cont,
+                      discharge_permitted_mode_t dcp, reset_filter_mode_t rstf,
+                      open_wire_detection_mode_t owcs) {
+  uint8_t val = (cont << 7) | (dcp << 4) | (rstf << 2) | (owcs & 0x03) | 0x60;
+  bms_send_command((command_t){0x02 | rd, val});
+}
+
+void spi_adsv_command(cont_measurement_mode_t cont,
+                      discharge_permitted_mode_t dcp,
+                      open_wire_detection_mode_t owcs) {
+  uint8_t val = (cont << 7) | (dcp << 4) | (owcs & 0x03) | 0x68;
+  bms_send_command((command_t){0x01, val});
+}
+
+void spi_adax_command(aux_open_wire_detection_mode_t owaux,
+                      pull_down_current_mode_t pup,
+                      aux_adc_input_channel_select_t ch) {
+  uint8_t val = (pup << 7) | (((ch >> 4) & 0x01) << 6) | (ch & 0x0F) | 0x10;
+  bms_send_command((command_t){0x04 + owaux, val});
+}
+
+void spi_adax2_command(aux_adc_input_channel_select_t ch) {
+  uint8_t val = (ch & 0x0F);
+  bms_send_command((command_t){0x04, val});
+}
+
+void spi_adc_snap_command(void) { bms_send_command((command_t){0x00, 0x2D}); }
+
+void spi_adc_unsnap_command(void) { bms_send_command((command_t){0x00, 0x2F}); }

@@ -195,6 +195,12 @@ typedef struct {
 } comms_reg_t;
 
 typedef struct {
+  uint8_t *register_data;
+  uint8_t *pec_error_flags;
+  uint8_t *command_counter;
+} asic_status_buffers_t;
+
+typedef struct {
   uint8_t serial_id_array[ADBMS_NUM_SERIAL_ID_BYTES];
 } serial_id_reg_t;
 
@@ -265,18 +271,18 @@ typedef struct {
   pwm_reg_a_t pwm_ctl_a;
   pwm_reg_b_t pwm_ctl_b;
 
-  comms_reg_t comm;
+  comms_reg_t comm; // WARN: may be confused with asic_mailbox_t com
   serial_id_reg_t sid;
 
-  asic_mailbox_t configa;
-  asic_mailbox_t configb;
+  asic_mailbox_t config_a;
+  asic_mailbox_t config_b;
 
   asic_mailbox_t clrflag;
   asic_mailbox_t stat;
-  asic_mailbox_t com;
+  asic_mailbox_t com; // WARN: may be confused with comms_reg_t comm
 
-  asic_mailbox_t pwma;
-  asic_mailbox_t pwmb;
+  asic_mailbox_t pwm_a;
+  asic_mailbox_t pwm_b;
   asic_mailbox_t rsid;
 
   error_detection_t crc_err;

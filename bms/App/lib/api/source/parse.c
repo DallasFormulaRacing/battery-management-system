@@ -1,6 +1,9 @@
 #include "parse.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include <assert.h>
+
+// ! This file needs to be verified
 
 static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
                                        cfg_reg_group_select_t group,
@@ -74,25 +77,57 @@ void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
   }
 }
 
-void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx) {
-  // TODO stdargs
+void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
+                                      uint8_t asic_idx,
+                                      pwm_duty_cycle_t duty_cycle,
+                                      pwm_reg_group_select_t group,
+                                      uint8_t pwm_channel_idx) {
+  if (asic_idx >= asic_ctx->ic_count) {
+    return;
+  }
+
+  pwm_reg_a_t *pwm_a;
+  pwm_reg_b_t *pwm_b;
+
+  switch (group) {
+  case PWM_REG_GROUP_A:
+    if (pwm_channel_idx >= ADBMS_NUM_PWMA_CHANNELS) {
+      return;
+    }
+    pwm_a = &asic_ctx[asic_idx].pwm_ctl_a;
+    pwm_a->pwm_a_ctl_array[pwm_channel_idx] = duty_cycle;
+    break;
+
+  case PWM_REG_GROUP_B:
+    if (pwm_channel_idx >= ADBMS_NUM_PWMB_CHANNELS) {
+      return;
+    }
+    pwm_b = &asic_ctx[asic_idx].pwm_ctl_b;
+    pwm_b->pwm_b_ctl_array[pwm_channel_idx] = duty_cycle;
+    break;
+
+  case NO_PWM_REG_GROUP:
+    return;
+
+  default:
+    return;
+  }
 }
 
 void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
                             pwm_duty_cycle_t duty_cycle) {
-  for (uint8_t current_ic_idx = 0; current_ic_idx < asic_ctx->ic_count;
-       current_ic_idx++) {
-    for (uint8_t current_pwm_channel_idx = 0;
-         current_pwm_channel_idx < ADBMS_NUM_PWMA_CHANNELS;
-         current_pwm_channel_idx++) {
-      asic_ctx[current_ic_idx]
-          .pwm_ctl_a.pwm_a_ctl_array[current_pwm_channel_idx] = duty_cycle;
+
+  pwm_reg_a_t *pwm_a;
+  pwm_reg_b_t *pwm_b;
+
+  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
+    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMA_CHANNELS; pwm_idx++) {
+      pwm_a = &asic_ctx[curr_ic].pwm_ctl_a;
+      pwm_a->pwm_a_ctl_array[pwm_idx] = duty_cycle;
     }
-    for (uint8_t current_pwm_channel_idx = 0;
-         current_pwm_channel_idx < ADBMS_NUM_PWMB_CHANNELS;
-         current_pwm_channel_idx++) {
-      asic_ctx[current_ic_idx]
-          .pwm_ctl_b.pwm_b_ctl_array[current_pwm_channel_idx] = duty_cycle;
+    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMB_CHANNELS; pwm_idx++) {
+      pwm_b = &asic_ctx[curr_ic].pwm_ctl_b;
+      pwm_b->pwm_b_ctl_array[pwm_idx] = duty_cycle;
     }
   }
 }
@@ -103,7 +138,7 @@ void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     cfg_a = &asic_ctx[curr_ic].rx_cfg_a; // nickname
-    mailbox = &asic_ctx[curr_ic].configa;
+    mailbox = &asic_ctx[curr_ic].config_a;
     memcpy(&mailbox->rx_data_array[0], &data[address], ADBMS_RX_FRAME_BYTES);
     address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
 
@@ -128,7 +163,7 @@ void bms_parse_cfg_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     cfg_b = &asic_ctx[curr_ic].rx_cfg_b; // nickname
-    mailbox = &asic_ctx[curr_ic].configb;
+    mailbox = &asic_ctx[curr_ic].config_b;
     memcpy(&mailbox->rx_data_array[0], &data[address], ADBMS_RX_FRAME_BYTES);
 
     address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
@@ -240,6 +275,8 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     readings = &asic_ctx[curr_ic].s_cell.s_cell_voltages_array[0];
     break;
   default:
+    // WARN: Will only throw error at runtime
+    assert(0 && "Unexpected mtype in parse_cell_register.");
     break;
   }
 
@@ -375,7 +412,7 @@ void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &fcv_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_F);
+    parse_cell_register(asic_ctx, group, data, curr_ic, MEASURE_FILTERED);
   }
 }
 
@@ -704,7 +741,7 @@ void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     pwm = &asic_ctx[curr_ic].pwm_ctl_b;
-    mailbox = &asic_ctx[curr_ic].pwmb;
+    mailbox = &asic_ctx[curr_ic].pwm_b;
     memcpy(&mailbox->rx_data_array, &data[address], ADBMS_RX_FRAME_BYTES);
     address = ((curr_ic + 1) * (ADBMS_RX_FRAME_BYTES));
 
@@ -739,7 +776,7 @@ void bms_create_cfg_a(cell_asic_ctx_t *asic_ctx) {
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     cfg_a = &asic_ctx[curr_ic].rx_cfg_a;
-    mailbox = &asic_ctx[curr_ic].configa;
+    mailbox = &asic_ctx[curr_ic].config_a;
 
     mailbox->tx_data_array[0] =
         (((cfg_a->REFON & 0x01) << 7) | (cfg_a->CTH & 0x07));
@@ -761,7 +798,7 @@ void bms_create_cfg_b(cell_asic_ctx_t *asic_ctx) {
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     cfg_b = &asic_ctx[curr_ic].rx_cfg_b;
-    mailbox = &asic_ctx[curr_ic].configb;
+    mailbox = &asic_ctx[curr_ic].config_b;
 
     mailbox->tx_data_array[0] = cfg_b->VUV;
 
@@ -826,7 +863,7 @@ void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     pwm = &asic_ctx[curr_ic].pwm_ctl_a;
-    mailbox = &asic_ctx[curr_ic].pwma;
+    mailbox = &asic_ctx[curr_ic].pwm_a;
     mailbox->tx_data_array[0] = ((pwm->pwm_a_ctl_array[1] & 0x0F) << 4 |
                                  (pwm->pwm_a_ctl_array[0] & 0x0F));
     mailbox->tx_data_array[1] = ((pwm->pwm_a_ctl_array[3] & 0x0F) << 4 |
@@ -848,7 +885,7 @@ void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     pwm = &asic_ctx[curr_ic].pwm_ctl_b;
-    mailbox = &asic_ctx[curr_ic].pwmb;
+    mailbox = &asic_ctx[curr_ic].pwm_b;
     mailbox->tx_data_array[0] = ((pwm->pwm_b_ctl_array[1] & 0x0F) << 4 |
                                  (pwm->pwm_b_ctl_array[0] & 0x0F));
     mailbox->tx_data_array[1] = ((pwm->pwm_b_ctl_array[3] & 0x0F) << 4 |
@@ -858,7 +895,6 @@ void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
 
 void bms_parse_sid(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   // TODO
-
   uint8_t address = 0;
   serial_id_reg_t *sid;
   asic_mailbox_t *mailbox;

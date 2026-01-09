@@ -1,14 +1,17 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "bms_types.h"
 #include "bms_enums.h"
+#include "bms_types.h"
+#include <stdint.h>
 
 #define IC_COUNT_CHAIN 1 // this has to be at compile time.
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
+#define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
 
 cell_asic_ctx_t asic_ctx[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
+// asic_status_buffers_t read_buffer[IC_COUNT_CHAIN];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;
@@ -23,17 +26,17 @@ typedef struct {
 } adc_config_t;
 
 typedef struct {
-  const float overvoltage_threshold;
-  const float undervoltage_threshold;
+  const float overvoltage_threshold_v;
+  const float undervoltage_threshold_v;
 
-  const int OW_cell_threshold;
-  const int OW_aux_threshold;
+  const int openwire_cell_threshold_mv;
+  const int openwire_aux_threshold_mv;
 
-  const uint32_t loop_measurement_count;
-  const uint16_t measurement_loop_time;
+  const uint32_t loop_meas_count;
+  const uint16_t meas_loop_time_ms;
 
-  uint32_t loop_count;
-  uint32_t pladc_count;
+  uint32_t loop_counter;
+  uint32_t periodic_adc_count;
 } voltage_config_t;
 
 typedef struct {

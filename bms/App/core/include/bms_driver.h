@@ -7,7 +7,6 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "command_list.h"
-#include "main.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_it.h"
 

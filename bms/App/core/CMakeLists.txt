@@ -3,6 +3,7 @@
 target_sources(bms_api
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source/bms_driver.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/source/comms.c
 )
 
 target_compile_definitions(bms_api
@@ -13,7 +14,7 @@ target_compile_definitions(bms_api
 
 target_include_directories(bms_api
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include      
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
 
     PRIVATE
         ${CMAKE_SOURCE_DIR}/Core/Inc
