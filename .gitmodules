@@ -4,3 +4,6 @@
 [submodule "bms/submodules/external/unity_cmake/CMock"]
 	path = bms/submodules/external/unity_cmake/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
+[submodule "bms-gui"]
+	path = bms-gui
+	url = https://github.com/DallasFormulaRacing/bms-gui
