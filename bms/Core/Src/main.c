@@ -22,6 +22,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bms.h"
+#include "bms_driver.h"
+#include "command_list.h"
+#include "comms.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,6 +64,26 @@ static void MX_I2C1_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
+
+void SPI_test() {
+  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_Delay(200);
+}
+
+void bms_wake_test() {
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
+}
+
+void bms_wake_spi_test() {
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+}
 
 /* USER CODE END PFP */
 
@@ -113,8 +137,7 @@ int main(void) {
   while (1) {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-    bms_test_run();
-    HAL_Delay(100);
+    // bms_test_run();
   }
   /* USER CODE END 3 */
 }
@@ -449,29 +472,3 @@ void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-void SPI_test() {
-  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  HAL_Delay(200);
-
-  /**
-   * xTaskCreate(bms_service_task);
-   * xTaskCreate(cell_balancing_service_task);
-   * xTaskCreate(state_of_charge_service_task);
-   */
-}
-
-void bms_wake_test() {
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
-}
-
-void bms_wake_spi_test() {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-}

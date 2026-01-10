@@ -775,7 +775,7 @@ void bms_create_cfg_a(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    cfg_a = &asic_ctx[curr_ic].rx_cfg_a;
+    cfg_a = &asic_ctx[curr_ic].tx_cfg_a;
     mailbox = &asic_ctx[curr_ic].config_a;
 
     mailbox->tx_data_array[0] =
@@ -797,7 +797,7 @@ void bms_create_cfg_b(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    cfg_b = &asic_ctx[curr_ic].rx_cfg_b;
+    cfg_b = &asic_ctx[curr_ic].tx_cfg_b;
     mailbox = &asic_ctx[curr_ic].config_b;
 
     mailbox->tx_data_array[0] = cfg_b->VUV;

@@ -5,7 +5,7 @@
 #include "bms_types.h"
 #include <stdint.h>
 
-#define IC_COUNT_CHAIN 1 // this has to be at compile time.
+#define IC_COUNT_CHAIN 1 // TODO: this has to be at compile time.
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
 #define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
 

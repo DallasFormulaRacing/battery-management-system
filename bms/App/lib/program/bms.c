@@ -207,6 +207,11 @@ void bms_test_init() {
   hbms.config->adc = &g_adc_cfg;
   hbms.config->voltage = &g_voltage_cfg;
   hbms.config->measurement = &g_meas_cfg;
+
+  for (int i = 0; i < IC_COUNT_CHAIN; i++) {
+    asic[i].ic_count = IC_COUNT_CHAIN;
+  }
+
   adbms_init_config(hbms.asic);
   adbms_start_adc_cell_voltage_measurment(hbms.asic);
 }
