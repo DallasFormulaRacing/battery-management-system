@@ -94,22 +94,3 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 target_link_options(${PROJECT_NAME} PRIVATE
     -Wl,--gc-sections
 )
-
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/main.i
-    COMMAND ${CMAKE_C_COMPILER}
-        -E
-        $<$<BOOL:$<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>>:
-            $<JOIN:$<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>,;-D>>
-        $<$<BOOL:$<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>>:
-            $<JOIN:$<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>,;-I>>
-        $<$<BOOL:$<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_OPTIONS>>:
-            $<JOIN:$<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_OPTIONS>,;>>
-        ${CMAKE_SOURCE_DIR}/Core/Src/main.c
-        -o ${CMAKE_BINARY_DIR}/main.i
-    DEPENDS ${CMAKE_SOURCE_DIR}/Core/Src/main.c
-    COMMENT "Generating main.i"
-)
-
-
-add_custom_target(preprocess_main DEPENDS ${CMAKE_BINARY_DIR}/main.i)
