@@ -1,6 +1,7 @@
 #include "data.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "comms.h"
 #include "config.h"
 #include "parse.h"
 #include <stdint.h>
