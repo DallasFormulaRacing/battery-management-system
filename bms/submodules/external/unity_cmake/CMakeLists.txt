@@ -1,7 +1,7 @@
 add_library(Unity STATIC
-    CMock/vendor/unity/src/unity.c
+    Unity/src/unity.c
 )
 
 target_include_directories(Unity PUBLIC
-    CMock/vendor/unity/src
+    Unity/src
 )

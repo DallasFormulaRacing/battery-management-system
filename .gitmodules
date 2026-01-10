@@ -1,6 +1,6 @@
 [submodule "bms/submodules/external/unity_cmake/Unity"]
 	path = bms/submodules/external/unity_cmake/Unity
-	url = https://github.com/ThrowTheSwitch/Unity.git
+	url = https://github.com/ThrowTheSwitch/Unity
 [submodule "bms/submodules/external/unity_cmake/CMock"]
 	path = bms/submodules/external/unity_cmake/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
