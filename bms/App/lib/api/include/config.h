@@ -9,8 +9,8 @@
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
 #define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
 
-cell_asic_ctx_t asic_ctx[IC_COUNT_CHAIN];
-uint8_t write_buffer[WRITE_SIZE];
+extern cell_asic_ctx_t *asic_ctx;
+extern uint8_t write_buffer[WRITE_SIZE];
 // asic_status_buffers_t read_buffer[IC_COUNT_CHAIN];
 
 typedef struct {
@@ -53,9 +53,7 @@ typedef struct {
   adc_config_t *adc;
   voltage_config_t *voltage;
   measurement_config_t *measurement;
-
-  cell_asic_ctx_t asic_ctx[IC_COUNT_CHAIN];
-} bms_t;
+} bms_cfg_t;
 
 #endif
 

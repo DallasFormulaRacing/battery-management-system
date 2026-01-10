@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bms.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,32 +66,6 @@ static void MX_SPI1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void SPI_test() {
-  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  HAL_Delay(200);
-
-  /**
-   * xTaskCreate(bms_service_task);
-   * xTaskCreate(cell_balancing_service_task);
-   * xTaskCreate(state_of_charge_service_task);
-   */
-}
-
-void bms_wake_test() {
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
-}
-
-void bms_wake_spi_test() {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -134,27 +108,13 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // bms_wake_test();
-  bms_wake_spi_test();
+  bms_test_init();
+
   while (1) {
-
-    /* -- Sample board code for User push-button in interrupt mode ---- */
-    // if (BspButtonState == BUTTON_PRESSED)
-    // {
-    //   /* Update button state */
-    //   BspButtonState = BUTTON_RELEASED;
-    //   /* -- Sample board code to toggle led ---- */
-    //   //BSP_LED_Toggle(LED_GREEN);
-
-    //   /* ..... Perform your action ..... */
-    // }
-
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-
-    SPI_test();
-    HAL_Delay(1000);
+    bms_test_run();
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -489,3 +449,29 @@ void assert_failed(uint8_t *file, uint32_t line) {
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+void SPI_test() {
+  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_Delay(200);
+
+  /**
+   * xTaskCreate(bms_service_task);
+   * xTaskCreate(cell_balancing_service_task);
+   * xTaskCreate(state_of_charge_service_task);
+   */
+}
+
+void bms_wake_test() {
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
+}
+
+void bms_wake_spi_test() {
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+}
