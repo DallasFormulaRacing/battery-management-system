@@ -137,7 +137,7 @@ int main(void) {
   while (1) {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-    // bms_test_run();
+    bms_test_run();
   }
   /* USER CODE END 3 */
 }

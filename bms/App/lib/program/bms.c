@@ -213,7 +213,20 @@ void bms_test_init() {
   }
 
   adbms_init_config(hbms.asic);
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
 }
 
-void bms_test_run() { adbms_read_cell_voltages(hbms.asic); }
+void bms_test_run() {
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_read_cell_voltages(hbms.asic);
+
+  HAL_Delay(20);
+
+  adbms_start_aux_voltage_measurment(hbms.asic, AUX_ALL);
+  adbms_read_aux_voltages(hbms.asic);
+
+  HAL_Delay(20);
+
+  adbms_read_status_registers(hbms.asic);
+
+  HAL_Delay(20);
+}
