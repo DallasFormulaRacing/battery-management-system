@@ -146,7 +146,7 @@ void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
     cfg_a->REFON = (mailbox->rx_data_array[0] & 0x80) >> 7;
     cfg_a->FLAG_D = (mailbox->rx_data_array[1] & 0xFF) >> 0;
     cfg_a->SOAKON = (mailbox->rx_data_array[2] & 0x80) >> 7;
-    cfg_a->OWRNG = (mailbox->rx_data_array[2] & 0x40) >> 7;
+    cfg_a->OWRNG = (mailbox->rx_data_array[2] & 0x40) >> 6;
     cfg_a->OWA = (mailbox->rx_data_array[2] & 0x38) >> 3;
     cfg_a->GPIOx = (mailbox->rx_data_array[3] & 0xFF) |
                    ((mailbox->rx_data_array[4] & 0x03) << 8);

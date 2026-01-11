@@ -216,8 +216,7 @@ void bms_test_init() {
 }
 
 void bms_test_run() {
-  adbms_start_avgcell_voltage_measurment(hbms.asic);
-  adbms_read_avgcell_voltages(hbms.asic);
+  adbms_write_read_config(hbms.asic);
 
   HAL_Delay(20);
 }
