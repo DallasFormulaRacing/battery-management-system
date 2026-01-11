@@ -14,6 +14,10 @@
             ],
             "device": "STM32G474xx",
             "runToEntryPoint": "main",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 20
+            },
             "interface": "swd",
             "svdFile": "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32G4xx/Include/STM32G474.svd",
             "preLaunchCommands": [

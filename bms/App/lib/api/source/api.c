@@ -115,12 +115,12 @@ comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx) {
   spi_adsv_command(g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
                    g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVA, REG_GROUP_A));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVB, REG_GROUP_B));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVC, REG_GROUP_C));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVD, REG_GROUP_D));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVE, REG_GROUP_E));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCVF, REG_GROUP_F));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVA, REG_GROUP_A));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVB, REG_GROUP_B));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVC, REG_GROUP_C));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVD, REG_GROUP_D));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVE, REG_GROUP_E));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVF, REG_GROUP_F));
   spi_adc_unsnap_command();
   return COMM_OK;
 }
@@ -143,17 +143,17 @@ comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
                    g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVA, REG_GROUP_A));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACA, REG_GROUP_A));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVB, REG_GROUP_B));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACB, REG_GROUP_B));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVC, REG_GROUP_C));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACC, REG_GROUP_C));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVD, REG_GROUP_D));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACD, REG_GROUP_D));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVE, REG_GROUP_E));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACE, REG_GROUP_E));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDCVF, REG_GROUP_F));
+      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACF, REG_GROUP_F));
   spi_adc_unsnap_command();
   return COMM_OK;
 }
@@ -175,17 +175,17 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
                    g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVA, REG_GROUP_A));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCA, REG_GROUP_A));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVB, REG_GROUP_B));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCB, REG_GROUP_B));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVC, REG_GROUP_C));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCC, REG_GROUP_C));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVD, REG_GROUP_D));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCD, REG_GROUP_D));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVE, REG_GROUP_E));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCE, REG_GROUP_E));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDCVF, REG_GROUP_F));
+      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCF, REG_GROUP_F));
   spi_adc_unsnap_command();
   return COMM_OK;
 }
