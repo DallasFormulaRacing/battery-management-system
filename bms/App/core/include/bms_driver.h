@@ -20,8 +20,6 @@ extern UART_HandleTypeDef hlpuart1;
 #define CS_PIN GPIO_PIN_6
 #define GPIO_PORT GPIOB
 
-void handle_init(void);
-
 void delay(uint32_t ms);
 
 void asic_cs_low(void);

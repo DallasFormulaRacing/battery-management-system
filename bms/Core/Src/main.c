@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bms.h"
+#include "bms_driver.h"
+#include "command_list.h"
+#include "comms.h"
 
 /* USER CODE END Includes */
 
@@ -61,23 +65,12 @@ static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
 void SPI_test() {
   uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
   HAL_Delay(200);
-
-  /**
-   * xTaskCreate(bms_service_task);
-   * xTaskCreate(cell_balancing_service_task);
-   * xTaskCreate(state_of_charge_service_task);
-   */
 }
 
 void bms_wake_test() {
@@ -91,6 +84,11 @@ void bms_wake_spi_test() {
   HAL_Delay(10);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 }
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
@@ -134,27 +132,14 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // bms_wake_test();
-  bms_wake_spi_test();
+  bms_test_init();
+
   while (1) {
-
-    /* -- Sample board code for User push-button in interrupt mode ---- */
-    // if (BspButtonState == BUTTON_PRESSED)
-    // {
-    //   /* Update button state */
-    //   BspButtonState = BUTTON_RELEASED;
-    //   /* -- Sample board code to toggle led ---- */
-    //   //BSP_LED_Toggle(LED_GREEN);
-
-    //   /* ..... Perform your action ..... */
-    // }
-
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
+    bms_test_run();
 
-    SPI_test();
-    HAL_Delay(1000);
+    // bms_send_data();
   }
   /* USER CODE END 3 */
 }

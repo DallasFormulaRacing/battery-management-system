@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "STM32G474 Debug (OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/bms.elf",
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32g4x.cfg"
+            ],
+            "device": "STM32G474xx",
+            "runToEntryPoint": "main",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 20
+            },
+            "interface": "swd",
+            "svdFile": "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32G4xx/Include/STM32G474.svd",
+            "preLaunchCommands": [
+                "monitor reset halt"
+            ],
+            "postLaunchCommands": [
+                "monitor arm semihosting enable"
+            ]
+        }
+    ]
+}

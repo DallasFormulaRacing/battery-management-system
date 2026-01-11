@@ -105,7 +105,7 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
     return COMM_INVALID_PARAMETERS;
   }
 
-  uint8_t frame[UINT8_MAX];
+  uint8_t frame[total_frame_len];
 
   build_command_buffer(command_bytes, frame);
 
@@ -140,6 +140,12 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
  * @param cmd
  */
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
+  /*uint8_t cmd[4];
+    cmd[0] = tx_cmd[0];
+    cmd[1] = tx_cmd[1];
+    cmd_pec = Pec15_Calc(2, cmd);
+    cmd[2] = (uint8_t)(cmd_pec >> 8);
+    cmd[3] = (uint8_t)(cmd_pec);*/
   uint16_t cmd_pec;
   cmd[0] = command_bytes[0];
   cmd[1] = command_bytes[1];

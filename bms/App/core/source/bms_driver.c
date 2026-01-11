@@ -8,17 +8,6 @@
 #define UART_TIME_OUT HAL_MAX_DELAY
 #define I2C_TIME_OUT HAL_MAX_DELAY
 
-SPI_HandleTypeDef *hspi_bms;
-UART_HandleTypeDef *huart_bms;
-I2C_HandleTypeDef *hi2c_bms;
-UART_HandleTypeDef *hlpuart_vcp;
-
-void handle_init() {
-  hspi_bms = &hspi1;
-  hi2c_bms = &hi2c1;
-  hlpuart_vcp = &hlpuart1;
-}
-
 void delay(uint32_t ms) { HAL_Delay(ms); }
 
 void asic_cs_low() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET); }
@@ -27,26 +16,26 @@ void asic_cs_hi() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); }
 
 void spi_write(uint16_t size, uint8_t *tx_data) {
   asic_cs_low();
-  HAL_SPI_Transmit(hspi_bms, tx_data, size, SPI_TIME_OUT);
+  HAL_SPI_Transmit(&hspi1, tx_data, size, SPI_TIME_OUT);
   /* SPI1 , data, size, timeout */
   asic_cs_hi();
 }
 
 void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
   asic_cs_low();
-  HAL_SPI_Transmit(hspi_bms, tx_data, 4, SPI_TIME_OUT);
-  HAL_SPI_Receive(hspi_bms, rx_data, size, SPI_TIME_OUT);
+  HAL_SPI_Transmit(&hspi1, tx_data, 4, SPI_TIME_OUT);
+  HAL_SPI_Receive(&hspi1, rx_data, size, SPI_TIME_OUT);
   asic_cs_hi();
 }
 
 void spi_read(uint16_t size, uint8_t *rx_data) {
   asic_cs_low();
-  HAL_SPI_Receive(hspi_bms, rx_data, size, SPI_TIME_OUT);
+  HAL_SPI_Receive(&hspi1, rx_data, size, SPI_TIME_OUT);
   asic_cs_hi();
 }
 
 void print_over_uart(const char *str) {
-  HAL_UART_Transmit(hlpuart_vcp, (uint8_t *)str, strlen(str), UART_TIME_OUT);
+  HAL_UART_Transmit(&hlpuart1, (uint8_t *)str, strlen(str), UART_TIME_OUT);
 }
 
 #if TIM_EN
