@@ -246,49 +246,49 @@ typedef struct {
 
 typedef struct {
   uint8_t ic_count;
-  bms_cfg_reg_a_t tx_cfg_a;
-  bms_cfg_reg_a_t rx_cfg_a;
+  volatile bms_cfg_reg_a_t tx_cfg_a;
+  volatile bms_cfg_reg_a_t rx_cfg_a;
 
-  bms_cfg_reg_b_t tx_cfg_b;
-  bms_cfg_reg_b_t rx_cfg_b;
+  volatile bms_cfg_reg_b_t tx_cfg_b;
+  volatile bms_cfg_reg_b_t rx_cfg_b;
 
-  clearflag_reg_t clr_flag;
+  volatile clearflag_reg_t clr_flag;
 
-  cell_voltage_t cell;
-  avg_cell_voltage_t avg_cell;
-  s_cell_voltage_t s_cell;
-  filtered_cell_voltage_t filtered_cell;
+  volatile cell_voltage_t cell;
+  volatile avg_cell_voltage_t avg_cell;
+  volatile s_cell_voltage_t s_cell;
+  volatile filtered_cell_voltage_t filtered_cell;
 
-  aux_voltage_t aux;
-  rednt_aux_voltage_t rednt_aux;
+  volatile aux_voltage_t aux;
+  volatile rednt_aux_voltage_t rednt_aux;
 
-  bms_stat_reg_a_t stat_a;
-  bms_stat_reg_b_t stat_b;
-  bms_stat_reg_c_t stat_c;
-  bms_stat_reg_d_t stat_d;
-  bms_stat_reg_e_t stat_e;
+  volatile bms_stat_reg_a_t stat_a;
+  volatile bms_stat_reg_b_t stat_b;
+  volatile bms_stat_reg_c_t stat_c;
+  volatile bms_stat_reg_d_t stat_d;
+  volatile bms_stat_reg_e_t stat_e;
 
-  pwm_reg_a_t pwm_ctl_a;
-  pwm_reg_b_t pwm_ctl_b;
+  volatile pwm_reg_a_t pwm_ctl_a;
+  volatile pwm_reg_b_t pwm_ctl_b;
 
-  comms_reg_t comm; // WARN: may be confused with asic_mailbox_t com
-  serial_id_reg_t sid;
+  volatile comms_reg_t comm; // WARN: may be confused with asic_mailbox_t com
+  volatile serial_id_reg_t sid;
 
-  asic_mailbox_t config_a;
-  asic_mailbox_t config_b;
+  volatile asic_mailbox_t config_a;
+  volatile asic_mailbox_t config_b;
 
-  asic_mailbox_t clrflag;
-  asic_mailbox_t stat;
-  asic_mailbox_t com; // WARN: may be confused with comms_reg_t comm
+  volatile asic_mailbox_t clrflag;
+  volatile asic_mailbox_t stat;
+  volatile asic_mailbox_t com; // WARN: may be confused with comms_reg_t comm
 
-  asic_mailbox_t pwm_a;
-  asic_mailbox_t pwm_b;
-  asic_mailbox_t rsid;
+  volatile asic_mailbox_t pwm_a;
+  volatile asic_mailbox_t pwm_b;
+  volatile asic_mailbox_t rsid;
 
-  error_detection_t crc_err;
-  aux_openwire_t gpio;
-  cell_openwire_t owcell;
-  diag_test_t diag_result;
+  volatile error_detection_t crc_err;
+  volatile aux_openwire_t gpio;
+  volatile cell_openwire_t owcell;
+  volatile diag_test_t diag_result;
 } cell_asic_ctx_t;
 
 /* ----------------------------------------------------- */

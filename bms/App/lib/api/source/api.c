@@ -16,14 +16,14 @@ extern measurement_config_t g_meas_cfg;
   } while (0)
 
 comm_status_t adbms_init_config(cell_asic_ctx_t *asic_ctx) {
-  bms_cfg_reg_a_t *cfg_a;
-  bms_cfg_reg_b_t *cfg_b;
+  bms_cfg_reg_a_t *cfg_a; // table 102
+  bms_cfg_reg_b_t *cfg_b; // table 103
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     cfg_a = &asic_ctx[ic].tx_cfg_a;
     cfg_b = &asic_ctx[ic].tx_cfg_b;
 
     cfg_a->REFON = POWER_UP;
-    cfg_a->GPIOx = 0X3FF; // All GPIO pull down off
+    cfg_a->GPIOx = 0x3FF; // All GPIO pull down off (10 1s)
 
     cfg_b->VOV =
         set_ov_voltage_threshold(g_voltage_cfg.overvoltage_threshold_v);

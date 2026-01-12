@@ -40,6 +40,10 @@ typedef struct {
 } voltage_config_t;
 
 typedef struct {
+  // todo:
+} emulate_fault_flagd_config_t; // reference: page 26 and 70
+
+typedef struct {
   loop_measurement_enable_t measure_cell;
   loop_measurement_enable_t measure_avg_cell;
   loop_measurement_enable_t measure_f_cell;

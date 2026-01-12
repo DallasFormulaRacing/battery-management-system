@@ -2,7 +2,7 @@
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
-bms_handler_t hbms;
+volatile bms_handler_t hbms;
 
 adc_config_t g_adc_cfg = {
     .redundant_measurement_mode = RD_OFF,
@@ -30,9 +30,9 @@ measurement_config_t g_meas_cfg = {
     .measure_avg_cell = ENABLED,
     .measure_f_cell = ENABLED,
     .measure_s_voltage = ENABLED,
-    .measure_aux = DISABLED,
-    .measure_raux = DISABLED,
-    .measure_stat = DISABLED,
+    .measure_aux = ENABLED,
+    .measure_raux = ENABLED,
+    .measure_stat = ENABLED,
 };
 
 static bms_cfg_t g_bms_cfg = {
@@ -41,7 +41,7 @@ static bms_cfg_t g_bms_cfg = {
     .measurement = &g_meas_cfg,
 };
 
-bms_handler_t hbms = {
+volatile bms_handler_t hbms = {
     .config = &g_bms_cfg,
     .state =
         {
@@ -217,6 +217,10 @@ void bms_test_init() {
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
+  adbms_read_status_registers(hbms.asic);
+
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_read_cell_voltages(hbms.asic);
 
   HAL_Delay(20);
 }
