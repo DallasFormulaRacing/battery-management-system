@@ -22,9 +22,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bms.h"
-#include "bms_driver.h"
-#include "command_list.h"
-#include "comms.h"
 
 /* USER CODE END Includes */
 
@@ -65,26 +62,6 @@ static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
-void SPI_test() {
-  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  HAL_Delay(200);
-}
-
-void bms_wake_test() {
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
-}
-
-void bms_wake_spi_test() {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-}
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -107,8 +84,7 @@ int main(void) {
   /* Reset of all peripherals, Initializes the Flash interface and the Systick.
    */
 
-
-   HAL_Init();
+  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -474,5 +450,25 @@ void assert_failed(uint8_t *file, uint32_t line) {
      number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
      line) */
   /* USER CODE END 6 */
+}
+
+void SPI_test() {
+  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_Delay(200);
+}
+
+void bms_wake_test() {
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
+}
+
+void bms_wake_spi_test() {
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 }
 #endif /* USE_FULL_ASSERT */

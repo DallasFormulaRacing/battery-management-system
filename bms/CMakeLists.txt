@@ -18,7 +18,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Platform-independent sources (Always build)
 add_subdirectory(App)
-add_subdirectory(DumbExample)
 
 # For native unit testing
 if(BUILD_TESTING)
