@@ -30,6 +30,16 @@ comm_status_t adbms_start_raux_voltage_measurment(
     cell_asic_ctx_t *asic_ctx, redundant_enable_t redundant_measurement_mode);
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx);
+
+comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx);
+
+bool is_conversion_done(const volatile uint8_t *poll_bytes,
+                        cell_asic_ctx_t *asic_ctx);
+
 comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_set_reset_gpio_pins(cell_asic_ctx_t *asic_ctx);

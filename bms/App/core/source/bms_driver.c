@@ -1,13 +1,6 @@
 #include "bms_driver.h"
 #include <string.h>
 
-#define WAKEUP_DELAY 1 /* BMS ic wakeup delay  */
-#define TIM_EN 0
-
-#define SPI_TIME_OUT HAL_MAX_DELAY
-#define UART_TIME_OUT HAL_MAX_DELAY
-#define I2C_TIME_OUT HAL_MAX_DELAY
-
 void delay(uint32_t ms) { HAL_Delay(ms); }
 
 void asic_cs_low() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET); }

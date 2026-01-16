@@ -81,9 +81,6 @@ adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
-                   g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVA, REG_GROUP_A));
@@ -112,8 +109,6 @@ comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
-  spi_adsv_command(g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVA, REG_GROUP_A));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVB, REG_GROUP_B));
@@ -137,10 +132,11 @@ adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
-                   g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+  // asic_wakeup(asic_ctx->ic_count);
+  // spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
+  //                  g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
+  //                  g_adc_cfg.RSTF_en,
+  //                  g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACA, REG_GROUP_A));
@@ -289,6 +285,67 @@ comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
+comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx) {
+  uint8_t poll_bytes[2 * asic_ctx->ic_count];
+
+  do {
+    spi_poll_command_raw(PLADC, asic_ctx->ic_count, poll_bytes);
+  } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx) {
+  uint8_t poll_bytes[2 * asic_ctx->ic_count];
+
+  do {
+    spi_poll_command_raw(PLCADC, asic_ctx->ic_count, poll_bytes);
+  } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx) {
+  uint8_t poll_bytes[2 * asic_ctx->ic_count];
+
+  do {
+    spi_poll_command_raw(PLSADC, asic_ctx->ic_count, poll_bytes);
+  } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx) {
+  uint8_t poll_bytes[2 * asic_ctx->ic_count];
+
+  do {
+    spi_poll_command_raw(PLAUX1, asic_ctx->ic_count, poll_bytes);
+  } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx) {
+  uint8_t poll_bytes[2 * asic_ctx->ic_count];
+
+  do {
+    spi_poll_command_raw(PLAUX2, asic_ctx->ic_count, poll_bytes);
+  } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+comm_status_t adbms_bleed_cell_pwm(cell_asic_ctx_t *asic_ctx) {
+  return COMM_OK;
+}
+
+bool is_conversion_done(const volatile uint8_t *poll_bytes,
+                        cell_asic_ctx_t *asic_ctx) {
+  for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
+    uint8_t status_byte = poll_bytes[(2 * ic) + 1];
+
+    if (status_byte == 0xFF) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx) {
 //   // TODO
 
@@ -337,7 +394,7 @@ comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx) {
 //   return COMM_OK;
 // }
 
-// comm_status_t adbms_clear_spin_measurement() {
+// comm_status_t adbms_clear_s_pin_measurement() {
 //   // TODO
 //   return COMM_OK;
 // }
@@ -457,7 +514,7 @@ comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx) {
 // }
 
 // comm_status_t
-// adbms_open_wire_detection_condtion_check(cell_asic_ctx_t *asic_ctx,
+// adbms_open_wire_detection_condition_check(cell_asic_ctx_t *asic_ctx,
 //                                          bms_op_t type) {
 //   // TODO
 //   return COMM_OK;

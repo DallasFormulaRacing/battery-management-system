@@ -216,10 +216,11 @@ void bms_test_init() {
 }
 
 void bms_test_run() {
-  adbms_write_read_config(hbms.asic);
-  adbms_read_status_registers(hbms.asic);
+  // adbms_write_read_config(hbms.asic);
+  // adbms_read_status_registers(hbms.asic);
 
   adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_poll_for_conversion_adc(hbms.asic);
   adbms_read_cell_voltages(hbms.asic);
 
   HAL_Delay(20);

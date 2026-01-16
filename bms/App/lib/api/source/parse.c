@@ -2,6 +2,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include <assert.h>
+#include <stdint.h>
 
 // ! This file needs to be verified
 
@@ -28,6 +29,10 @@ uint16_t set_uv_voltage_threshold(float volt) {
   vuv_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
   vuv_value &= 0xFFFU;
   return vuv_value;
+}
+
+float convert_voltage_human_readable(int16_t voltage) {
+  return ((float)voltage * 0.000150F) + 1.5F;
 }
 
 uint8_t make_cfg_a_flag(diagnostics_flags_for_x_t flag_d, flag_ctl_t flag) {
