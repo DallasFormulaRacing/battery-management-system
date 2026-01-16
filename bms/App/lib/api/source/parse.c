@@ -16,7 +16,7 @@ uint16_t set_ov_voltage_threshold(float volt) {
   uint8_t shift_bits = 12;
   volt = (volt - 1.5F);
   volt = volt / (16 * 0.000150F);
-  vov_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
+  vov_value = ((uint16_t)volt + (2U * (1U << (shift_bits - 1U))));
   vov_value &= 0xFFF;
   return vov_value;
 }
@@ -26,7 +26,7 @@ uint16_t set_uv_voltage_threshold(float volt) {
   uint8_t shift_bits = 12;
   volt = (volt - 1.5F);
   volt = volt / (16 * 0.000150F);
-  vuv_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
+  vuv_value = ((uint16_t)volt + (2U * (1U << (shift_bits - 1U))));
   vuv_value &= 0xFFFU;
   return vuv_value;
 }

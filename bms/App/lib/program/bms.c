@@ -2,7 +2,7 @@
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
-volatile bms_handler_t hbms;
+bms_handler_t hbms;
 
 adc_config_t g_adc_cfg = {
     .redundant_measurement_mode = RD_OFF,
@@ -41,7 +41,7 @@ static bms_cfg_t g_bms_cfg = {
     .measurement = &g_meas_cfg,
 };
 
-volatile bms_handler_t hbms = {
+bms_handler_t hbms = {
     .config = &g_bms_cfg,
     .state =
         {
