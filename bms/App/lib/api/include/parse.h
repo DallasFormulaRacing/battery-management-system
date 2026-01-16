@@ -37,6 +37,12 @@ uint16_t make_cfg_b_dcc_bit(discharge_cell_x_ctl_t dcc, dcc_bit_ctl_t dccbit);
 void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
                                         discharge_timer_range_t range,
                                         discharge_timer_timeout_t value);
+
+void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
+                                      uint8_t asic_idx,
+                                      pwm_duty_cycle_t duty_cycle,
+                                      pwm_reg_group_select_t group,
+                                      uint8_t pwm_channel_idx);
 void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
                             pwm_duty_cycle_t duty_cycle);
 
