@@ -205,9 +205,6 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size);
 
-static void init_status_buffers(asic_status_buffers_t *status_buffers,
-                                uint16_t read_buffer_size);
-
 cfg_reg_group_select_t switch_group_cfg(bms_group_select_t group) {
   switch (group) {
   case ALL_REG_GROUPS:
@@ -277,7 +274,13 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   }
 
   asic_status_buffers_t status_buffers;
-  init_status_buffers(&status_buffers, read_buffer_size);
+
+  uint8_t read_buffer[read_buffer_size];
+  uint8_t pec_error[asic_ctx->ic_count];
+  uint8_t cmd_count[asic_ctx->ic_count];
+  status_buffers.register_data = read_buffer;
+  status_buffers.pec_error_flags = pec_error;
+  status_buffers.command_counter = cmd_count;
 
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
@@ -285,16 +288,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
   return COMM_OK;
-}
-
-static void init_status_buffers(asic_status_buffers_t *status_buffers,
-                                uint16_t read_buffer_size) {
-  uint8_t read_buffer[read_buffer_size];
-  uint8_t pec_error[asic_ctx->ic_count];
-  uint8_t cmd_count[asic_ctx->ic_count];
-  status_buffers->register_data = read_buffer;
-  status_buffers->pec_error_flags = pec_error;
-  status_buffers->command_counter = cmd_count;
 }
 
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,

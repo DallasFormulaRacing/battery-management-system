@@ -1,4 +1,5 @@
 #include "comms.h"
+#include "bms_driver.h"
 #include "command_list.h"
 #include <stdint.h>
 
@@ -105,7 +106,7 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
     return COMM_INVALID_PARAMETERS;
   }
 
-  uint8_t frame[UINT8_MAX];
+  uint8_t frame[total_frame_len];
 
   build_command_buffer(command_bytes, frame);
 
@@ -140,6 +141,12 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
  * @param cmd
  */
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
+  /*uint8_t cmd[4];
+    cmd[0] = tx_cmd[0];
+    cmd[1] = tx_cmd[1];
+    cmd_pec = Pec15_Calc(2, cmd);
+    cmd[2] = (uint8_t)(cmd_pec >> 8);
+    cmd[3] = (uint8_t)(cmd_pec);*/
   uint16_t cmd_pec;
   cmd[0] = command_bytes[0];
   cmd[1] = command_bytes[1];
@@ -263,3 +270,20 @@ void spi_adax2_command(aux_adc_input_channel_select_t ch) {
 void spi_adc_snap_command(void) { bms_send_command((command_t){0x00, 0x2D}); }
 
 void spi_adc_unsnap_command(void) { bms_send_command((command_t){0x00, 0x2F}); }
+
+void spi_poll_command_raw(const command_t cmd_bytes, const uint8_t ic_count,
+                          uint8_t *poll_bytes) {
+  uint8_t dummy = 0xFF;
+
+  asic_cs_low();
+
+  command_msg_t cmd;
+  build_command_buffer(cmd_bytes, cmd);
+  spi_write(4, cmd);
+
+  for (uint8_t i = 0; i < (2U * ic_count); i++) {
+    HAL_SPI_TransmitReceive(&hspi1, &dummy, &poll_bytes[i], 1, SPI_TIME_OUT);
+  }
+
+  asic_cs_hi();
+}

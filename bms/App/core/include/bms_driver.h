@@ -10,6 +10,13 @@
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_it.h"
 
+#define WAKEUP_DELAY 1 /* BMS ic wakeup delay  */
+#define TIM_EN 0
+
+#define SPI_TIME_OUT HAL_MAX_DELAY
+#define UART_TIME_OUT HAL_MAX_DELAY
+#define I2C_TIME_OUT HAL_MAX_DELAY
+
 extern ADC_HandleTypeDef hadc1;
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
@@ -19,8 +26,6 @@ extern UART_HandleTypeDef hlpuart1;
 
 #define CS_PIN GPIO_PIN_6
 #define GPIO_PORT GPIOB
-
-void handle_init(void);
 
 void delay(uint32_t ms);
 
