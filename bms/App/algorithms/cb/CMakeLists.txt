@@ -1,6 +1,8 @@
 add_library(bms_cb
     cb.c
     cb.h
+    csort.c
+    csort.h
 )
 
 target_include_directories(bms_cb
