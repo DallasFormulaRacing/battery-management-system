@@ -7,13 +7,6 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct {
-  uint8_t ic_index;
-  uint8_t cell_index;
-  uint8_t pwm_channel_index;
-  pwm_duty_cycle_t duty_cycle;
-} pwm_target_cell_ctl_t;
-
 typedef enum {
   MEASURE_RAW = 0,
   MEASURE_FILTERED,
@@ -38,13 +31,13 @@ void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
                                         discharge_timer_range_t range,
                                         discharge_timer_timeout_t value);
 
-void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
-                                      uint8_t asic_idx,
-                                      pwm_duty_cycle_t duty_cycle,
-                                      pwm_reg_group_select_t group,
-                                      uint8_t pwm_channel_idx);
-void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
-                            pwm_duty_cycle_t duty_cycle);
+// void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
+//                                       uint8_t asic_idx,
+//                                       pwm_duty_cycle_t duty_cycle,
+//                                       pwm_reg_group_select_t group,
+//                                       uint8_t pwm_channel_idx);
+// void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
+//                             pwm_duty_cycle_t duty_cycle);
 
 void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_cfg_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
@@ -86,7 +79,7 @@ void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
 // --- create helpers ---
 void bms_create_cfg_a(cell_asic_ctx_t *asic_ctx);
 void bms_create_cfg_b(cell_asic_ctx_t *asic_ctx);
-void bms_create_clrflag_data(cell_asic_ctx_t *asic_ctx);
+void bms_create_clrflag_mb_data(cell_asic_ctx_t *asic_ctx);
 void bms_create_comm(cell_asic_ctx_t *asic_ctx);
 void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx);
 void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx);
