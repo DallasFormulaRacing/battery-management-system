@@ -1,6 +1,7 @@
 #ifndef CDATATYPES_H
 #define CDATATYPES_H
 
+#include "bms_enums.h"
 #include <stddef.h>
 #include <stdint.h>
 

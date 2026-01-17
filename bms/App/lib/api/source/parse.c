@@ -1,8 +1,4 @@
 #include "parse.h"
-#include "bms_enums.h"
-#include "bms_types.h"
-#include <assert.h>
-#include <stdint.h>
 
 // ! This file needs to be verified
 
@@ -81,63 +77,6 @@ void set_cfg_b_discharge_time_out_value(cell_asic_ctx_t *asic_ctx,
     }
   }
 }
-
-/*
-void set_pwm_duty_cycle_target_single(cell_asic_ctx_t *asic_ctx,
-                                      uint8_t asic_idx,
-                                      pwm_duty_cycle_t duty_cycle,
-                                      pwm_reg_group_select_t group,
-                                      uint8_t pwm_channel_idx) {
-  if (asic_idx >= asic_ctx->ic_count) {
-    return;
-  }
-
-  pwm_reg_a_t *pwm_a;
-  pwm_reg_b_t *pwm_b;
-
-  switch (group) {
-  case PWM_REG_GROUP_A:
-    if (pwm_channel_idx >= ADBMS_NUM_PWMA_CHANNELS) {
-      return;
-    }
-    pwm_a = &asic_ctx[asic_idx].pwm_ctl_a;
-    pwm_a->pwm_a_ctl_array[pwm_channel_idx] = duty_cycle;
-    break;
-
-  case PWM_REG_GROUP_B:
-    if (pwm_channel_idx >= ADBMS_NUM_PWMB_CHANNELS) {
-      return;
-    }
-    pwm_b = &asic_ctx[asic_idx].pwm_ctl_b;
-    pwm_b->pwm_b_ctl_array[pwm_channel_idx] = duty_cycle;
-    break;
-
-  case NO_PWM_REG_GROUP:
-    return;
-
-  default:
-    return;
-  }
-}
-
-void set_pwm_duty_cycle_all(cell_asic_ctx_t *asic_ctx,
-                            pwm_duty_cycle_t duty_cycle) {
-
-  pwm_reg_a_t *pwm_a;
-  pwm_reg_b_t *pwm_b;
-
-  for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMA_CHANNELS; pwm_idx++) {
-      pwm_a = &asic_ctx[curr_ic].pwm_ctl_a;
-      pwm_a->pwm_a_ctl_array[pwm_idx] = duty_cycle;
-    }
-    for (uint8_t pwm_idx = 0; pwm_idx < ADBMS_NUM_PWMB_CHANNELS; pwm_idx++) {
-      pwm_b = &asic_ctx[curr_ic].pwm_ctl_b;
-      pwm_b->pwm_b_ctl_array[pwm_idx] = duty_cycle;
-    }
-  }
-}
-*/
 
 void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
   uint8_t address = 0;
@@ -774,6 +713,69 @@ void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
   default:
     break;
   }
+}
+
+void set_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
+                             pwm_duty_cycle_t duty_cycle) {
+  // set the config struct in the asic ctx
+  // then pack it into the appropriate pwm mailbox
+  if (cell_number < ADBMS_NUM_PWMA_CHANNELS) {
+    asic_ctx->pwm_ctl_a.pwm_a_ctl_array[cell_number] = duty_cycle;
+  } else {
+    asic_ctx->pwm_ctl_b.pwm_b_ctl_array[cell_number - 12] = duty_cycle;
+  }
+}
+
+void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
+  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+    if (cell_number < ADBMS_NUM_PWMA_CHANNELS) {
+      asic_ctx[ic].pwm_ctl_a.pwm_a_ctl_array[cell_number] = 0;
+    } else {
+      asic_ctx[ic].pwm_ctl_b.pwm_b_ctl_array[cell_number - 12] = 0;
+    }
+  }
+}
+
+void pack_pwm_duty_cycle_into_mailbox(cell_asic_ctx_t *asic_ctx) {
+  asic_mailbox_t *pwm_a_mailbox = &asic_ctx->pwm_a_mb;
+  asic_mailbox_t *pwm_b_mailbox = &asic_ctx->pwm_b_mb;
+  pwm_reg_a_t pwm_a_cfg = asic_ctx->pwm_ctl_a;
+  pwm_reg_b_t pwm_b_cfg = asic_ctx->pwm_ctl_b;
+  pack_pwma(&pwm_a_cfg, pwm_a_mailbox);
+  pack_pwmb(&pwm_b_cfg, pwm_b_mailbox);
+}
+
+void pack_pwma(const pwm_reg_a_t *cfg, asic_mailbox_t *mb) {
+  for (uint8_t i = 0; i < 6; i++) {
+    uint8_t lo = cfg->pwm_a_ctl_array[i * 2] & 0x0F;
+    uint8_t hi = cfg->pwm_a_ctl_array[(i * 2) + 1] & 0x0F;
+
+    mb->tx_data_array[i] = lo | (hi << 4);
+  }
+}
+
+void pack_pwmb(const pwm_reg_b_t *cfg, asic_mailbox_t *mb) {
+  for (uint8_t i = 0; i < 2; i++) {
+    uint8_t lo = cfg->pwm_b_ctl_array[i * 2] & 0x0F;
+    uint8_t hi = cfg->pwm_b_ctl_array[(i * 2) + 1] & 0x0F;
+
+    mb->tx_data_array[i] = lo | (hi << 4);
+  }
+}
+
+voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx) {
+  voltage_readings_t lowest = INT16_MAX;
+  voltage_readings_t *array = NULL;
+  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+    array = asic_ctx[ic].cell.cell_voltages_array;
+    // handle chain asic so surround this in a for loop this is O(N^2) 12 x 12
+    for (voltage_readings_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
+      if (array[i] < lowest) {
+        lowest = array[i];
+      }
+    }
+  }
+  return lowest;
 }
 
 // --- create helpers ---
