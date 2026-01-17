@@ -215,13 +215,35 @@ void bms_test_init() {
   adbms_init_config(hbms.asic);
 }
 
+/*
+  PWM_0_0_PERCENT_DUTY_CYCLE = 0x0,  0.0% (default) duty cycle
+  PWM_6_6_PERCENT_DUTY_CYCLE = 0x1,  6.6% duty cycle
+  PWM_13_2_PERCENT_DUTY_CYCLE = 0x2, 13.2% duty cycle
+  PWM_19_8_PERCENT_DUTY_CYCLE = 0x3, 19.8% duty cycle
+  PWM_26_4_PERCENT_DUTY_CYCLE = 0x4, 26.4% duty cycle
+  PWM_33_0_PERCENT_DUTY_CYCLE = 0x5, 33.0% duty cycle
+  PWM_39_6_PERCENT_DUTY_CYCLE = 0x6, 39.6% duty cycle
+  PWM_46_2_PERCENT_DUTY_CYCLE = 0x7, 46.2% duty cycle
+  PWM_52_8_PERCENT_DUTY_CYCLE = 0x8, 52.8% duty cycle
+  PWM_59_4_PERCENT_DUTY_CYCLE = 0x9, 59.4% duty cycle
+  PWM_66_0_PERCENT_DUTY_CYCLE = 0xA, 66.0% duty cycle
+  PWM_72_6_PERCENT_DUTY_CYCLE = 0xB, 72.6% duty cycle
+  PWM_79_2_PERCENT_DUTY_CYCLE = 0xC, 79.2% duty cycle
+  PWM_85_8_PERCENT_DUTY_CYCLE = 0xD, 85.8% duty cycle
+  PWM_92_4_PERCENT_DUTY_CYCLE = 0xE, 92.4% duty cycle
+  PWM_100_0_PERCENT_DUTY_CYCLE = 0xF 100.0% duty cycle
+*/
 void bms_test_run() {
   // adbms_write_read_config(hbms.asic);
   // adbms_read_status_registers(hbms.asic);
 
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
-  adbms_poll_for_conversion_adc(hbms.asic);
-  adbms_read_cell_voltages(hbms.asic);
+  // adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  // adbms_poll_for_conversion_adc(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
 
+  // adbms_bleed_cell_pwm(hbms.asic, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
+
+  // reads 15 (14+1) on the scope
+  adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
   HAL_Delay(20);
 }

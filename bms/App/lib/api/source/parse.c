@@ -736,33 +736,6 @@ void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
   }
 }
 
-void pack_pwm_duty_cycle_into_mailbox(cell_asic_ctx_t *asic_ctx) {
-  asic_mailbox_t *pwm_a_mailbox = &asic_ctx->pwm_a_mb;
-  asic_mailbox_t *pwm_b_mailbox = &asic_ctx->pwm_b_mb;
-  pwm_reg_a_t pwm_a_cfg = asic_ctx->pwm_ctl_a;
-  pwm_reg_b_t pwm_b_cfg = asic_ctx->pwm_ctl_b;
-  pack_pwma(&pwm_a_cfg, pwm_a_mailbox);
-  pack_pwmb(&pwm_b_cfg, pwm_b_mailbox);
-}
-
-void pack_pwma(const pwm_reg_a_t *cfg, asic_mailbox_t *mb) {
-  for (uint8_t i = 0; i < 6; i++) {
-    uint8_t lo = cfg->pwm_a_ctl_array[i * 2] & 0x0F;
-    uint8_t hi = cfg->pwm_a_ctl_array[(i * 2) + 1] & 0x0F;
-
-    mb->tx_data_array[i] = lo | (hi << 4);
-  }
-}
-
-void pack_pwmb(const pwm_reg_b_t *cfg, asic_mailbox_t *mb) {
-  for (uint8_t i = 0; i < 2; i++) {
-    uint8_t lo = cfg->pwm_b_ctl_array[i * 2] & 0x0F;
-    uint8_t hi = cfg->pwm_b_ctl_array[(i * 2) + 1] & 0x0F;
-
-    mb->tx_data_array[i] = lo | (hi << 4);
-  }
-}
-
 voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx) {
   voltage_readings_t lowest = INT16_MAX;
   voltage_readings_t *array = NULL;
@@ -867,6 +840,7 @@ void bms_create_comm(cell_asic_ctx_t *asic_ctx) {
   }
 }
 
+// --- pwm create helpers ---
 void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
   pwm_reg_a_t *pwm;
   asic_mailbox_t *mailbox;
@@ -889,7 +863,7 @@ void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+  // TODO: this shouldnt be wrong, but we need to check it
   pwm_reg_b_t *pwm;
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {

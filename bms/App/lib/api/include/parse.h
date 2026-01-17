@@ -77,9 +77,7 @@ void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data);
 
-void pack_pwm_duty_cycle_into_mailbox(cell_asic_ctx_t *asic_ctx);
-void pack_pwma(const pwm_reg_a_t *cfg, asic_mailbox_t *mb);
-void pack_pwmb(const pwm_reg_b_t *cfg, asic_mailbox_t *mb);
+
 voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx);
 
 // --- create helpers ---
