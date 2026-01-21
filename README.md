@@ -32,13 +32,6 @@ DO NOT USE CUBE-CMAKE
 
 If you get compiler detection errors make sure the CMake GNU ARM toolchain flag is being detected!
 
-`Client TUI Instructions`
-
-`cwd = client/spacestation`
-
-1. `cargo build`
-2. `cargo run`
-
 ### VS Code Extensions
 
 ```txt
