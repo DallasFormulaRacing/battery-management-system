@@ -3,6 +3,7 @@
 #include "command_list.h"
 #include "comms.h"
 #include "config.h"
+#include <assert.h>
 
 extern adc_config_t g_adc_cfg;
 extern voltage_config_t g_voltage_cfg;
@@ -327,6 +328,33 @@ comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx) {
   do {
     spi_poll_command_raw(PLAUX2, asic_ctx->ic_count, poll_bytes);
   } while (!is_conversion_done(poll_bytes, asic_ctx));
+  return COMM_OK;
+}
+
+// todo: write a version of this function that does not override the entire pwm
+// register upon each call
+comm_status_t adbms_bleed_cell_pwm(cell_asic_ctx_t *asic_ctx,
+                                   uint8_t cell_number, uint8_t segment_number,
+                                   pwm_duty_cycle_t duty_cycle) {
+  // problem: cell indexing starts at 0, but pwm indexing starts at 1
+  uint8_t pwm_number = cell_number + 1;
+  if (pwm_number <= ADBMS_NUM_PWMA_CHANNELS) {
+    asic_ctx[segment_number].pwm_ctl_a.pwm_a_ctl_array[pwm_number] = duty_cycle;
+    bms_create_pwm_a(asic_ctx);
+    RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMA, REG_GROUP_A));
+  }
+
+  // use the second pwm register if we are at cells 12-15
+  else {
+    assert(pwm_number > ADBMS_NUM_PWMA_CHANNELS &&
+           pwm_number <= (ADBMS_NUM_PWMA_CHANNELS + ADBMS_NUM_PWMB_CHANNELS));
+
+    asic_ctx[segment_number]
+        .pwm_ctl_b.pwm_b_ctl_array[pwm_number - ADBMS_NUM_PWMA_CHANNELS - 1] =
+        duty_cycle;
+    bms_create_pwm_b(asic_ctx);
+    RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMB, REG_GROUP_B));
+  }
   return COMM_OK;
 }
 
