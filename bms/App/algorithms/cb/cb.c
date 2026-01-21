@@ -7,7 +7,7 @@
  * @brief cell balance super loop
  *
  *
- * @param asic_ctx: The context of the ASIC
+ * @param asic_ctx: 
  * @return void
  */
 void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx) {};

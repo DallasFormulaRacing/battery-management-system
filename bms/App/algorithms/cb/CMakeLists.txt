@@ -3,6 +3,8 @@ add_library(bms_cb
     cb.h
     csort.c
     csort.h
+    queue.c
+    queue.h
 )
 
 target_include_directories(bms_cb

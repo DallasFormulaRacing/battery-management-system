@@ -19,3 +19,5 @@ Diagnostics:
         - unknown_typename_suggest
 
         - typename_requires_specqual
+
+        - bugprone-easily-swappable-parameters
