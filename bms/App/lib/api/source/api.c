@@ -1,9 +1,12 @@
 #include "api.h"
 #include "bms_enums.h"
+#include "bms_types.h"
 #include "command_list.h"
 #include "comms.h"
 #include "config.h"
+#include "parse.h"
 #include <assert.h>
+#include <stdint.h>
 
 extern adc_config_t g_adc_cfg;
 extern voltage_config_t g_voltage_cfg;
@@ -343,17 +346,36 @@ bool is_conversion_done(const volatile uint8_t *poll_bytes,
   return true;
 }
 
-// todo: write a version of this function that does not override the entire pwm
-// register upon each call
-comm_status_t adbms_bleed_cell_pwm(cell_asic_ctx_t *asic_ctx,
-                                   uint8_t cell_number, uint8_t segment_number,
-                                   pwm_duty_cycle_t duty_cycle) {
+/** // TODO: Needs to be tested
+ * @brief Sets the pwm duty cycle for each cell, but does not send the command
+ * yet. This allows for multiple cells to be bled in parallel as you can call
+ * this function as many times as necessary until you need to send the PWM
+ * command + mailbox contents.
+ *
+ * For example (pseudocode):
+ * adbms_set_cell_pwm(..., cell 10, segment 0, 50%);
+ * adbms_set_cell_pwm(..., cell 15, segment 3, 10%);
+ * adbms_set_cell_pwm(..., cell 2, segment 11, 80%);
+ *
+ * Then, when you are satisfied with the cells you are bleeding at a certain
+ * rate, you call adbms_send_pwm_commands(...).
+ *
+ * This is an improvement over the previous implementation, which you could only
+ * bleed one cell at a time; this function now bleed multiple cells at a time.
+ *
+ * @param asic_ctx -- array of ASIC context
+ * @param cell_number -- cell to be bled at designated pwm duty_cycle
+ * @param segment_number -- segment number (used by the asic array)
+ * @param duty_cycle -- duty cycle you want to bleed cell_number at
+ * @return comm_status_t -- status of SPI transmission
+ */
+comm_status_t adbms_set_cell_pwm(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
+                                 uint8_t segment_number,
+                                 pwm_duty_cycle_t duty_cycle) {
   // problem: cell indexing starts at 0, but pwm indexing starts at 1
   uint8_t pwm_number = cell_number + 1;
   if (pwm_number <= ADBMS_NUM_PWMA_CHANNELS) {
     asic_ctx[segment_number].pwm_ctl_a.pwm_a_ctl_array[pwm_number] = duty_cycle;
-    bms_create_pwm_a(asic_ctx);
-    RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMA, REG_GROUP_A));
   }
 
   // use the second pwm register if we are at cells 12-15
@@ -364,10 +386,43 @@ comm_status_t adbms_bleed_cell_pwm(cell_asic_ctx_t *asic_ctx,
     asic_ctx[segment_number]
         .pwm_ctl_b.pwm_b_ctl_array[pwm_number - ADBMS_NUM_PWMA_CHANNELS - 1] =
         duty_cycle;
-    bms_create_pwm_b(asic_ctx);
-    RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMB, REG_GROUP_B));
   }
   return COMM_OK;
+}
+
+/**
+ * @brief Builds the PWM Mailboxes, and subsequently, the PWM Command packet
+ * from the given PWM Config structs. Ideally, use after calling
+ * adbms_set_cell_pwm(...) sufficiently.
+ *
+ * @param asic_ctx
+ * @return comm_status_t
+ */
+comm_status_t adbms_send_pwm_commands(cell_asic_ctx_t *asic_ctx) {
+  bms_create_pwm_a(asic_ctx);
+  bms_create_pwm_b(asic_ctx);
+  RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMB, REG_GROUP_B));
+  RETURN_IF_ERROR(bms_write_data(asic_ctx, BMS_REG_PWM, WRPWMA, REG_GROUP_A));
+
+  return COMM_OK;
+}
+
+/**
+ * @brief Sets all cell PWM duty cycle half-bytes to zero for every asic in asic
+ * chain. Then constructs mailbox packet and transmit over SPI.
+ *
+ * @param asic_ctx -- array of asic contexts
+ * @return comm_status_t -- status of SPI transmission
+ */
+comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
+  for (uint8_t segment_idx = 0; segment_idx < IC_COUNT_CHAIN; segment_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
+      adbms_set_cell_pwm(asic_ctx, cell_idx, segment_idx,
+                         PWM_0_0_PERCENT_DUTY_CYCLE);
+    }
+  }
+
+  adbms_send_pwm_commands(asic_ctx);
 }
 
 // comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx) {
