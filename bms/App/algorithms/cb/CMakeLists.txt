@@ -1,8 +1,6 @@
 add_library(bms_cb
     cb.c
     cb.h
-    csort.c
-    csort.h
     queue.c
     queue.h
 )
