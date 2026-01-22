@@ -422,7 +422,7 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
     }
   }
 
-  adbms_send_pwm_commands(asic_ctx);
+  return adbms_send_pwm_commands(asic_ctx);
 }
 
 // comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx) {
