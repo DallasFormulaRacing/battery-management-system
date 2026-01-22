@@ -97,7 +97,7 @@ comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 
 // i dont think these are needed but im keeping them for now
-comm_status_t adbms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
+// comm_status_t adbms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
+// comm_status_t adbms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
 
 #endif
