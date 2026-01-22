@@ -18,14 +18,12 @@ typedef struct {
   // queue_t balance_q;
 } pcb_ctx_t;
 
-void init_pcb(pcb_ctx_t *pcb);
+void populate_pcb(pcb_ctx_t *pcb);
 
-/**
- * use the retention registers to store segment identifier for easy id during
- * cell balancing
- *
- */
-void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
+void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
+
+pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
+                                             voltage_readings_t delta);
 
 #endif
 // void qsort_cells_by_voltage(battery_cell_t *cells, uint16_t num_cells);

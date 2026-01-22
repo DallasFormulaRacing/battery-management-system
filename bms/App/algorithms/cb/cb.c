@@ -1,41 +1,23 @@
 #include "cb.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "queue.h"
+#include <stdint.h>
 
 // ! table 95, page 68
 
 /**
  * @brief
  * Some things to think about:
- * how do we want to collect the cells that need to be balanced?
- * queue? all at once? -- i dont think queue is necessary unless temperature is
- * a problem
+ * handling bad cells: make sure under voltage and over voltage cases are
+ * handled in the case where a cell is not accepting charge, and the algo might
+ * bleed every cell to a value under the undervoltage threshold
  *
  * collate all cell votlages from the asic array 192 element (asic) to 144
  * element (pcb) -- is this necessary? -- not really but could make life easier
  * we have a lot of memory to spare.
  *
- *
- *
- *
- *
- *
- *
- *
- *
- *
  */
-
-/**
- * @brief cell balance super loop
- *
- *
- * @param asic_ctx:
- * @return void
- */
-void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
-  // todo
-}
 
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   // copy cells from asic
@@ -97,4 +79,36 @@ pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
   if (delta_v < 0.0132F && delta_v >= 0.0066F)
     return PWM_6_6_PERCENT_DUTY_CYCLE;
   return PWM_0_0_PERCENT_DUTY_CYCLE;
+}
+
+/**
+ * @brief Populate the PCB struct by doing a first pass through the battery
+ * array to find the lowest cell, then a second pass to calculate each cell
+ * delta. during this second pass, if the cell delta is greater than the, add it
+ * to the PWM struct (array)
+ *
+ * @param pcb
+ */
+void populate_pcb(pcb_ctx_t *pcb) {
+  voltage_readings_t min_voltage = INT16_MAX;
+  battery_cell_t base;
+  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+    if (pcb->batteries[cell_idx].cell_voltage < min_voltage) {
+      min_voltage = pcb->batteries[cell_idx].cell_voltage;
+      base = pcb->batteries[cell_idx];
+    }
+  }
+
+  pcb->lowest_cell = base;
+}
+
+/**
+ * @brief init the PCB struct with the user input: max cell delta
+ *
+ * @param pcb
+ * @param max_cell_delta_allowed (target cell delta)
+ */
+void init_cell_balancing(pcb_ctx_t *pcb,
+                         voltage_readings_t max_cell_delta_allowed) {
+  pcb->maximum_cell_delta_allowed = max_cell_delta_allowed;
 }
