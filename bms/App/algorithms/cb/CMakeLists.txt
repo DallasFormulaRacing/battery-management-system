@@ -13,4 +13,5 @@ target_include_directories(bms_cb
 target_link_libraries(bms_cb
     PUBLIC
         bms_api
+        
 )
