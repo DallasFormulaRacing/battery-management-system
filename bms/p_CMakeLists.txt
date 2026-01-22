@@ -1,3 +1,4 @@
+# ! /CMakeLists.txt -- Root CMakeLists.txt
 cmake_minimum_required(VERSION 3.22)
 
 option(BUILD_TESTING "Build native executable for unit testing" OFF)
