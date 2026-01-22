@@ -8,7 +8,8 @@
  * @brief
  * Some things to think about:
  * how do we want to collect the cells that need to be balanced?
- * queue? all at once?
+ * queue? all at once? -- i dont think queue is necessary unless temperature is
+ * a problem
  *
  * collate all cell votlages from the asic array 192 element (asic) to 144
  * element (pcb) -- is this necessary? -- not really but could make life easier
@@ -38,6 +39,15 @@ void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
 
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   // copy cells from asic
+  uint8_t segment_idx = 0;
+  uint8_t battery_idx = 0;
+  for (battery_idx = 0; battery_idx < NUM_CELL_MAX; battery_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < 12; cell_idx++) {
+      pcb->batteries[battery_idx].cell_voltage =
+          asic_ctx[segment_idx].cell.cell_voltages_array[cell_idx];
+    }
+    segment_idx++;
+  }
 }
 
 /**
@@ -50,37 +60,41 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
  * @param delta -- cell delta in signed int16
  * @return pwm_duty_cycle_t -- interpolated PWM Duty Cycle
  */
-pwm_duty_cycle_t map_delta_to_pwm_discretize(voltage_readings_t delta) {
+pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
+                                             voltage_readings_t delta) {
   float delta_v = convert_voltage_human_readable(delta);
+  if (delta_v <=
+      convert_voltage_human_readable(pcb->maximum_cell_delta_allowed))
+    return PWM_0_0_PERCENT_DUTY_CYCLE;
   if (delta_v >= 0.100F /*is above X = 100 mV */)
     return PWM_100_0_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.100F && delta_v >= 0.0924F /*is in between X and Y */)
+  if (delta_v < 0.100F && delta_v >= 0.0924F)
     return PWM_92_4_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0924F && delta_v >= 0.0858F /*is in between X and Y */)
+  if (delta_v < 0.0924F && delta_v >= 0.0858F)
     return PWM_85_8_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0858F && delta_v >= 0.0792F /*is in between X and Y */)
+  if (delta_v < 0.0858F && delta_v >= 0.0792F)
     return PWM_79_2_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0792F && delta_v >= 0.0726F /*is in between X and Y */)
+  if (delta_v < 0.0792F && delta_v >= 0.0726F)
     return PWM_72_6_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0726F && delta_v >= 0.0660F /*is in between X and Y */)
+  if (delta_v < 0.0726F && delta_v >= 0.0660F)
     return PWM_66_0_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0660F && delta_v >= 0.0594F /*is in between X and Y */)
+  if (delta_v < 0.0660F && delta_v >= 0.0594F)
     return PWM_59_4_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0594F && delta_v >= 0.0528F /*is in between X and Y */)
+  if (delta_v < 0.0594F && delta_v >= 0.0528F)
     return PWM_52_8_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0528F && delta_v >= 0.0462F /*is in between X and Y */)
+  if (delta_v < 0.0528F && delta_v >= 0.0462F)
     return PWM_46_2_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0462F && delta_v >= 0.0396F /*is in between X and Y */)
+  if (delta_v < 0.0462F && delta_v >= 0.0396F)
     return PWM_39_6_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0396F && delta_v >= 0.0330F /*is in between X and Y */)
+  if (delta_v < 0.0396F && delta_v >= 0.0330F)
     return PWM_33_0_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0330F && delta_v >= 0.0264F /*is in between X and Y */)
+  if (delta_v < 0.0330F && delta_v >= 0.0264F)
     return PWM_26_4_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0264F && delta_v >= 0.0198F /*is in between X and Y */)
+  if (delta_v < 0.0264F && delta_v >= 0.0198F)
     return PWM_19_8_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0198F && delta_v >= 0.0132F /*is in between X and Y */)
+  if (delta_v < 0.0198F && delta_v >= 0.0132F)
     return PWM_13_2_PERCENT_DUTY_CYCLE;
-  if (delta_v < 0.0132F && delta_v >= 0.0066F /*is in between X and Y */)
+  if (delta_v < 0.0132F && delta_v >= 0.0066F)
     return PWM_6_6_PERCENT_DUTY_CYCLE;
   return PWM_0_0_PERCENT_DUTY_CYCLE;
 }

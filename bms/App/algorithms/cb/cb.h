@@ -15,7 +15,7 @@ typedef struct {
   voltage_readings_t maximum_cell_delta_allowed;
   battery_cell_t lowest_cell;
   battery_cell_t batteries[NUM_CELL_MAX];
-  queue_t balance_q;
+  // queue_t balance_q;
 } pcb_ctx_t;
 
 void init_pcb(pcb_ctx_t *pcb);
@@ -26,9 +26,9 @@ void init_pcb(pcb_ctx_t *pcb);
  *
  */
 void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
-void qsort_cells_by_voltage(battery_cell_t *cells, uint16_t num_cells);
 
 #endif
+// void qsort_cells_by_voltage(battery_cell_t *cells, uint16_t num_cells);
 
 // void sort_cell_queue(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
 //   qsort_cells_by_voltage(pcb->balance_q.pack, NUM_PARALLEL_JOBS);
