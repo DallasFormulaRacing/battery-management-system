@@ -21,6 +21,7 @@ typedef enum {
 } parse_adc_measurement_type_t;
 
 float convert_voltage_human_readable(voltage_readings_t voltage);
+voltage_readings_t convert_voltage_machine_readable(float voltage);
 
 uint16_t set_ov_voltage_threshold(float volt);
 uint16_t set_uv_voltage_threshold(float volt);
