@@ -226,6 +226,6 @@ void bms_test_run() {
   // adbms_bleed_cell_pwm(hbms.asic, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
 
   // reads 15 (14+1) on the scope
-  adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
+  // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
   HAL_Delay(20);
 }
