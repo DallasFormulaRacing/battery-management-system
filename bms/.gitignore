@@ -11,6 +11,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps/
 CMakeUserPresets.json
+CMakePresets.json
+.mxproject
 
 # CMake build dir
 build/
