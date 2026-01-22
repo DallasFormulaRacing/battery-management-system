@@ -20,7 +20,7 @@ typedef enum {
   MEASURE_AUX_ADC_REDNT,
 } parse_adc_measurement_type_t;
 
-float convert_voltage_human_readable(int16_t voltage);
+float convert_voltage_human_readable(voltage_readings_t voltage);
 
 uint16_t set_ov_voltage_threshold(float volt);
 uint16_t set_uv_voltage_threshold(float volt);
@@ -76,7 +76,6 @@ void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data);
-
 
 voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx);
 
