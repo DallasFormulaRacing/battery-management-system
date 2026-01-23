@@ -1,4 +1,5 @@
 #include "charging.h"
+#include "cb.h"
 
 // ******************* CHARGING
 /**
@@ -13,7 +14,15 @@
  * @return void
  */
 void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
-  adbms_start_adc_cell_voltage_measurment(asic_ctx);
-  adbms_read_cell_voltages(asic_ctx);
   copy_cell_voltages(asic_ctx, pcb);
+  /**
+   * go through the battery cell array
+   * add adbms_set_cell_pwm(asic, battery.cellnumber, battery.segmentnumber)
+   *
+   */
+  find_cell_deltas(pcb);
+  populate_pwm_register(asic_ctx, pcb);
 }
+
+// ! MAKE SURE THE DAISY CHAIN COMM PACKET ORDER IS RESPECTED HERE!
+// ! THE FIRST PACKET NEEDS TO GO LAST, IS THIS HANDLED IN write_to_all_ics????

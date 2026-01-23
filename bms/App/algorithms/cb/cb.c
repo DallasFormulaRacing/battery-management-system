@@ -1,4 +1,5 @@
 #include "cb.h"
+#include "api.h"
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "queue.h"
@@ -7,7 +8,13 @@
 // ! table 95, page 68
 
 /**
- * @brief
+ ******************************************************************************
+ * @file           : cb.c
+ * @brief          : Header for cb.c file. This file contains platform
+ *                   independent helper functions for EV charging functionality.
+ ******************************************************************************
+ * @attention
+ *
  * Some things to think about:
  * handling bad cells: make sure under voltage and over voltage cases are
  * handled in the case where a cell is not accepting charge, and the algo might
@@ -17,6 +24,8 @@
  * element (pcb) -- is this necessary? -- not really but could make life easier
  * we have a lot of memory to spare.
  *
+ *
+ ******************************************************************************
  */
 
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
@@ -32,7 +41,7 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   }
 }
 
-/**
+/** // TODO is there a better way to write this?
  * @brief maps a certain cell delta to an appropriate duty cycle (since time is
  * fixed). if saturated (i.e. above a certain value), clamp to 100%. intervals
  * and corresponding pwm values are listed in descending order.
@@ -83,13 +92,12 @@ pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
 
 /**
  * @brief Populate the PCB struct by doing a first pass through the battery
- * array to find the lowest cell, then a second pass to calculate each cell
- * delta. during this second pass, if the cell delta is greater than the, add it
- * to the PWM struct (array)
+ * array to find the lowest cell
  *
  * @param pcb
  */
-void populate_pcb(pcb_ctx_t *pcb) {
+void find_cell_deltas(pcb_ctx_t *pcb) {
+  // First pass: find minimum cell
   voltage_readings_t min_voltage = INT16_MAX;
   battery_cell_t base;
   for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
@@ -100,6 +108,27 @@ void populate_pcb(pcb_ctx_t *pcb) {
   }
 
   pcb->lowest_cell = base;
+}
+
+/**
+ * @brief then a second pass to calculate each cell
+ * delta. during this second pass, if the cell delta is greater than the, add it
+ * to the PWM struct (array)
+ *
+ * @param asic_ctx
+ * @param pcb
+ */
+void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
+  battery_cell_t *cell;
+  // Second pass: find all cell deltas
+  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+    cell = &pcb->batteries[cell_idx];
+    cell->delta = (voltage_readings_t)(cell->cell_voltage -
+                                       pcb->lowest_cell.cell_voltage);
+
+    adbms_set_cell_pwm(asic_ctx, cell->cell_number, cell->segment_number,
+                       map_delta_to_pwm_discretize(pcb, cell->delta));
+  }
 }
 
 /**

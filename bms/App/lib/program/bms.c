@@ -1,4 +1,5 @@
 #include "bms.h"
+#include "api.h"
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
@@ -171,21 +172,20 @@ void bms_state_charging(bms_handler_t *hbms) {
 
 void bms_state_balancing(bms_handler_t *hbms) {
   /*
-  - this state must be able to:
-    - freeze the ADCs using the SNAP command
-    - check for cell delta greater than target cell delta
-    - if cell delta greater than target cell delta, balance the cells
-    - if cell delta less than target cell delta, stay in this state
+  adbms_start_adc_cell_voltage_measurment(asic_ctx);
+  adbms_read_cell_voltages(asic_ctx);
 
-  immediately after balancing, we need to transition to the measuring state
-  again
+  --> if bad cell, stop execution and move to fault state
+
+  cell_delta_policy_enforcer;
+
   */
 }
 
 void bms_state_fault(bms_handler_t *hbms) {
   /*
   - this state opens the shut down circuit and stays in fault state until the
-  MCU is manually reset via NRST
+  MCU is manually reset via NRST or Power cycled
 
   - this state cannot transition to any other state
   - once this state is reached it stays.
@@ -216,14 +216,14 @@ void bms_test_init() {
 }
 
 void bms_test_run() {
-  // adbms_write_read_config(hbms.asic);
-  // adbms_read_status_registers(hbms.asic);
+  adbms_write_read_config(hbms.asic);
+  adbms_read_status_registers(hbms.asic);
 
-  // adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
   // adbms_poll_for_conversion_adc(hbms.asic);
-  // adbms_read_cell_voltages(hbms.asic);
+  adbms_read_cell_voltages(hbms.asic);
 
-  // adbms_bleed_cell_pwm(hbms.asic, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
+  adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
 
   // reads 15 (14+1) on the scope
   // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);

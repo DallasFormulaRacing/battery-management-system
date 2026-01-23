@@ -5,6 +5,8 @@
 #include "bms_driver.h"
 #include "bms_enums.h"
 #include "bms_types.h"
+#include "cb.h"
+#include "charging.h"
 #include "config.h"
 
 #define IDLE_POLLING_INTERVAL_MS 1000
