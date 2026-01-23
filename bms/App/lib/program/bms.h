@@ -60,6 +60,7 @@ typedef struct {
   bms_cfg_t *config;
   bms_sm_ctx_t state;
   cell_asic_ctx_t *asic;
+  pcb_ctx_t *pcb;
 } bms_handler_t;
 
 extern adc_config_t g_adc_cfg;

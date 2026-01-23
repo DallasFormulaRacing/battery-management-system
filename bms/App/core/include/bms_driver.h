@@ -8,10 +8,11 @@
 #include "bms_types.h"
 #include "command_list.h"
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_tim.h"
 #include "stm32g4xx_it.h"
 
 #define WAKEUP_DELAY 1 /* BMS ic wakeup delay  */
-#define TIM_EN 0
+#define TIM_EN 1
 
 #define SPI_TIME_OUT HAL_MAX_DELAY
 #define UART_TIME_OUT HAL_MAX_DELAY
@@ -23,6 +24,7 @@ extern I2C_HandleTypeDef hi2c3;
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi5;
 extern UART_HandleTypeDef hlpuart1;
+extern TIM_HandleTypeDef htim3;
 
 #define CS_PIN GPIO_PIN_6
 #define GPIO_PORT GPIOB

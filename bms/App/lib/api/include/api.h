@@ -44,6 +44,9 @@ comm_status_t adbms_set_cell_pwm(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
                                  uint8_t segment_number,
                                  pwm_duty_cycle_t duty_cycle);
 
+comm_status_t adbms_send_pwm_commands(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx);
+
 comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_set_reset_gpio_pins(cell_asic_ctx_t *asic_ctx);

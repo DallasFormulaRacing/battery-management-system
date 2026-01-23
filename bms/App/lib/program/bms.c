@@ -1,5 +1,6 @@
 #include "bms.h"
 #include "api.h"
+#include "charging.h"
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
@@ -168,6 +169,10 @@ void bms_state_charging(bms_handler_t *hbms) {
 
   we need to alternate between charging and measuring states
   */
+  cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
+  // need to handle errors
+  //
+  bms_sm_transition(hbms, BMS_STATE_MEASURE);
 }
 
 void bms_state_balancing(bms_handler_t *hbms) {

@@ -104,7 +104,7 @@ extern "C" {
 #define USE_HAL_SMBUS_REGISTER_CALLBACKS 0U
 #define USE_HAL_SPI_REGISTER_CALLBACKS 0U
 #define USE_HAL_SRAM_REGISTER_CALLBACKS 0U
-#define USE_HAL_TIM_REGISTER_CALLBACKS 1U
+#define USE_HAL_TIM_REGISTER_CALLBACKS 0U
 #define USE_HAL_UART_REGISTER_CALLBACKS 0U
 #define USE_HAL_USART_REGISTER_CALLBACKS 0U
 #define USE_HAL_WWDG_REGISTER_CALLBACKS 0U
@@ -146,7 +146,7 @@ extern "C" {
 #if !defined(HSI48_VALUE)
 #define HSI48_VALUE                                                            \
   (48000000UL) /*!< Value of the Internal High Speed oscillator for USB FS/RNG \
-                  in Hz. The real value my vary depending on manufacturing                             \
+                  in Hz. The real value my vary depending on manufacturing     \
                   process variations.*/
 #endif         /* HSI48_VALUE */
 
