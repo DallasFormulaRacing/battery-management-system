@@ -101,6 +101,7 @@ f.FilterMaskIdHigh = 0;
 f.FilterMaskIdLow  = 0;
 f.FilterFIFOAssignment = CAN_RX_FIFO0;
 f.FilterActivation = ENABLE;
+
 HAL_CAN_ConfigFilter(&hcan1, &f);
 
 HAL_CAN_Start(&hcan1);
@@ -124,7 +125,7 @@ HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_ERROR)
     tx.DLC = 8;
 
     HAL_CAN_AddTxMessage(&hcan1, &tx, data, &mb);
-    HAL_Delay(500);
+    HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
