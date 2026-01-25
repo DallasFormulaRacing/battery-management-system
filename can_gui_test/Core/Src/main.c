@@ -103,12 +103,28 @@ f.FilterFIFOAssignment = CAN_RX_FIFO0;
 f.FilterActivation = ENABLE;
 HAL_CAN_ConfigFilter(&hcan1, &f);
 
+HAL_CAN_Start(&hcan1);
+HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_ERROR);
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    CAN_TxHeaderTypeDef tx = {0};
+    uint8_t data[8] = {1,2,3,4,5,6,7,8};
+    uint32_t mb;
+
+    tx.StdId = 0x123;
+    tx.IDE = CAN_ID_STD;
+    tx.RTR = CAN_RTR_DATA;
+    tx.DLC = 8;
+
+    HAL_CAN_AddTxMessage(&hcan1, &tx, data, &mb);
+    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -219,7 +235,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  CAN_RxHeaderTypeDef rx;
+  uint8_t d[8];
+  HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx, d);
+}
 /* USER CODE END 4 */
 
 /**
