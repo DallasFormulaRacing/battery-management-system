@@ -171,7 +171,9 @@ void bms_state_charging(bms_handler_t *hbms) {
   */
   cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
   // need to handle errors
-  //
+  // todo: handle safety as in check for UV and OV
+  // todo: put this in a loop to stop when no cells need balancing
+
   bms_sm_transition(hbms, BMS_STATE_MEASURE);
 }
 
