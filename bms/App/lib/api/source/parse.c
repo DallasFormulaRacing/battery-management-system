@@ -2,6 +2,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include <assert.h>
+#include <stdint.h>
 
 // ! This file needs to be verified
 
@@ -15,7 +16,7 @@ uint16_t set_ov_voltage_threshold(float volt) {
   uint8_t shift_bits = 12;
   volt = (volt - 1.5F);
   volt = volt / (16 * 0.000150F);
-  vov_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
+  vov_value = ((uint16_t)volt + (2U * (1U << (shift_bits - 1U))));
   vov_value &= 0xFFF;
   return vov_value;
 }
@@ -25,9 +26,13 @@ uint16_t set_uv_voltage_threshold(float volt) {
   uint8_t shift_bits = 12;
   volt = (volt - 1.5F);
   volt = volt / (16 * 0.000150F);
-  vuv_value = (uint16_t)(volt + (2U * (1U << (shift_bits - 1U))));
+  vuv_value = ((uint16_t)volt + (2U * (1U << (shift_bits - 1U))));
   vuv_value &= 0xFFFU;
   return vuv_value;
+}
+
+float convert_voltage_human_readable(int16_t voltage) {
+  return ((float)voltage * 0.000150F) + 1.5F;
 }
 
 uint8_t make_cfg_a_flag(diagnostics_flags_for_x_t flag_d, flag_ctl_t flag) {
@@ -146,7 +151,7 @@ void bms_parse_cfg_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
     cfg_a->REFON = (mailbox->rx_data_array[0] & 0x80) >> 7;
     cfg_a->FLAG_D = (mailbox->rx_data_array[1] & 0xFF) >> 0;
     cfg_a->SOAKON = (mailbox->rx_data_array[2] & 0x80) >> 7;
-    cfg_a->OWRNG = (mailbox->rx_data_array[2] & 0x40) >> 7;
+    cfg_a->OWRNG = (mailbox->rx_data_array[2] & 0x40) >> 6;
     cfg_a->OWA = (mailbox->rx_data_array[2] & 0x38) >> 3;
     cfg_a->GPIOx = (mailbox->rx_data_array[3] & 0xFF) |
                    ((mailbox->rx_data_array[4] & 0x03) << 8);
@@ -775,7 +780,7 @@ void bms_create_cfg_a(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    cfg_a = &asic_ctx[curr_ic].rx_cfg_a;
+    cfg_a = &asic_ctx[curr_ic].tx_cfg_a;
     mailbox = &asic_ctx[curr_ic].config_a;
 
     mailbox->tx_data_array[0] =
@@ -797,7 +802,7 @@ void bms_create_cfg_b(cell_asic_ctx_t *asic_ctx) {
   asic_mailbox_t *mailbox;
 
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
-    cfg_b = &asic_ctx[curr_ic].rx_cfg_b;
+    cfg_b = &asic_ctx[curr_ic].tx_cfg_b;
     mailbox = &asic_ctx[curr_ic].config_b;
 
     mailbox->tx_data_array[0] = cfg_b->VUV;

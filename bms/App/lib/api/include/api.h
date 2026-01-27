@@ -13,34 +13,48 @@ comm_status_t adbms_init_config(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_write_read_config(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_write_config(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_config(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_adc_cell_voltage_measurment();
+comm_status_t
+adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_adc_s_voltage_measurment();
+comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_avgcell_voltage_measurment();
+comm_status_t adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_fcell_voltage_measurment();
+comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_aux_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_aux_voltage_measurment(
+    cell_asic_ctx_t *asic_ctx,
+    aux_adc_input_channel_select_t channel_to_convert);
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_raux_voltage_measurment(
+    cell_asic_ctx_t *asic_ctx, redundant_enable_t redundant_measurement_mode);
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx);
-comm_status_t measurement_loop();
+
+comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx);
+
+bool is_conversion_done(const volatile uint8_t *poll_bytes,
+                        cell_asic_ctx_t *asic_ctx);
+
+comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_set_reset_gpio_pins(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_enable_mute(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_disable_mute(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_soft_reset();
-comm_status_t adbms_reset_cmd_count();
+comm_status_t adbms_soft_reset(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_reset_cmd_count(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_reset_pec_error_flag(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_snap();
-comm_status_t adbms_unsnap();
-comm_status_t adbms_clear_cell_measurement();
-comm_status_t adbms_clear_aux_measurement();
-comm_status_t adbms_clear_spin_measurement();
-comm_status_t adbms_clear_fcell_measurement();
-comm_status_t adbms_clear_ovuv_measurement();
+comm_status_t adbms_snap(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_unsnap(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_cell_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_aux_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_spin_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_fcell_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_ovuv_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_clear_all_flags(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_set_dcc_discharge(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_clear_dcc_discharge(cell_asic_ctx_t *asic_ctx);

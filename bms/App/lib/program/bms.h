@@ -15,7 +15,7 @@
 typedef enum {
   BMS_STATE_BOOT,
   BMS_STATE_INIT,
-  BMS_STATE_IDLE,
+  BMS_STATE_TRANSMIT_DATA,
   BMS_STATE_MEASURE,
   BMS_STATE_CHARGING,
   BMS_STATE_BALANCING,
@@ -55,17 +55,21 @@ typedef struct {
 } bms_sm_ctx_t;
 
 typedef struct {
-  bms_t *config;
+  bms_cfg_t *config;
   bms_sm_ctx_t state;
   cell_asic_ctx_t *asic;
 } bms_handler_t;
+
+extern adc_config_t g_adc_cfg;
+extern voltage_config_t g_voltage_cfg;
+extern measurement_config_t g_meas_cfg;
 
 void bms_sm_init(bms_handler_t *hbms);
 void bms_sm_run(bms_handler_t *hbms);
 
 void bms_state_entry(bms_handler_t *hbms);
 void bms_state_init(bms_handler_t *hbms);
-void bms_state_idle(bms_handler_t *hbms);
+void bms_state_transmit_data(bms_handler_t *hbms);
 void bms_state_measure(bms_handler_t *hbms);
 void bms_state_charging(bms_handler_t *hbms);
 void bms_state_balancing(bms_handler_t *hbms);
@@ -74,5 +78,9 @@ void bms_state_sleep(bms_handler_t *hbms);
 
 void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state);
 bool bms_check_for_fault(bms_handler_t *hbms);
+
+//***** TESTING FUNCTIONS *****/
+void bms_test_init();
+void bms_test_run();
 
 #endif

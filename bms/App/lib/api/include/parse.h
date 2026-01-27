@@ -26,6 +26,8 @@ typedef enum {
   MEASURE_AUX_ADC_REDNT,
 } parse_adc_measurement_type_t;
 
+float convert_voltage_human_readable(int16_t voltage);
+
 uint16_t set_ov_voltage_threshold(float volt);
 uint16_t set_uv_voltage_threshold(float volt);
 uint8_t make_cfg_a_flag(diagnostics_flags_for_x_t flag_d, flag_ctl_t flag);
