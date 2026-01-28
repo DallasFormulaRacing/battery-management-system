@@ -33,14 +33,14 @@ void print_over_uart(const char *str) {
 
 #if TIM_EN
 
-void start_timer() { HAL_TIM_Base_Start(htim); }
+void start_timer() { HAL_TIM_Base_Start_IT(&htim3); }
 
-void stop_timer() { HAL_TIM_Base_Stop(htim); }
+void stop_timer() { HAL_TIM_Base_Stop_IT(&htim3); }
 
 uint32_t get_tim_count() {
   uint32_t count = 0;
-  count = __HAL_TIM_GetCounter(htim);
-  __HAL_TIM_SetCounter(htim, 0);
+  count = __HAL_TIM_GetCounter(&htim3);
+  __HAL_TIM_SetCounter(&htim3, 0);
   return (count);
 }
 

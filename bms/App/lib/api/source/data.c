@@ -330,12 +330,14 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
       return COMM_INVALID_COMMAND;
       break;
     }
+    break;
 
   default:
     *read_buffer_size = (asic_ctx->ic_count * READ_SIZE);
     *reg_data_size = READ_SIZE;
     return COMM_OK;
   }
+  return COMM_OK;
 }
 
 /**
@@ -367,7 +369,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     }
     break;
   case BMS_CMD_CLRFLAG:
-    bms_create_clrflag_data(asic_ctx);
+    bms_create_clrflag_mb_data(asic_ctx);
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_CLR_FLAG);
     break;
   default:
@@ -439,21 +441,21 @@ static asic_mailbox_t *get_mailbox_type(cell_asic_ctx_t *asic_ctx,
                                         asic_mailbox_id_select_t id) {
   switch (id) {
   case ASIC_MAILBOX_CONFIG_A:
-    return &asic_ctx->config_a;
+    return &asic_ctx->config_a_mb;
   case ASIC_MAILBOX_CONFIG_B:
-    return &asic_ctx->config_b;
+    return &asic_ctx->config_b_mb;
   case ASIC_MAILBOX_CLR_FLAG:
-    return &asic_ctx->clrflag;
+    return &asic_ctx->clrflag_mb;
   case ASIC_MAILBOX_STAT:
-    return &asic_ctx->stat;
+    return &asic_ctx->stat_mb;
   case ASIC_MAILBOX_COM:
-    return &asic_ctx->com;
+    return &asic_ctx->com_mb;
   case ASIC_MAILBOX_PWM_A:
-    return &asic_ctx->pwm_a;
+    return &asic_ctx->pwm_a_mb;
   case ASIC_MAILBOX_PWM_B:
-    return &asic_ctx->pwm_b;
+    return &asic_ctx->pwm_b_mb;
   case ASIC_MAILBOX_RSID:
-    return &asic_ctx->rsid;
+    return &asic_ctx->rsid_mb;
   default:
     return NULL;
   }

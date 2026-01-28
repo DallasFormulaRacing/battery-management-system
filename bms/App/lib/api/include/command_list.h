@@ -77,11 +77,11 @@ static const command_t RDSTATD = {0x00, 0x33};
 static const command_t RDSTATE = {0x00, 0x34};
 
 /* PWM registers commands */
-static const command_t WRPWM1 = {0x00, 0x20};
-static const command_t RDPWM1 = {0x00, 0x22};
+static const command_t WRPWMA = {0x00, 0x20};
+static const command_t RDPWMA = {0x00, 0x22};
 
-static const command_t WRPWM2 = {0x00, 0x21};
-static const command_t RDPWM2 = {0x00, 0x23};
+static const command_t WRPWMB = {0x00, 0x21};
+static const command_t RDPWMB = {0x00, 0x23};
 
 /* Clear commands */
 static const command_t CLRCELL = {0x07, 0x11};

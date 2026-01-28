@@ -49,6 +49,8 @@ UART_HandleTypeDef hlpuart1;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim3;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -60,6 +62,7 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -83,7 +86,6 @@ int main(void) {
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick.
    */
-
   HAL_Init();
 
   /* USER CODE BEGIN Init */
@@ -103,6 +105,7 @@ int main(void) {
   MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_SPI1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   // bms_wake_test();
@@ -114,6 +117,7 @@ int main(void) {
 
   while (1) {
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
     bms_test_run();
 
@@ -352,6 +356,46 @@ static void MX_SPI1_Init(void) {
 }
 
 /**
+ * @brief TIM3 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM3_Init(void) {
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 2600;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK) {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK) {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+}
+
+/**
  * @brief GPIO Initialization Function
  * @param None
  * @retval None
@@ -450,25 +494,5 @@ void assert_failed(uint8_t *file, uint32_t line) {
      number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
      line) */
   /* USER CODE END 6 */
-}
-
-void SPI_test() {
-  uint8_t msg[] = {0x5, 0x5, 0x5, 0x5, 0x5, 0x5, 0x5};
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, msg, sizeof(msg), HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  HAL_Delay(200);
-}
-
-void bms_wake_test() {
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 1);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, 0);
-}
-
-void bms_wake_spi_test() {
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 }
 #endif /* USE_FULL_ASSERT */

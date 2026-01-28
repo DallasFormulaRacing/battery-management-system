@@ -1,6 +1,7 @@
 #ifndef CDATATYPES_H
 #define CDATATYPES_H
 
+#include "bms_enums.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -181,11 +182,11 @@ typedef struct {
 } bms_stat_reg_e_t;
 
 typedef struct {
-  uint8_t pwm_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
+  pwm_duty_cycle_t pwm_a_ctl_array[ADBMS_NUM_PWMA_CHANNELS];
 } pwm_reg_a_t;
 
 typedef struct {
-  uint8_t pwm_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
+  pwm_duty_cycle_t pwm_b_ctl_array[ADBMS_NUM_PWMB_CHANNELS];
 } pwm_reg_b_t;
 
 typedef struct {
@@ -274,16 +275,16 @@ typedef struct {
   comms_reg_t comm; // WARN: may be confused with asic_mailbox_t com
   serial_id_reg_t sid;
 
-  asic_mailbox_t config_a;
-  asic_mailbox_t config_b;
+  asic_mailbox_t config_a_mb;
+  asic_mailbox_t config_b_mb;
 
-  asic_mailbox_t clrflag;
-  asic_mailbox_t stat;
-  asic_mailbox_t com; // WARN: may be confused with comms_reg_t comm
+  asic_mailbox_t clrflag_mb;
+  asic_mailbox_t stat_mb;
+  asic_mailbox_t com_mb; // WARN: may be confused with comms_reg_t comm
 
-  asic_mailbox_t pwm_a;
-  asic_mailbox_t pwm_b;
-  asic_mailbox_t rsid;
+  asic_mailbox_t pwm_a_mb;
+  asic_mailbox_t pwm_b_mb;
+  asic_mailbox_t rsid_mb;
 
   error_detection_t crc_err;
   aux_openwire_t gpio;

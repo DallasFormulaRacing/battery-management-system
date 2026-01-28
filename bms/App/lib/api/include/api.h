@@ -40,6 +40,13 @@ comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx);
 bool is_conversion_done(const volatile uint8_t *poll_bytes,
                         cell_asic_ctx_t *asic_ctx);
 
+comm_status_t adbms_set_cell_pwm(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
+                                 uint8_t segment_number,
+                                 pwm_duty_cycle_t duty_cycle);
+
+comm_status_t adbms_send_pwm_commands(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx);
+
 comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_set_reset_gpio_pins(cell_asic_ctx_t *asic_ctx);
@@ -93,7 +100,7 @@ comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 
 // i dont think these are needed but im keeping them for now
-comm_status_t adbms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
+// comm_status_t adbms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
+// comm_status_t adbms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
 
 #endif
