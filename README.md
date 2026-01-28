@@ -2,6 +2,12 @@
 
 # Battery Management System
 
+## Documentation
+
+More detailed documentation is $\rightarrow$ [here.](docs/README.md)
+
+We are also working on integrating Doxygen so the BMS can become and remain a multi-year, evolving project.
+
 ## Getting Started
 
 Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-system.git`
@@ -9,7 +15,6 @@ Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-
 ### Tools
 
 Make sure you have the following utilities:
-
 
 - `make`
 - `CMake`
@@ -32,7 +37,7 @@ DO NOT USE CUBE-CMAKE
 
 If you get compiler detection errors make sure the CMake GNU ARM toolchain flag is being detected!
 
-### VS Code Extensions
+### Recommended VS Code Extensions
 
 ```txt
 cschlosser.doxdocgen
@@ -72,50 +77,6 @@ Your pull request will be automatically blocked from merging if it does not pass
 Please see [branch naming conventions](https://www.geeksforgeeks.org/git/how-to-naming-conventions-for-git-branches/) and [pull request naming conventions](https://github.com/mozilla-mobile/firefox-ios/wiki/Pull-Request-Naming-Guide) and name them appropriately. Bad naming is bad documentation and bad documentation is bad code. Refer to previous PRs or old branch names for inspiration/clarification.
 
 If applicable, please tie your pull request to one or more issues. Try to find an issue to solve with your PR, or just make one. Duplicate issues will be filtered.
-
-## Directory Structure
-
-### Subdirectories
-
-`App` - contains application layer logic, like algorithms and other user-defined modules. Write additional firmware here.
-
-`Core` - main function and architecture-specific sources. Edit as least often as possible.
-
-`Drivers` - vendor drivers and HAL. Also contains CMSIS library. Do not touch.
-
-### Tree
-
-```bash
-.
-├── App
-│   ├── algorithms
-│   │   ├── cb
-│   │   ├── pec
-│   │   ├── soc
-│   │   └── thermal
-│   ├── core
-│   │   ├── include
-│   │   └── source
-│   └── lib
-│       ├── api
-│       │   ├── include
-│       │   └── source
-│       └── program
-├── Core
-│   ├── Inc
-│   └── Src
-├── Drivers
-│   ├── CMSIS
-│   │   └── Include
-│   └── STM32G4xx_HAL_Driver
-│       ├── Inc
-│       └── Src
-└── cmake
-
-82 directories
-
-
-```
 
 ---
 
