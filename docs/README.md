@@ -39,7 +39,9 @@ Inline functions and macros are used deliberately. Macros are limited to compile
 
 Portability is a core requirement. Moving to a different microcontroller or vendor HAL should require changes only in the lowest layers. Vendor HAL code is wrapped by thin (light, typically one line) driver interfaces. These drivers expose only what is needed and hide implementation details.
 
-Each layer answers a different question. Lower layers define how something is done. Upper layers define what should happen. As code moves upward, it becomes more declarative and less concerned imperative. SPI transactions become structured data. Hardware states become logical states. Control decisions operate on validated inputs, not raw signals.
+Each layer answers a different question. Lower layers define how something is done. Upper layers define what should happen. As code moves upward, it becomes more declarative and less concerned-imperative. SPI transactions become structured data. Hardware states become logical states.
+
+An example of this is calling a high level superloop such as the cell balancing policy enforcer vs calling a low-level parsing function.
 
 The intent is to make incorrect usage difficult and correct usage boring.
 
