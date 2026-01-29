@@ -14,7 +14,7 @@ typedef struct {
 } pcb_ctx_t;
 
 void find_cell_deltas(pcb_ctx_t *pcb);
-void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
+// void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
 void init_cell_balancing(pcb_ctx_t *pcb,
                          voltage_readings_t max_cell_delta_allowed);
 

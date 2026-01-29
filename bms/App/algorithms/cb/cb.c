@@ -1,5 +1,5 @@
 #include "cb.h"
-#include "api.h"
+// #include "api.h"
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "queue.h"
@@ -33,6 +33,8 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   uint8_t segment_idx = 0;
   uint8_t battery_idx = 0;
   for (battery_idx = 0; battery_idx < NUM_CELL_MAX; battery_idx++) {
+    // TODO: Find out what this magic number in "cell_idx < 12" means,
+    // NUM_CELLS_PER_SEGMENT?
     for (uint8_t cell_idx = 0; cell_idx < 12; cell_idx++) {
       pcb->batteries[battery_idx].cell_voltage =
           asic_ctx[segment_idx].cell.cell_voltages_array[cell_idx];
@@ -118,18 +120,18 @@ void find_cell_deltas(pcb_ctx_t *pcb) {
  * @param asic_ctx
  * @param pcb
  */
-void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
-  battery_cell_t *cell;
-  // Second pass: find all cell deltas
-  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
-    cell = &pcb->batteries[cell_idx];
-    cell->delta = (voltage_readings_t)(cell->cell_voltage -
-                                       pcb->lowest_cell.cell_voltage);
-
-    adbms_set_cell_pwm(asic_ctx, cell->cell_number, cell->segment_number,
-                       map_delta_to_pwm_discretize(pcb, cell->delta));
-  }
-}
+// void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
+//   battery_cell_t *cell;
+//   // Second pass: find all cell deltas
+//   for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+//     cell = &pcb->batteries[cell_idx];
+//     cell->delta = (voltage_readings_t)(cell->cell_voltage -
+//                                        pcb->lowest_cell.cell_voltage);
+//
+//     adbms_set_cell_pwm(asic_ctx, cell->cell_number, cell->segment_number,
+//                        map_delta_to_pwm_discretize(pcb, cell->delta));
+//   }
+// }
 
 /**
  * @brief init the PCB struct with the user input: max cell delta
