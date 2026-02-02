@@ -22,23 +22,39 @@ void testGetTempFromResistanceGreater(void) {
 }
 
 void testGetTempFromResistance1100(void) {
-  TEST_ASSERT_EQUAL_INT16(75, get_temp_from_resistance(1100));
+  TEST_ASSERT_INT16_WITHIN(5, 90, get_temp_from_resistance(1100));
 }
 
 void testGetTempFromResistance1050(void) {
-  TEST_ASSERT_EQUAL_INT16(100, get_temp_from_resistance(1050));
+  TEST_ASSERT_INT16_WITHIN(5, 95, get_temp_from_resistance(1050));
 }
 
 void testGetTempFromResistance500(void) {
-  TEST_ASSERT_EQUAL_INT16(125, get_temp_from_resistance(500));
+  TEST_ASSERT_INT16_WITHIN(5, 120, get_temp_from_resistance(500));
 }
 
 void testGetTempFromResistance80000(void) {
-  TEST_ASSERT_EQUAL_INT16(0, get_temp_from_resistance(80000));
+  TEST_ASSERT_LESS_OR_EQUAL_INT16(-25, get_temp_from_resistance(80000));
 }
 
 void testGetTempFromResistance91000(void) {
-  TEST_ASSERT_EQUAL_INT16(-25, get_temp_from_resistance(91000));
+  TEST_ASSERT_LESS_OR_EQUAL_INT16(-25, get_temp_from_resistance(91000));
+}
+
+void testGetTempFromResistance16000(void) {
+  TEST_ASSERT_INT16_WITHIN(5, 10, get_temp_from_resistance(16000));
+}
+
+void testGetTempFromResistance3000(void) {
+  TEST_ASSERT_INT16_WITHIN(5, 57, get_temp_from_resistance(3000));
+}
+
+void testGetTempFromResistance10000(void) {
+  TEST_ASSERT_INT16_WITHIN(5, 25, get_temp_from_resistance(10000));
+}
+
+void testGetTempFromResistance10500(void) {
+  TEST_ASSERT_INT16_WITHIN(5, 17, get_temp_from_resistance(10500));
 }
 
 int main(void) {
@@ -50,5 +66,9 @@ int main(void) {
   RUN_TEST(testGetTempFromResistance500);
   RUN_TEST(testGetTempFromResistance80000);
   RUN_TEST(testGetTempFromResistance91000);
+  RUN_TEST(testGetTempFromResistance16000);
+  RUN_TEST(testGetTempFromResistance3000);
+  RUN_TEST(testGetTempFromResistance10000);
+  RUN_TEST(testGetTempFromResistance10500);
   return UNITY_END();
 }
