@@ -92,7 +92,7 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
-
+  init_LEDs();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -102,8 +102,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    drive_led(red);
-    drive_led(green);
+    drive_LED(&red);
+    drive_LED(&green);
   }
   /* USER CODE END 3 */
 }
