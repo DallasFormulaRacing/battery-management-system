@@ -44,8 +44,8 @@
 CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN PV */
-led_typedef red;
-led_typedef green;
+// led_typedef red;
+// led_typedef green;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
