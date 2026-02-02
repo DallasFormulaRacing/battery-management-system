@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include led_driver.h;
+#include "stm32f4xx_hal_can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,11 +92,24 @@ int main(void)
   MX_GPIO_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_CAN_Start(&hcan1);
   init_LEDs();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  //set filter to only receive messages in fifo 0
+  CAN_FilterTypeDef filterConfig = {0};
+  filterConfig.FilterActivation = ENABLE;
+  filterConfig.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+  HAL_CAN_ConfigFilter(&hcan1, &filterConfig);
+
+
+  //enable can specific interrupts:
+  uint32_t can_interrupts = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO0_FULL | CAN_IT_ERROR;
+  HAL_CAN_ActivateNotification(&hcan1, can_interrupts);
+
   while (1)
   {
     /* USER CODE END WHILE */
