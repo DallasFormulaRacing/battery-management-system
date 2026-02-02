@@ -57,7 +57,7 @@
 
 typedef int16_t voltage_readings_t;
 typedef uint32_t resistance_readings_t;
-typedef float temperature_readings_t;
+typedef int16_t temperature_readings_t;
 
 /* ----------------------------------------------------- */
 
