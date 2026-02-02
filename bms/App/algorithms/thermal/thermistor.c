@@ -5,9 +5,8 @@
 
 // TODO: Do testing and generate more accurate values
 thermistor_t temperature_resistance_lut[] = {
-    {-50.0F, 125000}, {-25.0F, 90000}, {0.0F, 11700},
-    {25.0F, 10000},   {50.0F, 3000},   {75.0F, 1100},
-    {100.0F, 1000},   {125.0F, 400},   {150.0F, 200},
+    {-50, 125000}, {-25, 90000}, {0, 11700}, {25, 10000}, {50, 3000},
+    {75, 1100},    {100, 1000},  {125, 400}, {150, 200},
 };
 
 static resistance_readings_t
@@ -17,7 +16,8 @@ get_resistance_from_voltage(voltage_readings_t voltage) {
   return (resistance_readings_t)((10000 * v_t) / (v_ref - v_t));
 }
 
-static temperature_readings_t binary_search(resistance_readings_t resistance) {
+temperature_readings_t get_temp_from_resistance(resistance_readings_t resistance) {
+  // Binary Search algorithm
   size_t num_lut_elems = sizeof(temperature_resistance_lut) /
                          sizeof(temperature_resistance_lut[0]);
 
@@ -50,7 +50,7 @@ static temperature_readings_t binary_search(resistance_readings_t resistance) {
   return temperature_resistance_lut[low].temperature;
 }
 
-temperature_readings_t get_thermistor_temperature(voltage_readings_t voltage) {
+temperature_readings_t get_temp_from_voltage(voltage_readings_t voltage) {
   resistance_readings_t resistance = get_resistance_from_voltage(voltage);
-  return binary_search(resistance);
+  return get_temp_from_resistance(resistance);
 }

@@ -10,4 +10,5 @@ typedef struct {
   // voltage_readings_t voltage;
 } thermistor_t;
 
-temperature_readings_t get_thermistor_temperature(voltage_readings_t voltage);
+temperature_readings_t get_temp_from_resistance(resistance_readings_t resistance);
+temperature_readings_t get_temp_from_voltage(voltage_readings_t voltage);
