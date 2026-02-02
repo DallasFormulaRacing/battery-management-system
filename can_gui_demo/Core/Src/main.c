@@ -93,7 +93,7 @@ int main(void)
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
   HAL_CAN_Start(&hcan1);
-  init_LEDs();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -221,7 +221,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, LED_Green_Pin|LED_Red_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOG, LED_Green_Pin|LED_Red_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : LED_Green_Pin LED_Red_Pin */
   GPIO_InitStruct.Pin = LED_Green_Pin|LED_Red_Pin;

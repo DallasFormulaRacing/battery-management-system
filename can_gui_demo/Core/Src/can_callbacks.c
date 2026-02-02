@@ -19,22 +19,24 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
         if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
             switch (rxHeader.StdId) {
                 case CMD_SET_LED:
-                    if (rxData[0] == LED_RED) {
+                    if (rxData[0] == LED_RED)
                         if (rxData[1] == 0x01)
-                            set_LED(&red, GPIO_PIN_RESET); // Turn on (assuming active low)
+                            set_LED(&red, GPIO_PIN_SET); // Turn on
                         else
-                            set_LED(&red, GPIO_PIN_SET); // Turn off
-                    } else if (rxData[0] == LED_GREEN) {
+                            set_LED(&red, GPIO_PIN_RESET); // Turn off
+                    else if (rxData[0] == LED_GREEN)
                         if (rxData[1] == 0x01)
-                            set_LED(&green, GPIO_PIN_RESET); // Turn on
+                            set_LED(&green, GPIO_PIN_SET); // Turn on
                         else
-                            set_LED(&green, GPIO_PIN_SET); // Turn off
+                            set_LED(&green, GPIO_PIN_RESET); // Turn off
                     break;
                 case CMD_BLINK_LED:
-                if (rxData[0] == LED_RED) {
-                        blink_led(&red, rxData[1], rxData[2]);
-                    } else if (rxData[0] == LED_GREEN) {
-                        blink_led(&green, rxData[1], rxData[2]);
+                    uint32_t on_ms  = ((uint32_t)rxData[1] << 8) | rxData[2];
+                    uint32_t off_ms = ((uint32_t)rxData[3] << 8) | rxData[4];
+                    if (rxData[0] == LED_RED)
+                        blink_led(&red, on_ms, off_ms);
+                    else if (rxData[0] == LED_GREEN)
+                        blink_led(&green, on_ms, off_ms);
                     break;
                 case CMD_LED_INIT:
                     init_LEDs();
@@ -42,12 +44,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
                 default:
                     // Unknown command, ignore
                     break;
-            }
+                }
+        }else {
+            // Error handling (optional)
+            break; // Exit the loop on error
         }
     }
 }
 
+
 void HAL_CAN_RxFifo0FullCallback(CAN_HandleTypeDef *hcan);
 
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *hcan);
-
