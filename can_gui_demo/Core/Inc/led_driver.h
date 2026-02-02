@@ -24,6 +24,7 @@ extern led_typedef green;
 
 void drive_LED(led_typedef *led);
 void set_LED(led_typedef *led, GPIO_PinState state);
+void blink_led(led_typedef *led, uint32_t on_duration, uint32_t off_duration);
 void init_LEDs(void);
 
 #endif
