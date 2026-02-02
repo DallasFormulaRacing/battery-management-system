@@ -1,5 +1,10 @@
 
+#include "led_driver.h"
 #include "stm32f4xx_hal_gpio.h"
+
+led_typedef red = {0};
+led_typedef green = {0};
+
 void drive_LED(led_typedef *led){
     if(!led->is_blinking){
         return;
@@ -21,4 +26,8 @@ void drive_LED(led_typedef *led){
 void set_LED(led_typedef *led, GPIO_PinState state){
     HAL_GPIO_WritePin(led->port, led->pin, state);
     led->state = state;
+}
+
+void init_LEDs(){
+    return;
 }

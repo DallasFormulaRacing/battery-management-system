@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <stdbool.h>
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_gpio.h"
 
 
 typedef struct{
@@ -23,5 +24,6 @@ extern led_typedef green;
 
 void drive_LED(led_typedef *led);
 void set_LED(led_typedef *led, GPIO_PinState state);
+void init_LEDs(void);
 
 #endif
