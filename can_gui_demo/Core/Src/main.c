@@ -37,6 +37,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+#define LED_CAN_STD_ID  0x104   // any 11-bit value (0x000–0x7FF)
+#define LED_TX_PERIOD_MS 1000   // send every 1000ms
 
 /* USER CODE END PM */
 
@@ -52,6 +54,7 @@ CAN_HandleTypeDef hcan1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN1_Init(void);
+static void CAN_SendLedStatus(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -110,6 +113,8 @@ int main(void)
   uint32_t can_interrupts = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO0_FULL | CAN_IT_ERROR;
   HAL_CAN_ActivateNotification(&hcan1, can_interrupts);
 
+  uint32_t last_led_can_tx = 0;
+  
   while (1)
   {
     /* USER CODE END WHILE */
@@ -117,6 +122,14 @@ int main(void)
     /* USER CODE BEGIN 3 */
     drive_LED(&red);
     drive_LED(&green);
+
+        uint32_t now = HAL_GetTick();
+
+    if (now - last_led_can_tx >= LED_TX_PERIOD_MS)
+    {
+        last_led_can_tx = now;
+        CAN_SendLedStatus();
+    }
   }
   /* USER CODE END 3 */
 }
@@ -236,7 +249,29 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void CAN_SendLedStatus(void){
+      CAN_TxHeaderTypeDef txHeader = {0};
+    uint8_t txData[2];
+    uint32_t txMailbox;
 
+    // Standard 11-bit ID
+    txHeader.StdId = LED_CAN_STD_ID;
+    txHeader.ExtId = 0;
+    txHeader.IDE   = CAN_ID_STD;
+    txHeader.RTR   = CAN_RTR_DATA;
+    txHeader.DLC   = 2;
+    txHeader.TransmitGlobalTime = DISABLE;
+
+    // Encode LEDs: 1 = ON, 0 = OFF
+    txData[0] = (red.state   == GPIO_PIN_SET) ? 1 : 0;
+    txData[1] = (green.state == GPIO_PIN_SET) ? 1 : 0;
+
+    // Wait for free mailbox (simple blocking version)
+    if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)
+    {
+        HAL_CAN_AddTxMessage(&hcan1, &txHeader, txData, &txMailbox);
+    }
+}
 /* USER CODE END 4 */
 
 /**
