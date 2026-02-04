@@ -20,7 +20,7 @@ typedef enum {
   MEASURE_AUX_ADC_REDNT,
 } parse_adc_measurement_type_t;
 
-float convert_voltage_human_readable(voltage_readings_t voltage);
+float convert_voltage_human_readable(int16_t voltage);
 voltage_readings_t convert_voltage_machine_readable(float voltage);
 
 uint16_t set_ov_voltage_threshold(float volt);
