@@ -9,66 +9,49 @@ static int16_t convert_human_readable_to_voltage(float voltage) {
   return (int16_t)((voltage - 1.5F) / 0.000150F);
 }
 
-void testGetTempFromResistanceZero(void) {
-  TEST_ASSERT_EQUAL_INT16(150, get_temp_from_resistance(0));
+void testGetTempFromVoltageZero(void) {
+  TEST_ASSERT_LESS_OR_EQUAL_FLOAT(1.793969773, get_temp_from_voltage(0.0));
 }
 
-void testGetTempFromResistanceLess(void) {
-  TEST_ASSERT_EQUAL_INT16(150, get_temp_from_resistance(100));
+void testGetTempFromVoltageLess(void) {
+  TEST_ASSERT_LESS_OR_EQUAL_FLOAT(1.793969773, get_temp_from_voltage(-400.0));
 }
 
-void testGetTempFromResistanceGreater(void) {
-  TEST_ASSERT_EQUAL_INT16(-50, get_temp_from_resistance(130000));
+void testGetTempFromVoltageGreater(void) {
+  TEST_ASSERT_GREATER_OR_EQUAL_FLOAT(100.753857,
+                                     get_temp_from_voltage(13000.0));
 }
 
-void testGetTempFromResistance1100(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 90, get_temp_from_resistance(1100));
+void testGetTempFromVoltage2_6(void) {
+  TEST_ASSERT_FLOAT_WITHIN(0.11, 28.25, get_temp_from_voltage(2.6));
 }
 
-void testGetTempFromResistance1050(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 95, get_temp_from_resistance(1050));
+void testGetTempFromVoltage1_7(void) {
+  TEST_ASSERT_FLOAT_WITHIN(0.11, 68.5, get_temp_from_voltage(1.7));
 }
 
-void testGetTempFromResistance500(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 120, get_temp_from_resistance(500));
+// dont say it, dont think about it Sebastian
+void testGetTempFromVoltage1_6767676767(void) {
+  TEST_ASSERT_FLOAT_WITHIN(0.11, 69.4, get_temp_from_voltage(1.6767676767));
 }
 
-void testGetTempFromResistance80000(void) {
-  TEST_ASSERT_LESS_OR_EQUAL_INT16(-25, get_temp_from_resistance(80000));
+void testGetTempFromVoltage2_886662(void) {
+  TEST_ASSERT_FLOAT_WITHIN(0.001, 1.793969773, get_temp_from_voltage(2.886662));
 }
 
-void testGetTempFromResistance91000(void) {
-  TEST_ASSERT_LESS_OR_EQUAL_INT16(-25, get_temp_from_resistance(91000));
-}
-
-void testGetTempFromResistance16000(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 10, get_temp_from_resistance(16000));
-}
-
-void testGetTempFromResistance3000(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 57, get_temp_from_resistance(3000));
-}
-
-void testGetTempFromResistance10000(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 25, get_temp_from_resistance(10000));
-}
-
-void testGetTempFromResistance10500(void) {
-  TEST_ASSERT_INT16_WITHIN(5, 17, get_temp_from_resistance(10500));
+void testGetTempFromVoltage0_918936968(void) {
+  TEST_ASSERT_FLOAT_WITHIN(0.001, 100.753857,
+                           get_temp_from_voltage(0.9189369682));
 }
 
 int main(void) {
-  RUN_TEST(testGetTempFromResistanceZero);
-  RUN_TEST(testGetTempFromResistanceLess);
-  RUN_TEST(testGetTempFromResistanceGreater);
-  RUN_TEST(testGetTempFromResistance1100);
-  RUN_TEST(testGetTempFromResistance1050);
-  RUN_TEST(testGetTempFromResistance500);
-  RUN_TEST(testGetTempFromResistance80000);
-  RUN_TEST(testGetTempFromResistance91000);
-  RUN_TEST(testGetTempFromResistance16000);
-  RUN_TEST(testGetTempFromResistance3000);
-  RUN_TEST(testGetTempFromResistance10000);
-  RUN_TEST(testGetTempFromResistance10500);
+  RUN_TEST(testGetTempFromVoltageZero);
+  RUN_TEST(testGetTempFromVoltageLess);
+  RUN_TEST(testGetTempFromVoltageGreater);
+  RUN_TEST(testGetTempFromVoltage2_6);
+  RUN_TEST(testGetTempFromVoltage1_7);
+  RUN_TEST(testGetTempFromVoltage1_6767676767);
+  RUN_TEST(testGetTempFromVoltage2_886662);
+  RUN_TEST(testGetTempFromVoltage0_918936968);
   return UNITY_END();
 }
