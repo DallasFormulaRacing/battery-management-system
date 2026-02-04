@@ -526,7 +526,7 @@ resistance_readings_t get_resistance_from_voltage(voltage_readings_t voltage) {
 }
 
 temp_c_readings_t get_temp_from_voltage(voltage_human_readable_t voltage) {
-  // Binary Search algorithm
+  // Binary Search algorithm, O(log(n)) lookup
   int32_t num_lut_elems =
       sizeof(voltage_temp_lut) / sizeof(voltage_temp_lut[0]);
 
@@ -546,11 +546,6 @@ temp_c_readings_t get_temp_from_voltage(voltage_human_readable_t voltage) {
   while (first <= last) {
     mid = (first + last) / 2;
 
-    if (voltage <= voltage_temp_lut[mid].voltage + 0.000001 &&
-        voltage >= voltage_temp_lut[mid].voltage - 0.000001) {
-      return voltage_temp_lut[mid].temperature;
-    }
-
     if (voltage_temp_lut[mid].voltage < voltage) {
       last = mid - 1;
     } else {
@@ -559,4 +554,28 @@ temp_c_readings_t get_temp_from_voltage(voltage_human_readable_t voltage) {
   }
 
   return voltage_temp_lut[last].temperature;
+
+  /*
+    // O(1) lookup, doesnt work with current LUT because voltages are not evenly
+    // spaced
+
+  int32_t last = num_lut_elems - 1; int32_t first = 0;
+
+  if (voltage < voltage_temp_lut[last].voltage) {
+    return voltage_temp_lut[first].temperature;
+  }
+
+  if (voltage > voltage_temp_lut[first].voltage) {
+    return voltage_temp_lut[last].temperature;
+  }
+
+  uint32_t index = (uint32_t)(((voltage_temp_lut[first].voltage - voltage) /
+                               (voltage_temp_lut[first].voltage -
+                                voltage_temp_lut[last].voltage)) *
+                              (num_lut_elems - 1));
+  if (index >= num_lut_elems) {
+    index = num_lut_elems - 1;
+  }
+  return voltage_temp_lut[index].temperature;
+  */
 }
