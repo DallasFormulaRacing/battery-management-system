@@ -18,15 +18,15 @@ typedef enum {
   GPIO8,
   GPIO9,
   GPIO10,
-  VREF2,                          // vref2
-  VD,                             // ldo3v
-  VA,                             // ldo5v
-  ITEMP,                          // temp
-  VPV,                            // vpos_2_neg
-  VMV,                            // vneg
-  RES,                            // vr4k
-  RESERVED                        // vref3
-} aux_adc_input_channel_select_t; // CH
+  VREF2,        // vref2
+  VD,           // ldo3v
+  VA,           // ldo5v
+  ITEMP,        // temp
+  VPV,          // vpos_2_neg
+  VMV,          // vneg
+  RES,          // vr4k
+  RESERVED      // vref3
+} aux_select_t; // CH
 
 typedef enum {
   RD_OFF = 0,
@@ -43,12 +43,12 @@ typedef enum {
   OW_ON_EVEN_CH,
   OW_ON_ODD_CH,
   OW_ON_ALL_CH
-} open_wire_detection_mode_t; // OW_CS
+} open_wire_detect_mode_t; // OW_CS
 
 typedef enum {
   AUX_OW_OFF = 0X0,
   AUX_OW_ON = 0X1,
-} aux_open_wire_detection_mode_t; // OW_AUX
+} aux_open_wire_detect_mode_t; // OW_AUX
 
 typedef enum {
   PUP_DOWN = 0X0,
@@ -58,7 +58,7 @@ typedef enum {
 typedef enum {
   DCP_OFF = 0X0,
   DCP_ON = 0X1,
-} discharge_permitted_mode_t; // DCP
+} discharge_permission_t; // DCP
 
 typedef enum {
   RSTF_OFF = 0X0,

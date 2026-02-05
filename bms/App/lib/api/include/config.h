@@ -15,12 +15,12 @@ extern uint8_t write_buffer[WRITE_SIZE];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;
-  aux_adc_input_channel_select_t channel_to_convert;
+  aux_select_t channel_to_convert;
   cont_measurement_mode_t continuous_measurement;
-  open_wire_detection_mode_t cell_open_wire_detection_mode;
-  aux_open_wire_detection_mode_t AUX_OW_en;
+  open_wire_detect_mode_t cell_open_wire_detection_mode;
+  aux_open_wire_detect_mode_t AUX_OW_en;
   pull_down_current_mode_t PUP_en;
-  discharge_permitted_mode_t DCP_en;
+  discharge_permission_t DCP_en;
   reset_filter_mode_t RSTF_en;
   inject_err_spi_read_t ERR_en;
 } adc_config_t;
@@ -63,9 +63,9 @@ typedef struct {
 
 /*redundant_enable_t RD_en = RD_OFF;
     cont_measurement_mode_t CONT_en = SINGLE;
-    open_wire_detection_mode_t OW_CS_en = OW_OFF_ALL_CH;
-    aux_open_wire_detection_mode_t AUX_OW_en = AUX_OW_OFF;
+    open_wire_detect_mode_t OW_CS_en = OW_OFF_ALL_CH;
+    aux_open_wire_detect_mode_t AUX_OW_en = AUX_OW_OFF;
     pull_down_current_mode_t PUP_en = PUP_DOWN;
-    discharge_permitted_mode_t DCP_en = DCP_OFF;
+    discharge_permission_t DCP_en = DCP_OFF;
     reset_filter_mode_t RSTF_en = RSTF_OFF;
     inject_err_spi_read_t ERR_en; = WITHOUT_ERR;*/
