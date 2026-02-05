@@ -1,1 +1,2 @@
-add_subdirectory(DumbExample)
+add_subdirectory(CellBalancing)
+add_subdirectory(Thermistor)

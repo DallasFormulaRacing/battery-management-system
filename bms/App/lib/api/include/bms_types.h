@@ -56,6 +56,9 @@
 /* ----------------------------------------------------- */
 
 typedef int16_t voltage_readings_t;
+typedef float voltage_human_readable_t;
+typedef uint32_t resistance_readings_t;
+typedef float temp_c_readings_t;
 
 /* ----------------------------------------------------- */
 

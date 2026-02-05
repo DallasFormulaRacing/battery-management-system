@@ -224,14 +224,18 @@ void bms_test_init() {
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
-  adbms_read_status_registers(hbms.asic);
+  // adbms_read_status_registers(hbms.asic);
 
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  HAL_Delay(20);
+
+  // adbms_start_adc_cell_voltage_measurment(hbms.asic);
   // adbms_poll_for_conversion_adc(hbms.asic);
-  adbms_read_cell_voltages(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
 
-  adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
+  // adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
 
+  adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_read_aux_voltages(hbms.asic);
   // reads 15 (14+1) on the scope
   // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
   HAL_Delay(20);

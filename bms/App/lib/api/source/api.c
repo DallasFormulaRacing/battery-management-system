@@ -136,11 +136,6 @@ adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
-  // asic_wakeup(asic_ctx->ic_count);
-  // spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
-  //                  g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-  //                  g_adc_cfg.RSTF_en,
-  //                  g_adc_cfg.cell_open_wire_detection_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACA, REG_GROUP_A));
@@ -190,9 +185,7 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_aux_voltage_measurment(
-    cell_asic_ctx_t *asic_ctx,
-    aux_adc_input_channel_select_t channel_to_convert) {
+comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
   // TODO
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     asic_ctx[ic].tx_cfg_a.REFON = POWER_UP;
@@ -530,7 +523,7 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 // }
 
 // comm_status_t
-// adbms_run_supply_error_detection_self_test(cell_asic_ctx_t *asic_ctx) {
+// adbms_run_post(cell_asic_ctx_t *asic_ctx) {
 //   // TODO
 //   return COMM_OK;
 // }
@@ -557,7 +550,7 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 // }
 
 // comm_status_t
-// adbms_check_rdstatc_err_bit_functionality(cell_asic_ctx_t *asic_ctx) {
+// adbms_check_rdstatc_err_fn(cell_asic_ctx_t *asic_ctx) {
 //   // TODO
 //   return COMM_OK;
 // }
@@ -574,7 +567,7 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 
 // comm_status_t adbms_cell_ow_voltage_collect(cell_asic_ctx_t *asic_ctx,
 //                                             bms_op_t type,
-//                                             open_wire_detection_mode_t
+//                                             open_wire_detect_mode_t
 //                                             ow_c_s) {
 //   // TODO
 //   return COMM_OK;
@@ -586,7 +579,7 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 // }
 
 // comm_status_t
-// adbms_gpio_pup_up_down_volatge_collect(cell_asic_ctx_t *asic_ctx,
+// adbms_gpio_pup_voltage_collect(cell_asic_ctx_t *asic_ctx,
 //                                        pull_down_current_mode_t pup) {
 //   // TODO
 //   return COMM_OK;
