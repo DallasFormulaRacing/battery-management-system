@@ -45,9 +45,7 @@ comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 /*
  * @group Reading AUX ADC measurement types
  */
-comm_status_t
-adbms_start_aux_voltage_measurment(cell_asic_ctx_t *asic_ctx,
-                                   aux_select_t channel_to_convert);
+comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_start_raux_voltage_measurment(
     cell_asic_ctx_t *asic_ctx, redundant_enable_t redundant_measurement_mode);

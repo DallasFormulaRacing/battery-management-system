@@ -185,9 +185,7 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t
-adbms_start_aux_voltage_measurment(cell_asic_ctx_t *asic_ctx,
-                                   aux_select_t channel_to_convert) {
+comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
   // TODO
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     asic_ctx[ic].tx_cfg_a.REFON = POWER_UP;
