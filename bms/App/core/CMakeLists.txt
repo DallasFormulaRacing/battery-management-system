@@ -4,6 +4,8 @@ target_sources(bms_api
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/source/bms_driver.c
         ${CMAKE_CURRENT_SOURCE_DIR}/source/comms.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/source/can_handler.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/source/can_utils.c
 )
 
 target_compile_definitions(bms_api
