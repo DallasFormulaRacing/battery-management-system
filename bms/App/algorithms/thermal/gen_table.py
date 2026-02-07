@@ -103,7 +103,7 @@ def c_header(HEADER_FILE: str, data: List[Tuple[int, float, float]]) -> None:
         # ---- LUT declaration FIRST (must exist before use) ----
         f.write("static const float thermistor_lut[THERM_LUT_SIZE] = {\n")
         for _, _, t in data:
-            f.write(f"    {t:.6f}f,\n")
+            f.write(f"    {t:.6f}F,\n")
         f.write("};\n\n")
 
         # ---- Runtime conversion function ----
