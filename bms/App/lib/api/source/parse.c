@@ -8,13 +8,9 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
                                        parse_measurement_type_t mtype);
 
 voltage_readings_t convert_voltage_machine_readable(float voltage) {
-  uint16_t val;
-  uint8_t shift_bits = 12;
   voltage = (voltage - 1.5F);
-  voltage = voltage / (16 * 0.000150F);
-  val = ((uint16_t)voltage + (2U * (1U << (shift_bits - 1U))));
-  val &= 0xFFF;
-  return (voltage_readings_t)val;
+  voltage = voltage / (0.000150F);
+  return (voltage_readings_t)voltage;
 }
 
 uint16_t set_ov_voltage_threshold(float volt) {
