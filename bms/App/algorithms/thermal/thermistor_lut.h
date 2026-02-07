@@ -1,15 +1,14 @@
-/* Auto-generated thermistor lookup table */
+/* Auto-generated thermistor LUT */
 /* DO NOT EDIT MANUALLY */
 
 #ifndef THERM_LUT_H
 #define THERM_LUT_H
 
-#include <math.h>
 #include <stdint.h>
 
-#define THERM_LUT_BASE_CODE (-141)
-#define THERM_LUT_SIZE (288)
-#define THERM_LUT_SHIFT (6)
+#define THERM_LUT_BASE_CODE -141
+#define THERM_LUT_SHIFT 6
+enum { THERM_LUT_SIZE = 288 };
 
 static const float thermistor_lut[THERM_LUT_SIZE] = {
     147.801289F, 144.986889F, 142.286136F, 139.694007F, 137.205665F,
@@ -72,12 +71,12 @@ static const float thermistor_lut[THERM_LUT_SIZE] = {
     -35.435170F, -36.820087F, -38.248303F,
 };
 
-static inline float get_temp(int16_t adc16) {
+static inline float thermistor_from_adc(int16_t adc16) {
   int16_t adc10 = (int16_t)(adc16 >> THERM_LUT_SHIFT);
-  int32_t idx = (int16_t)(adc10 - THERM_LUT_BASE_CODE);
+  int16_t idx = (int16_t)(adc10 - THERM_LUT_BASE_CODE);
 
   if (idx < 0 || idx >= THERM_LUT_SIZE) {
-    return NAN;
+    return -273.15F; /* invalid */
   }
 
   return thermistor_lut[idx];

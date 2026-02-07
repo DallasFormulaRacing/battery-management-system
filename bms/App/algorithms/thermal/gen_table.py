@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
 """
-Thermistor voltage-to-temperature model (ADC-driven)
+Thermistor LUT generator (ADC-driven, truncated)
 
 Thermistor P/N: NCG18WF104F0SRB
-
-Model:
-  - Input: ADC code (signed integer)
-  - Voltage: V = 1.5 + 0.000150 * code
-  - Output: temperature (°C)
-  - Polynomial valid only for V in [0.14, 2.91] volts
-
-This script generates temperatures by iterating over ADC codes,
-which guarantees contiguous indexing and avoids quantization jumps.
 """
 
 from typing import List, Tuple
 
-# USER EDITABLE
+# Configuration (user-editable)
 V_MIN = 0.14
 V_MAX = 2.91
+DESIRED_RES = 10   # bits
 
-# USER EDITABLE
+# ADC characteristics (fixed)
+ADC_RES = 16
 ADC_LSB_V = 0.000150
 ADC_OFFSET_V = 1.5
-
 ADC_MIN_CODE = -32768
 ADC_MAX_CODE = 32767
+RSRV = ADC_RES - DESIRED_RES  # bits dropped
 
-ADC_RES = 16
-DESIRED_RES = 10
+# Derived bounds
 
-N_MIN = int((V_MIN - ADC_OFFSET_V) // ADC_LSB_V)   # floor
-N_MAX = int((V_MAX - ADC_OFFSET_V) // ADC_LSB_V)   # floor
+N_MIN = int((V_MIN - ADC_OFFSET_V) // ADC_LSB_V)
+N_MAX = int((V_MAX - ADC_OFFSET_V) // ADC_LSB_V)
 
-RSRV = ADC_RES - DESIRED_RES
+def adc16_to_adc10(code16: int) -> int:
+    """Truncate ADC code by discarding LSBs (floor quantization)."""
+    return code16 >> RSRV
+
+N10_MIN = adc16_to_adc10(N_MIN)
+N10_MAX = adc16_to_adc10(N_MAX)
+
+# =========================
+# Model
+# =========================
 
 def thermistor_poly(v: float) -> float:
-    """
-    Voltage (V) -> Temperature (°C)
-    Valid only for V in [V_MIN, V_MAX].
-    """
+    """Voltage (V) -> Temperature (°C). Valid only in [V_MIN, V_MAX]."""
     return (
         2.3487131 * v**8
         - 35.359734 * v**7
@@ -52,29 +50,19 @@ def thermistor_poly(v: float) -> float:
         + 209.04676
     )
 
-def trunc(val: int) -> int:
-    return val >> RSRV
+def adc16_to_voltage(code16: int) -> float:
+    return ADC_OFFSET_V + ADC_LSB_V * code16
 
-
-def adc_code_to_voltage(code: int) -> float:
-    if not (ADC_MIN_CODE <= code <= ADC_MAX_CODE):
-        raise ValueError("ADC code out of int16 range")
-    return ADC_OFFSET_V + ADC_LSB_V * code
-
-
+# Table generation
 def make_table() -> List[Tuple[int, float, float]]:
     """
-    Returns a list of:
-      (adc10_code, voltage, temperature)
+    Returns (adc10_code, voltage, temperature)
     """
     data: List[Tuple[int, float, float]] = []
 
-    N10_MIN = trunc(N_MIN)
-    N10_MAX = trunc(N_MAX)
-
     for code10 in range(N10_MIN, N10_MAX + 1):
         code16 = code10 << RSRV
-        v = adc_code_to_voltage(code16)
+        v = adc16_to_voltage(code16)
 
         if V_MIN <= v <= V_MAX:
             t = thermistor_poly(v)
@@ -82,80 +70,45 @@ def make_table() -> List[Tuple[int, float, float]]:
 
     return data
 
-def c_header(HEADER_FILE: str, data: List[Tuple[int, float, float]]) -> None:
-    base_code = data[0][0]          # lowest 10-bit ADC code
-    table_len = len(data)
+# C header generation
+def write_c_header(path: str, data: List[Tuple[int, float, float]]) -> None:
+    base_code = data[0][0]
+    size = len(data)
 
-    with open(HEADER_FILE, "w") as f:
-        f.write("/* Auto-generated thermistor lookup table */\n")
+    with open(path, "w") as f:
+        f.write("/* Auto-generated thermistor LUT */\n")
         f.write("/* DO NOT EDIT MANUALLY */\n\n")
+        f.write("#ifndef THERM_LUT_H\n#define THERM_LUT_H\n\n")
+        f.write("#include <stdint.h>\n\n")
 
-        f.write("#ifndef THERM_LUT_H\n")
-        f.write("#define THERM_LUT_H\n\n")
+        f.write(f"#define THERM_LUT_BASE_CODE {base_code}\n")
+        f.write(f"#define THERM_LUT_SHIFT     {RSRV}\n")
+        f.write("enum { THERM_LUT_SIZE = %d };\n\n" % size)
 
-        f.write("#include <stdint.h>\n")
-        f.write("#include <math.h>\n\n")
-
-        f.write(f"#define THERM_LUT_BASE_CODE   ({base_code})\n")
-        f.write(f"#define THERM_LUT_SIZE        ({table_len})\n")
-        f.write(f"#define THERM_LUT_SHIFT       ({RSRV})\n\n")
-
-        # ---- LUT declaration FIRST (must exist before use) ----
         f.write("static const float thermistor_lut[THERM_LUT_SIZE] = {\n")
         for _, _, t in data:
             f.write(f"    {t:.6f}F,\n")
         f.write("};\n\n")
 
-        # ---- Runtime conversion function ----
-        f.write("static inline float get_temp(int16_t adc16)\n")
-        f.write("{\n")
-        f.write("    int16_t adc10 = adc16 >> THERM_LUT_SHIFT;\n")
-        f.write("    int32_t idx = adc10 - THERM_LUT_BASE_CODE;\n\n")
+        f.write("static inline float thermistor_from_adc(int16_t adc16)\n{\n")
+        f.write("    int16_t adc10 = (int16_t)(adc16 >> THERM_LUT_SHIFT);\n")
+        f.write("    int16_t idx = (int16_t)(adc10 - THERM_LUT_BASE_CODE);\n\n")
         f.write("    if (idx < 0 || idx >= THERM_LUT_SIZE) {\n")
-        f.write("        return NAN;\n")
+        f.write("        return -273.15F; /* invalid */\n")
         f.write("    }\n\n")
-        f.write("    return thermistor_lut[idx];\n")
-        f.write("}\n\n")
-
+        f.write("    return thermistor_lut[idx];\n}\n\n")
         f.write("#endif /* THERM_LUT_H */\n")
 
-
-
+# Main
 def main() -> None:
     data = make_table()
 
-    codes = [n for n, _, _ in data]
-    volts = [v for _, v, _ in data]
-    temps = [t for _, _, t in data]
+    print("ADC10 range :", data[0][0], "to", data[-1][0])
+    print("Samples     :", len(data))
+    print("Temp range  :", min(t for _, _, t in data),
+          "to", max(t for _, _, t in data))
 
-    print("ADC code range        :", min(codes), "to", max(codes))
-    print("Voltage range (V)     :", min(volts), "to", max(volts))
-    print("Temperature range (°C):", min(temps), "to", max(temps))
-    print("Total samples         :", len(data))
-
-    print("\nFirst point:", data[0])
-    print("Last point :", data[-1])
-
-    # =========================
-    # File output
-    # =========================
-
-    OUTPUT_FILE = "App/algorithms/thermal/table.txt"
-
-    base = data[0][0]
-
-    with open(OUTPUT_FILE, "w") as f:
-        f.write("index,         voltage_V,          temperature_C\n")
-        for n, v, t in data:
-            f.write(f"{n - base},           {v:.6f},            {t:.6f}\n")
-
-    print(f"\nWrote {len(data)} entries to {OUTPUT_FILE}")
-
-    c_header("App/algorithms/thermal/thermistor_lut.h", data)
-
-# =========================
-# Entry point
-# =========================
+    write_c_header("App/algorithms/thermal/thermistor_lut.h", data)
 
 if __name__ == "__main__":
     main()
