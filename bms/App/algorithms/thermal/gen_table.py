@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 """
+How to use: 
+1. Get the thermistor data sheet. 
+    The info you need is the temperature approx graph, 
+    the polynomial for that, and the min and max voltage values (in the domain)
+
+2. Edit V_MIN and V_MAX appropriately.
+
+3. Redefine thermistor_poly(v: float) -> float appropriately
+
+4. Run generator
+
 Thermistor LUT generator (ADC-driven, truncated)
 
 Thermistor P/N: NCG18WF104F0SRB
