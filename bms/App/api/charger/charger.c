@@ -35,6 +35,27 @@ void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   }
 }
 
+/**
+ * @brief then a second pass to calculate each cell
+ * delta. during this second pass, if the cell delta is greater than the, add it
+ * to the PWM struct (array)
+ *
+ * @param asic_ctx
+ * @param pcb
+ */
+void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
+  battery_cell_t *cell;
+  // Second pass: find all cell deltas
+  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+    cell = &pcb->batteries[cell_idx];
+    cell->delta = (voltage_readings_t)(cell->cell_voltage -
+                                       pcb->lowest_cell.cell_voltage);
+
+    adbms_set_cell_pwm(asic_ctx, cell->cell_number, cell->segment_number,
+                       map_delta_to_pwm_discretize(pcb, cell->delta));
+  }
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   discharge_timeout_flag = 1;
 }
