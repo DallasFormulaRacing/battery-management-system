@@ -16,7 +16,7 @@ $$
 
 to achieve this, we have several options:
 
-## option 1: on the go polynomial solving
+# option 1: on the go polynomial solving
 
 solve the characteristic thermistor polynomial (note: this is not the Steinhart-Hart equation). for any given thermistor and its characteristic polynomial it's clear that a higher degree of said polynomial yields less error and a more accurate reading. no look up table implementation. computationally the most expensive, but requires little to no planning on our part
 
@@ -99,4 +99,5 @@ the subtraction of $Nmin⁡$ is purely an indexing convenience: C arrays are zer
 ### python implementation
 
 Github link $\rightarrow$ [here](https://github.com/DallasFormulaRacing/battery-management-system/blob/feature/thermistors/bms/App/algorithms/thermal/gen_table.py)
+
 File relpath $\rightarrow$ [here](App/algorithms/thermal/gen_table.py)
