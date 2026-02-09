@@ -33,9 +33,17 @@ endif()
 message(STATUS ">>> Building for ARM target <<<")
 
 # 4. Workspace / Environment Settings
-set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
-set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
-set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # Linux-specific stuff
+endif () 
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  # Linux-specific stuff
+  set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
+  set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
+  set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
+endif () 
+
 
 # 5. Executable Definition
 file(GLOB CORE_SOURCES Core/Src/*.c)
