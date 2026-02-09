@@ -43,48 +43,8 @@ Each layer answers a different question. Lower layers define how something is do
 
 An example of this is calling a high level superloop such as the cell balancing policy enforcer vs calling a low-level parsing function.
 
-The intent is to make incorrect usage difficult and correct usage boring.
+The intent is to make incorrect usage difficult and correct usage boring. In the image below, "spec" means specific to. For example, the CMSIS library is specific to all Cortex microcontrollers, while HAL is specific only to the STM32 microcontroller.
 
-> Insert abstraction layers img here.
+So, given the diagram below, one can assume that an STM32 microcontroller is a type of Cortex microcontroller that obeys the [Cortex **C**ommon **M**icrocontroller **S**oftware **I**nterface **S**tandard.](https://arm-software.github.io/CMSIS_6/latest/General/index.html)
 
-### Subdirectories
-
-`App` - contains application layer logic, like algorithms and other user-defined modules. Write additional firmware here.
-
-`Core` - main function and architecture-specific sources. Edit as least often as possible.
-
-`Drivers` - vendor drivers and HAL. Also contains CMSIS library. Do not touch.
-
-### Tree
-
-```bash
-.
-├── App
-│   ├── algorithms
-│   │   ├── cb
-│   │   ├── pec
-│   │   ├── soc
-│   │   └── thermal
-│   ├── core
-│   │   ├── include
-│   │   └── source
-│   └── lib
-│       ├── api
-│       │   ├── include
-│       │   └── source
-│       └── program
-├── Core
-│   ├── Inc
-│   └── Src
-├── Drivers
-│   ├── CMSIS
-│   │   └── Include
-│   └── STM32G4xx_HAL_Driver
-│       ├── Inc
-│       └── Src
-└── cmake
-
-82 directories
-
-
-```
+![img](software/assets/all_layers.png)
