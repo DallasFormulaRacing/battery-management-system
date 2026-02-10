@@ -1,8 +1,8 @@
 #ifndef CAN_UTILS_H
 #define CAN_UTILS_H
 
-#include "stm32h5xx_hal.h"
-#include "types.h"
+//#include "stm32h5xx_hal.h"
+//#include "types.h"
 
 // ID Construction Macro
 #define CAN_EXT_ID_MASK 0x1FFFFFFF

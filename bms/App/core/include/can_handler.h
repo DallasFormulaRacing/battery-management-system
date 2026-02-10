@@ -2,8 +2,8 @@
 #ifndef COMMAND_HANDLER_H
 #define COMMAND_HANDLER_H
 
-#include "stm32h5xx_hal.h"
-#include "types.h"
+//#include "stm32h5xx_hal.h"
+//#include "types.h"
 
 /**
  * @brief Dispatches incoming CAN messages to specific handling functions.
