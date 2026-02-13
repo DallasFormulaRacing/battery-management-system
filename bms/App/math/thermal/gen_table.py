@@ -3,6 +3,13 @@
 Thermistor LUT generator (ADC-driven, truncated)
 
 Thermistor P/N: NCG18WF104F0SRB
+
+Whenever you change thermistors,
+
+change the following:
+- VMIN
+- VMAX
+- the polynomial function
 """
 
 from typing import List, Tuple

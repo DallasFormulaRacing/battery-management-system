@@ -8,9 +8,9 @@ bms_handler_t hbms;
 
 adc_config_t g_adc_cfg = {
     .redundant_measurement_mode = RD_OFF,
-    .channel_to_convert = AUX_ALL,
+    .channels = AUX_ALL,
     .continuous_measurement = SINGLE,
-    .cell_open_wire_detection_mode = OW_OFF_ALL_CH,
+    .ow_mode = OW_OFF_ALL_CH,
     .AUX_OW_en = AUX_OW_ON,
     .PUP_en = PUP_DOWN,
     .DCP_en = DCP_OFF,
@@ -220,6 +220,8 @@ void bms_test_init() {
   }
 
   adbms_init_config(hbms.asic);
+  adbms_start_aux_voltage_measurement(hbms.asic);
+  HAL_Delay(8);
 }
 
 void bms_test_run() {
@@ -233,11 +235,8 @@ void bms_test_run() {
   // adbms_read_cell_voltages(hbms.asic);
 
   // adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
-
-  adbms_start_aux_voltage_measurement(hbms.asic);
-  HAL_Delay(8);
   adbms_read_aux_voltages(hbms.asic);
   // reads 15 (14+1) on the scope
   // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
-  HAL_Delay(20);
+  HAL_Delay(8);
 }

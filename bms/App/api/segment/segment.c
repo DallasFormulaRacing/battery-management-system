@@ -79,7 +79,7 @@ adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
                    g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.RSTF_en, g_adc_cfg.ow_mode);
   return COMM_OK;
 }
 
@@ -107,7 +107,7 @@ comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
   spi_adsv_command(g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.ow_mode);
   return COMM_OK;
 }
 
@@ -131,7 +131,7 @@ adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
                    g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.RSTF_en, g_adc_cfg.ow_mode);
   return COMM_OK;
 }
 
@@ -159,7 +159,7 @@ comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
                    g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.RSTF_en, g_adc_cfg.ow_mode);
   return COMM_OK;
 }
 
@@ -168,7 +168,7 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
                    g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.RSTF_en, g_adc_cfg.ow_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCA, REG_GROUP_A));
@@ -194,16 +194,14 @@ comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
   }
   asic_wakeup(asic_ctx->ic_count);
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
-  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en,
-                   g_adc_cfg.channel_to_convert);
+  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en, g_adc_cfg.channels);
   return COMM_OK;
 }
 
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
-  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en,
-                   g_adc_cfg.channel_to_convert);
+  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en, g_adc_cfg.channels);
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -224,8 +222,7 @@ comm_status_t adbms_start_raux_voltage_measurment(
   }
   asic_wakeup(asic_ctx->ic_count);
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
-  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en,
-                   g_adc_cfg.channel_to_convert);
+  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en, g_adc_cfg.channels);
   return COMM_OK;
 }
 
@@ -250,11 +247,10 @@ comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
 
-  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en,
-                   g_adc_cfg.channel_to_convert);
+  spi_adax_command(g_adc_cfg.AUX_OW_en, g_adc_cfg.PUP_en, g_adc_cfg.channels);
   spi_adcv_command(g_adc_cfg.redundant_measurement_mode,
                    g_adc_cfg.continuous_measurement, g_adc_cfg.DCP_en,
-                   g_adc_cfg.RSTF_en, g_adc_cfg.cell_open_wire_detection_mode);
+                   g_adc_cfg.RSTF_en, g_adc_cfg.ow_mode);
 
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_STATUS, RDSTATA, REG_GROUP_A));
