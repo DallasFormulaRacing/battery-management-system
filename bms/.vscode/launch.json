@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "STM32G474 Debug (OpenOCD)",
+            "name": "STM32G474 OpenOCD",
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -23,8 +23,9 @@
             "preLaunchCommands": [
                 "monitor reset halt"
             ],
-            "postLaunchCommands": [
-                "monitor arm semihosting enable"
+            "serverArgs": [
+                "-c",
+                "adapter speed 2000"
             ]
         }
     ]
