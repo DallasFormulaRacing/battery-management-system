@@ -27,6 +27,14 @@ typedef uint8_t command_msg_t[4];
 //   COMM_INVALID_PARAMETERS,
 // } comm_status_t;
 
+//CAN commands
+typedef enum {
+    CAN_CMD_ID_READCV_ALL = 0x01,
+    CAN_CMD_ID_READSV_ALL = 0x02,
+    CAN_CMD_ID_READCAVG_ALL = 0x03,
+    // Add more command IDs as needed
+} CANFD_CommandID_t;
+
 void bms_send_command(const command_t tx_cmd);
 
 comm_status_t bms_read_register_spi(uint8_t ic_count,

@@ -1,9 +1,9 @@
 /* App/Inc/commands.h */
 #ifndef TYPES_H
 #define TYPES_H
-rq
 #include <stdint.h>
 
+/*
 typedef struct __attribute__((packed)){
     uint32_t linPotData;
     uint32_t wheelSpeed;
@@ -12,7 +12,10 @@ typedef struct __attribute__((packed)){
     uint8_t brakeTemperature;
     uint8_t tireTemperature;
 } NodeDataTypeDef;
+*/
 
+
+/*
 typedef enum {
     NODE_ID_FRONT_LEFT  = 0x01, // 00001
     NODE_ID_FRONT_RIGHT = 0x02, // 00010
@@ -25,16 +28,17 @@ typedef enum {
     NODE_ID_DASH        = 0x1F, // 11111 (Node 31)
     NODE_ID_UNKNOWN     = 0x00
 } NodeHardwareID_t;
+*/
 
-
+/*
 typedef struct {
     uint32_t uid[3];            // STM32 96-bit UID
     NodeHardwareID_t nodeType;  // Assigned CAN ID
 } UID_Mapping_t;
+*/
 
 
-
-extern NodeHardwareID_t self_node_id;
-extern NodeDataTypeDef nodeData;
+//extern NodeHardwareID_t self_node_id;
+//extern NodeDataTypeDef nodeData;
 
 #endif
