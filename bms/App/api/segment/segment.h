@@ -47,8 +47,7 @@ comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
  */
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_raux_voltage_measurment(
-    cell_asic_ctx_t *asic_ctx, redundant_enable_t redundant_measurement_mode);
+comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx);
 
 /*

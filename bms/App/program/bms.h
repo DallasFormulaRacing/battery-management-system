@@ -61,7 +61,7 @@ typedef struct {
   pcb_ctx_t *pcb;
 } bms_handler_t;
 
-extern adc_config_t g_adc_cfg;
+extern adc_config_t g_cell_profile;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
 
