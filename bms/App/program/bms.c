@@ -251,12 +251,12 @@ void bms_test_init() {
   HAL_Delay(8);
 }
 
-static inline float f2v(int16_t x) {
-  float v = (0.00015F * (float)x) + 1.5;
-  return v;
+static inline float f2v(int16_t xin) {
+  float volt = (0.00015F * (float)xin) + 1.5F;
+  return volt;
 }
 
-static inline float thermpoly(float x) {
+static inline float thermpoly(float xin) {
   // 2.3487131 * v**8
   //       - 35.359734 * v**7
   //       + 218.27577 * v**6
@@ -267,12 +267,12 @@ static inline float thermpoly(float x) {
   //       - 565.64244 * v
   //       + 209.04676
 
-  return (2.3487131F * x * x * x * x * x * x * x * x) -
-         (35.359734F * x * x * x * x * x * x * x) +
-         (218.27577F * x * x * x * x * x * x) -
-         (724.54830F * x * x * x * x * x) + (1417.8324F * x * x * x * x) -
-         (1687.9102F * x * x * x) + (1225.0384F * x * x) - (565.64244F * x) +
-         (209.04676F);
+  return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
+         (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
+         (218.27577F * xin * xin * xin * xin * xin * xin) -
+         (724.54830F * xin * xin * xin * xin * xin) +
+         (1417.8324F * xin * xin * xin * xin) - (1687.9102F * xin * xin * xin) +
+         (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
 }
 
 static float g_thermtesterVOLTAGE[12];
