@@ -2,6 +2,7 @@
 #define CDATATYPES_H
 
 #include "bms_enums.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
