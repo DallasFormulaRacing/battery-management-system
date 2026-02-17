@@ -4,6 +4,7 @@
 #include "config.h"
 #include "segment.h"
 #include "stm32g4xx_hal.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
@@ -49,7 +50,7 @@ voltage_config_t g_voltage_cfg = {
     .overvoltage_threshold_v = 4.15F,
     .undervoltage_threshold_v = 2.51F,
     .openwire_cell_threshold_mv = 2000,
-    .openwire_aux_threshold_mv = 50000,
+    .openwire_aux_threshold_mv = 2900, // NOTE: Original value was 50000, typo?
     .loop_meas_count = 4,
     .meas_loop_time_ms = 1000,
 };
@@ -279,11 +280,68 @@ static float g_thermtesterVOLTAGE[12];
 static float g_thermtesterTEMPERATURE;
 static float g_thermistorVOLTAGE;
 
-static void thermtestvoltage() {
-  for (int i = 0; i <= 11; i++) {
-    g_thermtesterVOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+static bms_fault_t thermOpenWireTest() {
+  bool anyOpenWire = false;
+  for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
+    if (hbms.asic->aux.aux_voltages_array[i] >
+        g_voltage_cfg.openwire_aux_threshold_mv) {
+      hbms.asic->gpio.therm_ow_pull_up_array[i] = true;
+      anyOpenWire = true;
+    }
   }
+
+  if (anyOpenWire) {
+    return BMS_ERR_AUX_OPENWIRE;
+  }
+  return BMS_ERR_NONE;
 }
+
+// static bms_fault_t thermAuxTest() {
+//   for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
+//
+//   }
+//     return BMS_ERR_NONE;
+// }
+
+// static bms_fault_t thermtestvoltage() {
+//   // TODO: separate into both temp and ow check
+//   static uint16_t open_wire_count = 0;
+//   static uint16_t over_temp_count = 0;
+//   static uint16_t under_temp_count = 0;
+//   for (int i = 0; i <= 11; i++) {
+//     if (hbms.asic->aux.aux_voltages_array[i] >
+//         g_voltage_cfg.openwire_aux_threshold_mv) {
+//       hbms.asic->gpio.therm_ow_pull_up_array[i] =
+//           hbms.asic->aux
+//               .aux_voltages_array[i]; // WARN:pull up array is 10 elements,
+//               this
+//                                       // loop stores up to 12
+//       open_wire_count++;
+//     }
+//
+//     g_thermtesterVOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+//
+//     if (g_thermtesterVOLTAGE[i] > 59.0) {
+//       over_temp_count++;
+//     }
+//
+//     if (g_thermtesterVOLTAGE[i] < -20.0) {
+//       under_temp_count++;
+//     }
+//   }
+//
+//   if (open_wire_count > 0) {
+//     return BMS_ERR_AUX_OPENWIRE;
+//   }
+//   if (over_temp_count > 0) {
+//     return BMS_ERR_THERM_OVER_TEMP;
+//   }
+//   if (under_temp_count > 0) {
+//     return BMS_ERR_THERM_UNDER_TEMP;
+//   }
+//
+//   return BMS_ERR_NONE;
+// }
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
@@ -293,7 +351,7 @@ void bms_test_run() {
   adbms_read_status_registers(hbms.asic);
 
   HAL_Delay(20);
-  thermtestvoltage();
+  thermOpenWireTest();
   g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
   g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
   HAL_Delay(8);

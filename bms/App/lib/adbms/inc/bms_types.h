@@ -244,8 +244,9 @@ typedef struct {
 } cell_openwire_t;
 
 typedef struct {
-  voltage_readings_t aux_ow_pull_up_array[ADBMS_NUM_AUX_CHANNELS - 2];
-  voltage_readings_t aux_ow_pull_down_array[ADBMS_NUM_AUX_CHANNELS - 2];
+  // NOTE: If there is a voltage present in any of the elements, there is an OW
+  bool therm_ow_pull_up_array[ADBMS_NUM_AUX_CHANNELS - 2];
+  bool therm_ow_pull_down_array[ADBMS_NUM_AUX_CHANNELS - 2];
 } aux_openwire_t;
 
 typedef struct {
@@ -275,7 +276,7 @@ typedef struct {
   pwm_reg_a_t pwm_ctl_a;
   pwm_reg_b_t pwm_ctl_b;
 
-  comms_reg_t comm; // WARN: may be confused with asic_mailbox_t com
+  comms_reg_t comm;
   serial_id_reg_t sid;
 
   asic_mailbox_t config_a_mb;
@@ -283,7 +284,7 @@ typedef struct {
 
   asic_mailbox_t clrflag_mb;
   asic_mailbox_t stat_mb;
-  asic_mailbox_t com_mb; // WARN: may be confused with comms_reg_t comm
+  asic_mailbox_t com_mb;
 
   asic_mailbox_t pwm_a_mb;
   asic_mailbox_t pwm_b_mb;

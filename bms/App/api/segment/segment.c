@@ -6,6 +6,7 @@
 #include "config.h"
 #include "data.h"
 #include "parse.h"
+#include "spi.h"
 #include <assert.h>
 #include <stdint.h>
 
@@ -206,6 +207,22 @@ comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
   spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
                    g_thermistor_profile.channels);
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXB, REG_GROUP_B));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXC, REG_GROUP_C));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXD, REG_GROUP_D));
+  return COMM_OK;
+}
+
+comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adax_command(g_open_wire_check_profile.AUX_OW_en,
+                   g_open_wire_check_profile.PUP_en,
+                   g_open_wire_check_profile.channels);
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
   RETURN_IF_ERROR(
