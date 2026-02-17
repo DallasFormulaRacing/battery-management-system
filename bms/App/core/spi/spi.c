@@ -46,6 +46,12 @@ uint32_t get_tim_count() {
 
 #endif
 
+/**
+ * @brief Wake up IC chain
+ * t ready 10 micro
+ * t wake is 500 micro
+ * @param total_ic
+ */
 void asic_wakeup(uint8_t total_ic) {
   for (uint8_t ic = 0; ic < total_ic; ic++) {
     asic_cs_low();
