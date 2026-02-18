@@ -15,9 +15,9 @@ extern uint8_t write_buffer[WRITE_SIZE];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;
-  aux_select_t channel_to_convert;
+  aux_select_t channels;
   cont_measurement_mode_t continuous_measurement;
-  open_wire_detect_mode_t cell_open_wire_detection_mode;
+  open_wire_detect_mode_t ow_mode;
   aux_open_wire_detect_mode_t AUX_OW_en;
   pull_down_current_mode_t PUP_en;
   discharge_permission_t DCP_en;

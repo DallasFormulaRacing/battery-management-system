@@ -34,6 +34,8 @@ typedef enum {
   BMS_ERR_CS_MISMATCH,
   BMS_ERR_CELL_OPENWIRE,
   BMS_ERR_AUX_OPENWIRE,
+  BMS_ERR_THERM_OVER_TEMP,
+  BMS_ERR_THERM_UNDER_TEMP,
   BMS_ERR_VA_OV,
   BMS_ERR_VA_UV,
   BMS_ERR_VD_OV,
@@ -61,7 +63,7 @@ typedef struct {
   pcb_ctx_t *pcb;
 } bms_handler_t;
 
-extern adc_config_t g_adc_cfg;
+extern adc_config_t g_cell_profile;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
 

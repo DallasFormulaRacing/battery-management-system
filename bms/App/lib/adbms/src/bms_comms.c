@@ -56,7 +56,7 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
   if (bytes_per_asic_register < 3U)
     return COMM_INVALID_PARAMETERS;
 
-  if ((uint16_t)ic_count * bytes_per_asic_register > UINT8_MAX)
+  if ((uint16_t)ic_count * bytes_per_asic_register > BUF_MAX)
     return COMM_INVALID_PARAMETERS;
 
   if ((asic_status_buffers == NULL) ||
@@ -102,7 +102,7 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
   const uint16_t total_frame_len =
       4U + (per_asic_frame_len * (uint16_t)ic_count);
 
-  if (total_frame_len > UINT8_MAX) {
+  if (total_frame_len > BUF_MAX) {
     return COMM_INVALID_PARAMETERS;
   }
 
