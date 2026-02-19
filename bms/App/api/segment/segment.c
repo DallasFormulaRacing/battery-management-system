@@ -106,6 +106,15 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
+comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVALL, ALL_REG_GROUPS));
+
+  return COMM_OK;
+}
+
 comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
