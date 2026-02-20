@@ -43,6 +43,7 @@ typedef enum {
 
 // Prototypes
 void CAN_InitHeader(FDCAN_TxHeaderTypeDef *tx_header);
-HAL_StatusTypeDef CAN_Transmit(uint8_t priority, uint32_t cmd_type, uint8_t* pData, uint32_t dlc_bytes);
+HAL_StatusTypeDef CAN_Transmit(uint32_t commandHeader, uint8_t* pData, uint32_t dlc_bytes);
+void Process_CAN_Command(uint32_t rx_id, uint8_t* data);
 
 #endif
