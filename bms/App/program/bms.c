@@ -1,6 +1,7 @@
 #include "bms.h"
 #include "charger.h"
 #include "stm32g4xx_hal.h"
+#include "fdcan.h"
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];

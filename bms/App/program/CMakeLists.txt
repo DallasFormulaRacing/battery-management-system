@@ -7,4 +7,4 @@ add_library(bms_app STATIC
 )
 
 target_include_directories(bms_app PUBLIC .)
-target_link_libraries(bms_app PRIVATE cb adbms charger segment)
+target_link_libraries(bms_app PRIVATE cb adbms charger segment fdcan)
