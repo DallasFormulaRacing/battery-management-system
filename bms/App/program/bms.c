@@ -249,6 +249,7 @@ void bms_test_init() {
 
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
   HAL_Delay(8);
 }
 
@@ -258,15 +259,10 @@ static inline float f2v(int16_t xin) {
 }
 
 static inline float thermpoly(float xin) {
-  // 2.3487131 * v**8
-  //       - 35.359734 * v**7
-  //       + 218.27577 * v**6
-  //       - 724.54830 * v**5
-  //       + 1417.8324 * v**4
-  //       - 1687.9102 * v**3
-  //       + 1225.0384 * v**2
-  //       - 565.64244 * v
-  //       + 209.04676
+  // 2.3487131 * v * * 8 - 35.359734 * v * * 7 + 218.27577 * v * * 6 -
+  //     724.54830 * v * * 5 + 1417.8324 * v * * 4 - 1687.9102 * v * * 3 +
+  //     1225.0384 * v * * 2 - 565.64244 * v +
+  //     209.04676
 
   return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
          (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
@@ -276,11 +272,11 @@ static inline float thermpoly(float xin) {
          (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
 }
 
-static float g_thermtesterVOLTAGE[12];
-static float g_thermtesterTEMPERATURE;
-static float g_thermistorVOLTAGE;
+static float VOLTAGE[12];
+// static float g_thermtesterTEMPERATURE;
+// static float g_thermistorVOLTAGE;
 
-static bms_fault_t thermOpenWireTest() {
+static bms_fault_t therm_open_wire_test() {
   bool anyOpenWire = false;
   for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
     if (hbms.asic->aux.aux_voltages_array[i] >
@@ -296,24 +292,41 @@ static bms_fault_t thermOpenWireTest() {
   return BMS_ERR_NONE;
 }
 
+static void thermtestvoltage() {
+  for (int i = 0; i <= 11; i++) {
+    VOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+  }
+}
+
 // static void thermtestvoltage() {
 //   for (int i = 0; i <= 11; i++) {
-//     g_thermtesterVOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+//     VOLTAGE[i] = f2v(hbms.asic->cell.cell_voltages_array[i]);
 //   }
 // }
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
+  adbms_start_aux_voltage_measurement(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
   // adbms_read_status_registers(hbms.asic);
   adbms_read_aux_voltages(hbms.asic);
 
-  adbms_read_status_registers(hbms.asic);
+  // adbms_read_status_registers(hbms.asic);
 
-  HAL_Delay(20);
-  thermOpenWireTest();
-  g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
-  g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
+  // HAL_Delay(20);
+  // therm_open_wire_test();
+  // g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
+  // g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
+
+  // spi_adc_snap_command();
+  // HAL_Delay(8);
+
+  // adbms_read_rdcvall_voltage(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
+  adbms_read_rdasall_voltage(hbms.asic);
+  therm_open_wire_test();
   HAL_Delay(8);
+  thermtestvoltage();
 }
 
 /*
