@@ -2,6 +2,10 @@
 
 extern FDCAN_HandleTypeDef hfdcan2; //check if this configured to fdcan or standard
 
+// function pointer variables
+static fdcan_rx_handler_t s_rx_handler = NULL;
+static void *s_rx_ctx = NULL;
+
 /**
  * @brief Sets default values for the FDCAN header
  */
@@ -38,18 +42,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
         // Pop the fifo to clear queue
         if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
-            Process_CAN_Command(rxHeader.Identifier, rxData);
+            if (s_rx_handler)
+                s_rx_handler(&rxHeader, rxData, s_rx_ctx);
         }
     }
 }
 
-/**
- * @brief Parset the command and execute appropriate logic
- */
-void Process_CAN_Command(uint32_t rx_id, uint8_t *data){
-    //check if bms device is the target and source is gui
-    //check if command is read svoltages, cvoltages, or other
-    //if so, move to data gathering
-    //have switch case statement for command id and execute appropriate logic for each command
-    //find a way to access hbms, or have it as an argument a function in the switch case
+void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx)
+{
+    s_rx_handler = handler;
+    s_rx_ctx = ctx;
 }

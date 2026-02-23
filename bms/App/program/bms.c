@@ -7,6 +7,7 @@ cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 bms_handler_t hbms;
 
+static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 adc_config_t g_adc_cfg = {
     .redundant_measurement_mode = RD_OFF,
     .channel_to_convert = AUX_ALL,
@@ -241,4 +242,24 @@ void bms_test_run() {
   // reads 15 (14+1) on the scope
   // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
   HAL_Delay(20);
+}
+
+static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx)
+{
+    bms_handler_t *bms = (bms_handler_t*)ctx;
+
+    uint32_t rx_id = hdr->Identifier;
+
+    // your old switch-case logic here
+}
+
+/**
+ * @brief Parset the command and execute appropriate logic
+ */
+void Process_CAN_Command(uint32_t rx_id, uint8_t *data){
+    //check if bms device is the target and source is gui
+    //check if command is read svoltages, cvoltages, or other
+    //if so, move to data gathering
+    //have switch case statement for command id and execute appropriate logic for each command
+    //find a way to access hbms, or have it as an argument a function in the switch case
 }
