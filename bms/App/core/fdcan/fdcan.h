@@ -12,6 +12,12 @@
 (((uint32_t)(cmd) & 0xFFFF) << 5) | \
 (((uint32_t)(source) & 0x1F)))
 
+// ID Extraction Macros
+#define CAN_ID_GET_PRIORITY(id)   (uint8_t)(((id) >> 26) & 0x07U)
+#define CAN_ID_GET_TARGET(id)     (uint8_t)(((id) >> 21) & 0x1FU)
+#define CAN_ID_GET_CMD(id)        (uint16_t)(((id) >> 5)  & 0xFFFFU)
+#define CAN_ID_GET_SOURCE(id)     (uint8_t)((id) & 0x1FU)
+
 // Can Segment Enums (following CANpute CANFD convention)
 // Priority Levels
 typedef enum{
@@ -25,7 +31,7 @@ typedef enum{
 
 // Device IDs
 #define BMS_DEVICE_ID 0x1F
-#define GUI_DEVICE_ID 0x00
+#define GUI_DEVICE_ID 0x1E
 
 // Command Enums
 typedef enum {
@@ -44,7 +50,7 @@ typedef enum {
 // Prototypes
 void CAN_InitHeader(FDCAN_TxHeaderTypeDef *tx_header);
 HAL_StatusTypeDef CAN_Transmit(uint32_t commandHeader, uint8_t* pData, uint32_t dlc_bytes);
-//void Process_CAN_Command(uint32_t rx_id, uint8_t* data);
+void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data);
 
 typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
