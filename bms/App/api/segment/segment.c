@@ -32,6 +32,7 @@ comm_status_t adbms_init_config(cell_asic_ctx_t *asic_ctx) {
 
     cfg_a->REFON = POWER_UP;
     cfg_a->GPIOx = 0x3FF; // All GPIO pull down off (10 1s)
+    cfg_a->FC = 0x4; // Sets IIR to -3dB at 10 Hz for filtered cell readings
 
     cfg_b->VOV =
         set_ov_voltage_threshold(g_voltage_cfg.overvoltage_threshold_v);
@@ -663,10 +664,17 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 //   return COMM_OK;
 // }
 
-// comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
+comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+  return COMM_OK;
+}
 
 // comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx) {
 //   // TODO
