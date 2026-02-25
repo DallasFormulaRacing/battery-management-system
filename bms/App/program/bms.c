@@ -22,6 +22,18 @@ adc_config_t g_cell_profile = {
     .ERR_en = WITHOUT_ERR,
 };
 
+adc_config_t g_cell_filtered_profile = {
+    .redundant_measurement_mode = RD_OFF,
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS,
+    .ow_mode = OW_OFF_ALL_CH,
+    .AUX_OW_en = AUX_OW_ON,
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_ON,
+    .ERR_en = WITHOUT_ERR,
+};
+
 adc_config_t g_thermistor_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
@@ -250,6 +262,11 @@ void bms_test_init() {
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
   adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
+                   g_cell_filtered_profile.continuous_measurement,
+                   g_cell_filtered_profile.DCP_en,
+                   g_cell_filtered_profile.RSTF_en,
+                   g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
 
@@ -322,8 +339,11 @@ void bms_test_run() {
   // HAL_Delay(8);
 
   // adbms_read_rdcvall_voltage(hbms.asic);
-  // adbms_read_cell_voltages(hbms.asic);
-  adbms_read_rdasall_voltage(hbms.asic);
+  spi_adc_snap_command();
+  adbms_read_cell_voltages(hbms.asic);
+  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_read_filtered_cell_voltages(hbms.asic);
+  spi_adc_unsnap_command();
   therm_open_wire_test();
   HAL_Delay(8);
   thermtestvoltage();

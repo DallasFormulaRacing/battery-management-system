@@ -15,6 +15,7 @@ extern adc_config_t g_thermistor_profile;
 extern adc_config_t g_open_wire_check_profile;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
+extern adc_config_t g_cell_filtered_profile;
 
 #define RETURN_IF_ERROR(status)                                                \
   do {                                                                         \
@@ -90,7 +91,7 @@ adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
   // TODO
   asic_wakeup(asic_ctx->ic_count);
-  spi_adc_snap_command();
+  // spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -103,7 +104,7 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVE, REG_GROUP_E));
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVF, REG_GROUP_F));
-  spi_adc_unsnap_command();
+  // spi_adc_unsnap_command();
   return COMM_OK;
 }
 
@@ -666,13 +667,24 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 
 comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adc_snap_command();
+
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCALL, ALL_REG_GROUPS));
-  spi_adc_unsnap_command();
+
+  return COMM_OK;
+}
+
+comm_status_t adbms_read_filtered_cell_voltages(cell_asic_ctx_t *asic_ctx) {
+  // TODO
+  asic_wakeup(asic_ctx->ic_count);
+  // spi_adc_snap_command();
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCA, REG_GROUP_A));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCB, REG_GROUP_B));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCC, REG_GROUP_C));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCD, REG_GROUP_D));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCE, REG_GROUP_E));
+  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCF, REG_GROUP_F));
+  // spi_adc_unsnap_command();
   return COMM_OK;
 }
 
