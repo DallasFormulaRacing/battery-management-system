@@ -64,16 +64,28 @@ static void read_aux_voltage(cell_asic_ctx_t *asic_ctx,
 static void read_rednt_aux_voltage(cell_asic_ctx_t *asic_ctx,
                                    bms_group_select_t group,
                                    asic_status_buffers_t *status_buffers) {
+  parse_offsets_t offset;
+  if (group == NO_REG_GROUP) {
+    offset = RDASALL_RAUX_OFFSET;
+  } else {
+    offset = NO_OFFSET;
+  }
   bms_parse_rednt_aux(asic_ctx, switch_group_aux(group),
-                      status_buffers->register_data);
+                      status_buffers->register_data, offset);
   check_crc_errors(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, status_buffers);
 }
 
 static void read_status_select(cell_asic_ctx_t *asic_ctx,
                                bms_group_select_t group,
                                asic_status_buffers_t *status_buffers) {
+  parse_offsets_t offset;
+  if (group == ALL_REG_GROUPS) {
+    offset = RDASALL_SR_OFFSET;
+  } else {
+    offset = NO_OFFSET;
+  }
   bms_parse_status_select(asic_ctx, switch_group_cfg(group),
-                          status_buffers->register_data);
+                          status_buffers->register_data, offset);
   check_crc_errors(asic_ctx, BMS_REG_STATUS, status_buffers);
 }
 
@@ -113,6 +125,7 @@ static void read_avg_and_s_cell(cell_asic_ctx_t *asic_ctx,
 static void read_aux_rednt_aux_status(cell_asic_ctx_t *asic_ctx,
                                       bms_group_select_t group,
                                       asic_status_buffers_t *status_buffers) {
+
   read_aux_voltage(asic_ctx, group, status_buffers);
   read_rednt_aux_voltage(asic_ctx, group, status_buffers);
   read_status_select(asic_ctx, group, status_buffers);

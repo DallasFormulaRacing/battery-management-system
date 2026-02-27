@@ -326,12 +326,12 @@ comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
                    g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
                    g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-
   spi_adax2_command(g_thermistor_profile.channels);
-  spi_adc_snap_command();
+
+  // spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_CMD_RDASALL, RDASALL, ALL_REG_GROUPS));
-  spi_adc_unsnap_command();
+  // spi_adc_unsnap_command();
   return COMM_OK;
 }
 

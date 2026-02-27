@@ -211,6 +211,7 @@ typedef struct {
 typedef struct {
   uint8_t tx_data_array[ADBMS_TX_FRAME_BYTES];
   uint8_t rx_data_array[ADBMS_RX_FRAME_BYTES];
+  uint8_t rx_rdasall_array[ADBMS_RDASALL_FRAME_SIZE];
 } asic_mailbox_t; // this is ic_register_ in the old files
 
 typedef struct {
