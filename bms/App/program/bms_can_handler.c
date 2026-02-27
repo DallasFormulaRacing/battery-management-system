@@ -2,11 +2,9 @@
 #include "charger.h"
 #include "stm32g4xx_hal.h"
 #include "fdcan.h"
+#include <stdint.h>
 
-// 64B CAN-FD payload, reserve 4 bytes for our mini-payload-header
 #define CANFD_MAX_DATA_BYTES         64U
-#define SV_HDR_BYTES                 4U
-#define SV_MAX_READINGS_PER_FRAME    ((CANFD_MAX_DATA_BYTES - SV_HDR_BYTES) / 2U) // int16_t = 2B
 
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 static void BMS_Send_SVoltages_All(bms_handler_t *bms);
@@ -31,20 +29,10 @@ static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *d
     }
 }
 
-
-static inline void write_i16_le(uint8_t *dst, int16_t v)
-{
-    dst[0] = (uint8_t)((uint16_t)v & 0xFFU);
-    dst[1] = (uint8_t)(((uint16_t)v >> 8) & 0xFFU);
-}
-
 /*
 Payload format (SVOLTAGE_ALL_RESP):
   byte0 = ic_index
-  byte1 = start_cell_index
-  byte2 = count (number of int16 readings in this frame)
-  byte3 = chunk_index
-  byte4.. = int16 readings (little-endian)
+    byte1...32 = cell voltages
 */
 static void BMS_Send_SVoltages_All(bms_handler_t *bms)
 {
@@ -52,36 +40,28 @@ static void BMS_Send_SVoltages_All(bms_handler_t *bms)
 
     for (uint8_t ic = 0; ic < (uint8_t)IC_COUNT_CHAIN; ic++) {
 
-        uint8_t start = 0;
-        uint8_t chunk = 0;
-
-        while (start < (uint8_t)ADBMS_NUM_CELLS_PER_IC) {
-
-            uint8_t remaining = (uint8_t)ADBMS_NUM_CELLS_PER_IC - start;
-            uint8_t count = (remaining > (uint8_t)SV_MAX_READINGS_PER_FRAME)
-                                ? (uint8_t)SV_MAX_READINGS_PER_FRAME
-                                : remaining;
-
             uint8_t tx[CANFD_MAX_DATA_BYTES] = {0};
-
             tx[0] = ic;        // ic_index
-            tx[1] = start;     // start_cell_index
-            tx[2] = count;     // number of readings
-            tx[3] = chunk;     // chunk_index
+            uint32_t off = 1U; // offset in tx buffer, start after ic identifier byte
 
-            uint32_t off = SV_HDR_BYTES;
-            for (uint8_t i = 0; i < count; i++) {
-                int16_t v = (int16_t)bms->asic[ic]
-                                .s_cell.s_cell_voltages_array[start + i];
-                write_i16_le(&tx[off], v);
+        for (uint8_t current_cell = 0; current_cell < (uint8_t)ADBMS_NUM_CELLS_PER_IC; current_cell++) {
+                int16_t voltage = (int16_t)bms->asic[ic].s_cell.s_cell_voltages_array[current_cell];                
+                /*
+                cell_voltage_t cell;
+                avg_cell_voltage_t avg_cell;
+                s_cell_voltage_t s_cell;
+                filtered_cell_voltage_t filtered_cell;
+                */
+
+                //split 16 bit voltages into bytes and store in tx buffer, little endian
+                tx[off] = (uint8_t)((uint16_t)voltage & 0xFFU);
+                tx[off+1] = (uint8_t)(((uint16_t)voltage >> 8) & 0xFFU);
+
                 off += 2U;
-            }
-
-            // Send one response frame (same CAN ID for all ICs/chunks)
-            (void)CAN_Transmit(READ_SVOLTAGE_ALL_RESP_ID, tx, off);
-
-            start = (uint8_t)(start + count);
-            chunk++;
         }
+
+        // Send one response frame (same CAN ID for all ICs), round up to 48 bytes for CAN-FD DLC
+        (void)CAN_Transmit(READ_SVOLTAGE_ALL_RESP_ID, tx, FDCAN_DLC_BYTES_48);
+
     }
 }
