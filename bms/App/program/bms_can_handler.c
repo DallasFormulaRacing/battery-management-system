@@ -4,6 +4,7 @@
 //#include "stm32g4xx_hal.h"
 #include "fdcan.h"
 #include <stdint.h>
+#include "main.h"
 
 #define CANFD_MAX_DATA_BYTES         64U
 
@@ -64,13 +65,14 @@ static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
             return;  // invalid type → do nothing
     }
 
+    //round up to 48 bytes to keep CANFD macro, max is actually 33
     (void)CAN_Transmit(can_id, tx, FDCAN_DLC_BYTES_48);
 }
 
 /*
 Payload format:
     byte0 = ic_index
-    byte1...32 = cell voltages
+    byte1...32 = cell voltages little endian, 2 bytes per voltage
 */
 static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type)
 {
@@ -123,7 +125,7 @@ void CAN_Hardware_Init(){
         // Handle error 
     }
 
-    //FDCAN_RegisterRXHandler(BMS_CAN_RxHandler, NULL); // Register the CAN RX handler
+    FDCAN_RegisterRxHandler(BMS_CAN_RxHandler, NULL); // Register the CAN RX handler
 
     if(HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
         // Handle error

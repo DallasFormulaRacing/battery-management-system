@@ -56,7 +56,7 @@ void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data);
 
 // function pointer for application-level CAN command processing in bms_can_handler.c
 typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
-void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
+extern void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
 
 void Configure_FDCAN_Filter(); // Configure FDCAN filters to accept only relevant messages
 void CAN_Hardware_Init(); // Initialize FDCAN peripheral and start it

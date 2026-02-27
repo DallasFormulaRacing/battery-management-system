@@ -64,16 +64,16 @@ void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data){
     // only handle extended IDs if that's your protocol
     if (hdr->IdType != FDCAN_EXTENDED_ID) return;
 
-    uint32_t id = hdr->Identifier & CAN_EXT_ID_MASK;
+    // uint32_t id = hdr->Identifier & CAN_EXT_ID_MASK;
 
-    uint8_t  target = CAN_ID_GET_TARGET(id);
-    uint8_t  source = CAN_ID_GET_SOURCE(id);
-    uint16_t cmd    = CAN_ID_GET_CMD(id);
+    // uint8_t  target = CAN_ID_GET_TARGET(id);
+    // uint8_t  source = CAN_ID_GET_SOURCE(id);
+    // uint16_t cmd    = CAN_ID_GET_CMD(id);
 
-    // accept only GUI -> BMS commands
-    if (target != BMS_DEVICE_ID) return;
-    if (source != GUI_DEVICE_ID) return;
-    if (!cmd_allowed(cmd)) return;
+    // // accept only GUI -> BMS commands
+    // if (target != BMS_DEVICE_ID) return;
+    // if (source != GUI_DEVICE_ID) return;
+    // if (!cmd_allowed(cmd)) return;
 
     // forward to application handler
     if (s_rx_handler)

@@ -114,6 +114,8 @@ int main(void)
   MX_FDCAN1_Init();
   MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
+  
+  CAN_Hardware_Init(); // initialize CAN peripheral and filters
 
   // bms_wake_test();
   /* USER CODE END 2 */

@@ -78,6 +78,7 @@ void Error_Handler(void);
 #define T_SWCLK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
+extern FDCAN_HandleTypeDef hfdcan2;
 
 /* USER CODE END Private defines */
 
