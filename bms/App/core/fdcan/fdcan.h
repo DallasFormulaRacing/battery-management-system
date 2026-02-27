@@ -54,10 +54,11 @@ void CAN_InitHeader(FDCAN_TxHeaderTypeDef *tx_header);
 HAL_StatusTypeDef CAN_Transmit(uint32_t commandHeader, uint8_t* pData, uint32_t dlc_bytes);
 void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data);
 
-// function pointer for application-level CAN command processing in bms_can_handler.c
+// Function pointer for application-level CAN command processing in bms_can_handler.c
 typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 extern void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
 
+// Hardware initialization functions
 void Configure_FDCAN_Filter(); // Configure FDCAN filters to accept only relevant messages
 void CAN_Hardware_Init(); // Initialize FDCAN peripheral and start it
 

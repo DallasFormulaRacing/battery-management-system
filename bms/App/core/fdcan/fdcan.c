@@ -49,43 +49,27 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     }
 }
 
-static int cmd_allowed(uint16_t cmd)
-{
-    switch ((CommandID_t)cmd) {
-        case CMD_ID_SVOLTAGE_ALL:
-        case CMD_ID_CVOLTAGE_ALL:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
+/**
+ * @brief Moves processing away from generated code and into application code in bms_can_handler.c
+ */
 void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data){
-    // only handle extended IDs if that's your protocol
-    if (hdr->IdType != FDCAN_EXTENDED_ID) return;
-
-    // uint32_t id = hdr->Identifier & CAN_EXT_ID_MASK;
-
-    // uint8_t  target = CAN_ID_GET_TARGET(id);
-    // uint8_t  source = CAN_ID_GET_SOURCE(id);
-    // uint16_t cmd    = CAN_ID_GET_CMD(id);
-
-    // // accept only GUI -> BMS commands
-    // if (target != BMS_DEVICE_ID) return;
-    // if (source != GUI_DEVICE_ID) return;
-    // if (!cmd_allowed(cmd)) return;
-
     // forward to application handler
     if (s_rx_handler)
         s_rx_handler(hdr, data, s_rx_ctx);
 }
 
+/**
+ * @brief Registers the application-level CAN RX handler 
+ */
 void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx)
 {
     s_rx_handler = handler;
     s_rx_ctx = ctx;
 }
 
+/**
+ * @brief FDCAN filter configuration to accept only messages to bms (from any source)
+ */
 void Configure_FDCAN_Filter(void){
     FDCAN_FilterTypeDef filterconfig;
     filterconfig.IdType = FDCAN_EXTENDED_ID;

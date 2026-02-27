@@ -18,8 +18,10 @@ typedef enum{
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx);
 static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type);
-//static void BMS_Send_CVoltages_All(bms_handler_t *bms);
 
+/**
+ * @brief RX handler for incoming CAN messages, registered with FDCAN driver
+ */
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx)
 {
     bms_handler_t *bms = (bms_handler_t*)ctx;
@@ -39,6 +41,9 @@ static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *d
     }
 }
 
+/**
+ * @brief Cell voltage can transmission wrapper
+ */
 static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
 {
     uint32_t can_id;
@@ -69,11 +74,14 @@ static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
     (void)CAN_Transmit(can_id, tx, FDCAN_DLC_BYTES_48);
 }
 
-/*
-Payload format:
-    byte0 = ic_index
-    byte1...32 = cell voltages little endian, 2 bytes per voltage
-*/
+/**
+ * @brief Sends all cell voltages of the specified type (raw, s_cell, avg, or filtered) for all ICs in the chain over CAN
+    * @param bms Pointer to the BMS handler struct containing ASIC contexts
+    * @param voltage_type Enum indicating which type of cell voltage to send (CELL, S_CELL, AVG_CELL, FILTERED_CELL)
+    * payload format has first byte as IC index
+    * followed by 16 bytes of cell voltages for that IC (little endian, 2 bytes per voltage)
+    * total payload is 1 + (16*2) = 33 bytes per IC
+ */
 static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type)
 {
     if (bms == NULL || bms->asic == NULL) return;
@@ -118,6 +126,9 @@ static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltag
     }
 }
 
+/**
+ * @brief Initializes FDCAN peripheral, configures filters, and registers application-level RX handler
+ */
 void CAN_Hardware_Init(){
     Configure_FDCAN_Filter();
 
