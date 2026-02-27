@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
+set(CMAKE_BUILD_TYPE Debug)
 
-# 1. Toolchain & Project Setup
+
 option(BUILD_TESTING "Build native executable for unit testing" OFF)
 
 if(NOT CMAKE_TOOLCHAIN_FILE AND NOT BUILD_TESTING)
@@ -16,11 +17,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# 2. Process App Layer
-# This defines bms_api and its sub-libraries (spi, adbms, cb, etc.)
+
+
 add_subdirectory(App)
 
-# 3. Native Unit Testing Guard
 if(BUILD_TESTING)
   message(STATUS ">>> Building for TESTING - skipping ARM target <<<")
   include(CTest)
@@ -32,7 +32,6 @@ endif()
 
 message(STATUS ">>> Building for ARM target <<<")
 
-# 4. Workspace / Environment Settings
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   # Linux-specific stuff
 endif () 
@@ -45,7 +44,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif () 
 
 
-# 5. Executable Definition
+
 file(GLOB CORE_SOURCES Core/Src/*.c)
 
 add_executable(${PROJECT_NAME}
@@ -53,14 +52,14 @@ add_executable(${PROJECT_NAME}
     startup_stm32g474xx.s
 )
 
-# 6. Global Compiler Definitions (Fixes the "Select Target Device" error)
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     STM32G474xx
     USE_HAL_DRIVER
 )
 
-# 7. Include Directories
-# This allows main.c to find bms.h and HAL headers
+
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     Core/Inc
     Drivers/CMSIS/Include
@@ -71,7 +70,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 add_link_options(--specs=nosys.specs)
 
-# 8. Optimization & CPU Flags
+
 target_compile_options(${PROJECT_NAME} PRIVATE
     -mcpu=cortex-m4
     -mthumb
@@ -82,8 +81,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -O0 -g3            # Development defaults
 )
 
-# 9. HAL & Driver Sources
-# We add them to the executable here
 file(GLOB HAL_SOURCES Drivers/STM32G4xx_HAL_Driver/Src/*.c)
 target_sources(${PROJECT_NAME} PRIVATE ${HAL_SOURCES})
 
@@ -100,7 +97,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         core_layer
         cb
-        adbms  # <--- Linking this here tells main.c where config.h is
+        adbms  
         segment
         charger
         bms_app

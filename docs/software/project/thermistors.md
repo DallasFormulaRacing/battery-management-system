@@ -101,3 +101,22 @@ The subtraction of $nmin⁡$ is purely an indexing convenience: c arrays are zer
 Github link $\rightarrow$ [here](https://github.Com/dallasformularacing/battery-management-system/blob/feature/thermistors/bms/app/algorithms/thermal/gen_table.Py)
 
 File relpath $\rightarrow$ [here](app/algorithms/thermal/gen_table.Py)
+
+## Open-Wire Fault
+
+> [!NOTE]
+> TODO: Which GPIO?
+
+In the event of a thermistor being disconnected or broken in an open-wire fault, a `GPIO pin` will be set to LOW,
+triggering the shutdown circuit and shutting down the high-voltage components of the car.
+
+The `therm_ow_pull_up_array` inside `aux_openwire_t` in the `cell_asic_ctx_t` struct is an array of bool values
+indicating which thermistors on the AUX ADC lines have had an open-wire fault, with true elements representing a fault
+in its representative AUX ADC line, and the default values being false for no open-wire fault.
+
+In the wake of an open-wire fault, you can view the `therm_ow_pull_up_array` and see which elements are set to true. 
+Keep in mind that the array elements start with 0 and end with 9, with every element representing its thermistor - 1.
+For example, if element 6 in `therm_ow_pull_up_array` was set to true, then thermistor 7 recently had an open-wire 
+fault.
+
+`therm_ow_pull_up_array` will only be cleared upon restarting the BMS.

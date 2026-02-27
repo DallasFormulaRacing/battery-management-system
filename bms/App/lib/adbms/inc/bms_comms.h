@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 typedef uint8_t command_msg_t[4];
+#define BUF_MAX 1024
 
 // typedef struct {
 //   uint8_t *register_data;
