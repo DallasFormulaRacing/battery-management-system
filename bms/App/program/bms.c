@@ -368,17 +368,17 @@ void bms_test_run() {
   // HAL_Delay(8);
 
   // adbms_read_rdcvall_voltage(hbms.asic);
-  spi_adc_snap_command();
+  // spi_adc_snap_command();
   // adbms_read_cell_voltages(hbms.asic);
+  // Testing
 
-  // adbms_read_rdasall_voltage(hbms.asic);
-
-  //   adbms_read_aux_voltages(hbms.asic);
-  //   adbms_read_raux_voltages(hbms.asic);
-  adbms_read_status_registers(hbms.asic);
-  // adbms_read_filtered_cell_voltages(hbms.asic);
+  adbms_read_rdasall_voltage(hbms.asic);
+  // adbms_read_status_registers(hbms.asic);
+  // adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_raux_voltages(hbms.asic);
+  //  adbms_read_filtered_cell_voltages(hbms.asic);
   vref2 = f2v(hbms.asic->stat_a.VREF2);
-  spi_adc_unsnap_command();
+  // spi_adc_unsnap_command();
   therm_open_wire_test();
   HAL_Delay(8);
   thermtestvoltage();

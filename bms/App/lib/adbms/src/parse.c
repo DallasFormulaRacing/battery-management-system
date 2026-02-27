@@ -1,4 +1,6 @@
 #include "parse.h"
+#include "bms_enums.h"
+#include "bms_types.h"
 
 // ! This file needs to be verified
 
@@ -388,7 +390,8 @@ void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t group,
 }
 
 void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx,
-                         aux_reg_group_select_t group, uint8_t *raux_data) {
+                         aux_reg_group_select_t group, uint8_t *raux_data,
+                         parse_offsets_t offset) {
   uint8_t data_size;
   uint8_t address = 0;
   if (group == NO_AUX_REG_GROUP) {
@@ -402,7 +405,8 @@ void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx,
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
     memcpy(&data[0], &raux_data[address], data_size);
     address = ((curr_ic + 1) * (data_size));
-    parse_aux_register(asic_ctx, group, data, curr_ic, MEASURE_AUX_ADC_REDNT);
+    parse_aux_register(asic_ctx, group, data + offset, curr_ic,
+                       MEASURE_AUX_ADC_REDNT);
   }
 }
 
@@ -589,7 +593,8 @@ void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
-                             cfg_reg_group_select_t group, uint8_t *data) {
+                             cfg_reg_group_select_t group, uint8_t *data,
+                             parse_offsets_t offset) {
   uint8_t status_c[ADBMS_RX_FRAME_BYTES];
   uint8_t status_e[ADBMS_RX_FRAME_BYTES];
   switch (group) {
@@ -614,16 +619,16 @@ void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
     break;
 
   case ALL_CFG_REG_GROUPS:
-    bms_parse_status_a(asic_ctx, &data[0]);
-    bms_parse_status_b(asic_ctx, &data[6]);
-    status_c[0] = data[12]; // why
-    status_c[1] = data[13];
-    status_c[4] = data[14];
-    status_c[5] = data[15];
+    bms_parse_status_a(asic_ctx, &data[0 + offset]);
+    bms_parse_status_b(asic_ctx, &data[6 + offset]);
+    status_c[0] = data[12 + offset]; // why
+    status_c[1] = data[13 + offset];
+    status_c[4] = data[14 + offset];
+    status_c[5] = data[15 + offset];
     bms_parse_status_c(asic_ctx, &status_c[0]);
-    bms_parse_status_d(asic_ctx, &data[16]);
-    status_e[4] = data[22];
-    status_e[5] = data[23];
+    bms_parse_status_d(asic_ctx, &data[16 + offset]);
+    status_e[4] = data[22 + offset];
+    status_e[5] = data[23 + offset];
     bms_parse_status_e(asic_ctx, &status_e[0]);
     break;
 
