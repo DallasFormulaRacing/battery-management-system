@@ -1,5 +1,6 @@
 #include "bms.h"
 #include "bms_enums.h"
+#include "bms_types.h"
 #include "charger.h"
 #include "config.h"
 #include "segment.h"
@@ -52,6 +53,18 @@ adc_config_t g_open_wire_check_profile = {
     .continuous_measurement = SINGLE,
     .ow_mode = OW_ON_ALL_CH,
     .AUX_OW_en = AUX_OW_ON,
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_OFF,
+    .ERR_en = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_open_wire_check_profile = {
+    .redundant_measurement_mode = RD_ON, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_OFF_ALL_CH,             // OW OFF
+    .AUX_OW_en = AUX_OW_OFF,              // OW OFF
     .PUP_en = PUP_DOWN,
     .DCP_en = DCP_OFF,
     .RSTF_en = RSTF_OFF,
@@ -262,6 +275,7 @@ void bms_test_init() {
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
   adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
                    g_cell_filtered_profile.continuous_measurement,
                    g_cell_filtered_profile.DCP_en,
@@ -269,6 +283,18 @@ void bms_test_init() {
                    g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
+
+static bms_fault_t volt_ow_eval() {
+  for (uint16_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
+    if (hbms.asic->s_cell.s_cell_voltages_array[i] <
+        0.9 * hbms.asic->cell.cell_voltages_array[i]) {
+      return BMS_ERR_CELL_OPENWIRE;
+    }
+  }
+  return BMS_ERR_NONE;
+}
+
+static void volt_ow_loop() {}
 
 static inline float f2v(int16_t xin) {
   float volt = (0.00015F * (float)xin) + 1.5F;
@@ -321,12 +347,15 @@ static void thermtestvoltage() {
 //   }
 // }
 
+static float vref2;
+
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
+
   // adbms_read_cell_voltages(hbms.asic);
   // adbms_read_status_registers(hbms.asic);
-  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_aux_voltages(hbms.asic);
 
   // adbms_read_status_registers(hbms.asic);
 
@@ -340,9 +369,15 @@ void bms_test_run() {
 
   // adbms_read_rdcvall_voltage(hbms.asic);
   spi_adc_snap_command();
-  adbms_read_cell_voltages(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
+
   // adbms_read_rdasall_voltage(hbms.asic);
-  adbms_read_filtered_cell_voltages(hbms.asic);
+
+  //   adbms_read_aux_voltages(hbms.asic);
+  //   adbms_read_raux_voltages(hbms.asic);
+  adbms_read_status_registers(hbms.asic);
+  // adbms_read_filtered_cell_voltages(hbms.asic);
+  vref2 = f2v(hbms.asic->stat_a.VREF2);
   spi_adc_unsnap_command();
   therm_open_wire_test();
   HAL_Delay(8);

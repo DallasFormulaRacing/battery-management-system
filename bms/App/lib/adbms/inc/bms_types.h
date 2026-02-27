@@ -122,13 +122,12 @@ typedef struct {
 typedef struct {
   uint16_t VREF2; // reference voltage 2
   uint16_t ITMP;  // internal die temperature
-  uint16_t VREF3; // reference voltage 3
 } bms_stat_reg_a_t;
 
 typedef struct {
-  uint16_t VD;   // discharge voltage
-  uint16_t VA;   // analog voltage
-  uint16_t VRES; // VREF2 across 4K resistor
+  int16_t VD;   // discharge voltage
+  int16_t VA;   // analog voltage
+  int16_t VRES; // VREF2 across 4K resistor
 } bms_stat_reg_b_t;
 
 typedef struct {
