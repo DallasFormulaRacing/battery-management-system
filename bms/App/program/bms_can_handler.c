@@ -1,4 +1,5 @@
 #include "bms.h"
+#include "bms_types.h"
 #include "charger.h"
 #include "stm32g4xx_hal.h"
 #include "fdcan.h"
@@ -6,9 +7,17 @@
 
 #define CANFD_MAX_DATA_BYTES         64U
 
+typedef enum{
+    CELL,
+    S_CELL,
+    AVG_CELL,
+    FILTERED_CELL
+} cell_voltage_type_t;
+
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
-static void BMS_Send_SVoltages_All(bms_handler_t *bms);
-static void BMS_Send_CVoltages_All(bms_handler_t *bms);
+static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx);
+static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type);
+//static void BMS_Send_CVoltages_All(bms_handler_t *bms);
 
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx)
 {
@@ -18,23 +27,52 @@ static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *d
 
     switch (CAN_ID_GET_CMD(rx_id)) {
         case CMD_ID_SVOLTAGE_ALL:
-                BMS_Send_SVoltages_All(bms);
+                BMS_Send_Voltages_All(bms, S_CELL);
             break;
         case CMD_ID_CVOLTAGE_ALL:
-                BMS_Send_CVoltages_All(bms);
+                BMS_Send_Voltages_All(bms, CELL);
             break;
         default:
-            // handle unknown command or ignore
+            // ignore
             break;
     }
 }
 
+static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
+{
+    uint32_t can_id;
+
+    switch (voltage_type)
+    {
+        case CELL:
+            can_id = READ_CVOLTAGE_ALL_RESP_ID;
+            break;
+
+        case S_CELL:
+            can_id = READ_SVOLTAGE_ALL_RESP_ID;
+            break;
+
+        case AVG_CELL:
+            //can_id = READ_AVGVOLTAGE_ALL_RESP_ID; unimplemented in fdcan.h
+            break;
+
+        case FILTERED_CELL:
+            //can_id = READ_FILTEREDVOLTAGE_ALL_RESP_ID; unimplemented in fdcan.h
+            break;
+
+        default:
+            return;  // invalid type → do nothing
+    }
+
+    (void)CAN_Transmit(can_id, tx, FDCAN_DLC_BYTES_48);
+}
+
 /*
-Payload format (SVOLTAGE_ALL_RESP):
-  byte0 = ic_index
+Payload format:
+    byte0 = ic_index
     byte1...32 = cell voltages
 */
-static void BMS_Send_SVoltages_All(bms_handler_t *bms)
+static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type)
 {
     if (bms == NULL || bms->asic == NULL) return;
 
@@ -45,13 +83,27 @@ static void BMS_Send_SVoltages_All(bms_handler_t *bms)
             uint32_t off = 1U; // offset in tx buffer, start after ic identifier byte
 
         for (uint8_t current_cell = 0; current_cell < (uint8_t)ADBMS_NUM_CELLS_PER_IC; current_cell++) {
-                int16_t voltage = (int16_t)bms->asic[ic].s_cell.s_cell_voltages_array[current_cell];                
-                /*
-                cell_voltage_t cell;
-                avg_cell_voltage_t avg_cell;
-                s_cell_voltage_t s_cell;
-                filtered_cell_voltage_t filtered_cell;
-                */
+
+            int16_t voltage;;
+
+            switch(voltage_type) {
+                case CELL:
+                    voltage = (int16_t)bms->asic[ic].cell.cell_voltages_array[current_cell];
+                    break;
+                case S_CELL:
+                    voltage = (int16_t)bms->asic[ic].s_cell.s_cell_voltages_array[current_cell];
+                    break;
+                
+                case AVG_CELL: //unused for now but can be added as a command later if needed
+                    voltage = (int16_t)bms->asic[ic].avg_cell.avg_cell_voltages_array[current_cell];
+                    break;
+                case FILTERED_CELL: //unused for now but can be added as a command later if needed
+                    voltage = (int16_t)bms->asic[ic].filtered_cell.filtered_cell_voltages_array[current_cell];
+                    break;
+                default:
+                    voltage = 0;
+                    break;
+                }
 
                 //split 16 bit voltages into bytes and store in tx buffer, little endian
                 tx[off] = (uint8_t)((uint16_t)voltage & 0xFFU);
@@ -60,8 +112,6 @@ static void BMS_Send_SVoltages_All(bms_handler_t *bms)
                 off += 2U;
         }
 
-        // Send one response frame (same CAN ID for all ICs), round up to 48 bytes for CAN-FD DLC
-        (void)CAN_Transmit(READ_SVOLTAGE_ALL_RESP_ID, tx, FDCAN_DLC_BYTES_48);
-
+        BMS_SendVoltageFrame(voltage_type, tx);
     }
 }
