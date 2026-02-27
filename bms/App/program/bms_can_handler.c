@@ -1,7 +1,7 @@
 #include "bms.h"
 #include "bms_types.h"
-#include "charger.h"
-#include "stm32g4xx_hal.h"
+//#include "charger.h"
+//#include "stm32g4xx_hal.h"
 #include "fdcan.h"
 #include <stdint.h>
 
@@ -114,4 +114,19 @@ static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltag
 
         BMS_SendVoltageFrame(voltage_type, tx);
     }
+}
+
+void CAN_Hardware_Init(){
+    Configure_FDCAN_Filter();
+
+    if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
+        // Handle error 
+    }
+
+    //FDCAN_RegisterRXHandler(BMS_CAN_RxHandler, NULL); // Register the CAN RX handler
+
+    if(HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+        // Handle error
+    }
+
 }

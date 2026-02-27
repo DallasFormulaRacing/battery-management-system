@@ -1,7 +1,7 @@
 #include "bms.h"
 #include "charger.h"
 #include "stm32g4xx_hal.h"
-#include "fdcan.h"
+//#include "fdcan.h"
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
@@ -243,5 +243,3 @@ void bms_test_run() {
   // adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
   HAL_Delay(20);
 }
-
-

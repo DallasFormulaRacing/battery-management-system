@@ -30,8 +30,10 @@ typedef enum{
 } PriorityID_t;
 
 // Device IDs
-#define BMS_DEVICE_ID 0x1F
-#define GUI_DEVICE_ID 0x1E
+typedef enum{
+    BMS_DEVICE_ID = 0x1F,
+    GUI_DEVICE_ID = 0x1E
+} DeviceID_t;
 
 // Command Enums
 typedef enum {
@@ -55,5 +57,8 @@ void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data);
 // function pointer for application-level CAN command processing in bms_can_handler.c
 typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
 void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
+
+void Configure_FDCAN_Filter(); // Configure FDCAN filters to accept only relevant messages
+void CAN_Hardware_Init(); // Initialize FDCAN peripheral and start it
 
 #endif

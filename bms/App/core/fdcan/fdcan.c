@@ -1,4 +1,5 @@
 #include "fdcan.h"
+#include "stm32g4xx_hal_fdcan.h"
 
 extern FDCAN_HandleTypeDef hfdcan2; //check if this configured to fdcan or standard
 
@@ -83,4 +84,22 @@ void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx)
 {
     s_rx_handler = handler;
     s_rx_ctx = ctx;
+}
+
+void Configure_FDCAN_Filter(void){
+    FDCAN_FilterTypeDef filterconfig;
+    filterconfig.IdType = FDCAN_EXTENDED_ID;
+    filterconfig.FilterIndex = 0;
+    filterconfig.FilterType = FDCAN_FILTER_MASK;
+    filterconfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+
+    uint32_t targetIDMask = (0x1F << 21); // Mask for target ID
+    //uint32_t sourceIDMask = (0x1F << 5);   // Mask for source ID
+
+    filterconfig.FilterID1 = (BMS_DEVICE_ID << 21); // Accept only messages from GUI to BMS
+    filterconfig.FilterID2 = targetIDMask; // Mask to ignore all bits except target and source ID
+
+    if(HAL_FDCAN_ConfigFilter(&hfdcan2, &filterconfig) != HAL_OK) {
+        // Handle error
+    }
 }
