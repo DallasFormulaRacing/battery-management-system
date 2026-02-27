@@ -1,5 +1,6 @@
 #include "bms.h"
 #include "bms_enums.h"
+#include "bms_types.h"
 #include "charger.h"
 #include "config.h"
 #include "segment.h"
@@ -22,6 +23,18 @@ adc_config_t g_cell_profile = {
     .ERR_en = WITHOUT_ERR,
 };
 
+adc_config_t g_cell_filtered_profile = {
+    .redundant_measurement_mode = RD_OFF,
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS,
+    .ow_mode = OW_OFF_ALL_CH,
+    .AUX_OW_en = AUX_OW_ON,
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_ON,
+    .ERR_en = WITHOUT_ERR,
+};
+
 adc_config_t g_thermistor_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
@@ -40,6 +53,18 @@ adc_config_t g_open_wire_check_profile = {
     .continuous_measurement = SINGLE,
     .ow_mode = OW_ON_ALL_CH,
     .AUX_OW_en = AUX_OW_ON,
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_OFF,
+    .ERR_en = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_open_wire_check_profile = {
+    .redundant_measurement_mode = RD_ON, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_OFF_ALL_CH,             // OW OFF
+    .AUX_OW_en = AUX_OW_OFF,              // OW OFF
     .PUP_en = PUP_DOWN,
     .DCP_en = DCP_OFF,
     .RSTF_en = RSTF_OFF,
@@ -249,8 +274,27 @@ void bms_test_init() {
 
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  // Needed for filtered cell readings
+  spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
+                   g_cell_filtered_profile.continuous_measurement,
+                   g_cell_filtered_profile.DCP_en,
+                   g_cell_filtered_profile.RSTF_en,
+                   g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
+
+static bms_fault_t volt_ow_eval() {
+  for (uint16_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
+    if (hbms.asic->s_cell.s_cell_voltages_array[i] <
+        0.9 * hbms.asic->cell.cell_voltages_array[i]) {
+      return BMS_ERR_CELL_OPENWIRE;
+    }
+  }
+  return BMS_ERR_NONE;
+}
+
+static void volt_ow_loop() {}
 
 static inline float f2v(int16_t xin) {
   float volt = (0.00015F * (float)xin) + 1.5F;
@@ -258,15 +302,10 @@ static inline float f2v(int16_t xin) {
 }
 
 static inline float thermpoly(float xin) {
-  // 2.3487131 * v**8
-  //       - 35.359734 * v**7
-  //       + 218.27577 * v**6
-  //       - 724.54830 * v**5
-  //       + 1417.8324 * v**4
-  //       - 1687.9102 * v**3
-  //       + 1225.0384 * v**2
-  //       - 565.64244 * v
-  //       + 209.04676
+  // 2.3487131 * v * * 8 - 35.359734 * v * * 7 + 218.27577 * v * * 6 -
+  //     724.54830 * v * * 5 + 1417.8324 * v * * 4 - 1687.9102 * v * * 3 +
+  //     1225.0384 * v * * 2 - 565.64244 * v +
+  //     209.04676
 
   return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
          (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
@@ -276,11 +315,11 @@ static inline float thermpoly(float xin) {
          (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
 }
 
-static float g_thermtesterVOLTAGE[12];
-static float g_thermtesterTEMPERATURE;
-static float g_thermistorVOLTAGE;
+static float VOLTAGE[12];
+// static float g_thermtesterTEMPERATURE;
+// static float g_thermistorVOLTAGE;
 
-static bms_fault_t thermOpenWireTest() {
+static bms_fault_t therm_open_wire_test() {
   bool anyOpenWire = false;
   for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
     if (hbms.asic->aux.aux_voltages_array[i] >
@@ -296,24 +335,53 @@ static bms_fault_t thermOpenWireTest() {
   return BMS_ERR_NONE;
 }
 
+static void thermtestvoltage() {
+  for (int i = 0; i <= 11; i++) {
+    VOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+  }
+}
+
 // static void thermtestvoltage() {
 //   for (int i = 0; i <= 11; i++) {
-//     g_thermtesterVOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+//     VOLTAGE[i] = f2v(hbms.asic->cell.cell_voltages_array[i]);
 //   }
 // }
 
+static float vref2;
+
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
+  adbms_start_aux_voltage_measurement(hbms.asic);
+
+  // adbms_read_cell_voltages(hbms.asic);
   // adbms_read_status_registers(hbms.asic);
-  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_aux_voltages(hbms.asic);
 
+  // adbms_read_status_registers(hbms.asic);
+
+  // HAL_Delay(20);
+  // therm_open_wire_test();
+  // g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
+  // g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
+
+  // spi_adc_snap_command();
+  // HAL_Delay(8);
+
+  // adbms_read_rdcvall_voltage(hbms.asic);
+  spi_adc_snap_command();
+  // adbms_read_cell_voltages(hbms.asic);
+
+  // adbms_read_rdasall_voltage(hbms.asic);
+
+  //   adbms_read_aux_voltages(hbms.asic);
+  //   adbms_read_raux_voltages(hbms.asic);
   adbms_read_status_registers(hbms.asic);
-
-  HAL_Delay(20);
-  thermOpenWireTest();
-  g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
-  g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
+  // adbms_read_filtered_cell_voltages(hbms.asic);
+  vref2 = f2v(hbms.asic->stat_a.VREF2);
+  spi_adc_unsnap_command();
+  therm_open_wire_test();
   HAL_Delay(8);
+  thermtestvoltage();
 }
 
 /*

@@ -424,9 +424,6 @@ void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 
     status->ITMP =
         (mailbox->rx_data_array[2] | (mailbox->rx_data_array[3] << 8));
-
-    status->VREF3 =
-        (mailbox->rx_data_array[4] | (mailbox->rx_data_array[5] << 8));
   }
 }
 
