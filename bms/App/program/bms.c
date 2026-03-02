@@ -38,14 +38,30 @@ bms_fault_t cell_voltage_in_range_check() {
   return BMS_ERR_NONE;
 }
 
-bms_fault_t cell_open_wire_check() {
+bms_fault_t cell_open_wire_check_odd() {
   // todo:
   // read S-ADC
+  adbms_read_rdcsall_voltage(hbms.asic);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
-  for (uint16_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
-    if (hbms.asic->s_cell.s_cell_voltages_array[i] <
-        0.9 * hbms.asic->cell.cell_voltages_array[i]) {
+  for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {
+    if (convert_voltage_human_readable(
+            hbms.asic->s_cell.s_cell_voltages_array[i]) < 1.0F) {
+      return BMS_ERR_CELL_OPENWIRE;
+    }
+  }
+  return BMS_ERR_NONE;
+}
+
+bms_fault_t cell_open_wire_check_even() {
+  // todo:
+  // read S-ADC
+  adbms_read_rdcsall_voltage(hbms.asic);
+  // if less than 1V call openwire check
+  // does not have to use C-ADC at all
+  for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {
+    if (convert_voltage_human_readable(
+            hbms.asic->s_cell.s_cell_voltages_array[i]) < 1.0F) {
       return BMS_ERR_CELL_OPENWIRE;
     }
   }
