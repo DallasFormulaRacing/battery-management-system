@@ -3,7 +3,6 @@
 
 #include "cb.h"
 #include "charger.h"
-// #include "config.h"
 #include "segment.h"
 #include "spi.h"
 
@@ -63,24 +62,11 @@ typedef struct {
   pcb_ctx_t *pcb;
 } bms_handler_t;
 
-extern adc_config_t g_cell_profile;
-extern voltage_config_t g_voltage_cfg;
-extern measurement_config_t g_meas_cfg;
-
-void bms_sm_init(bms_handler_t *hbms);
-void bms_sm_run(bms_handler_t *hbms);
-
-void bms_state_entry(bms_handler_t *hbms);
-void bms_state_init(bms_handler_t *hbms);
-void bms_state_transmit_data(bms_handler_t *hbms);
-void bms_state_measure(bms_handler_t *hbms);
-void bms_state_charging(bms_handler_t *hbms);
-void bms_state_balancing(bms_handler_t *hbms);
-void bms_state_fault(bms_handler_t *hbms);
-void bms_state_sleep(bms_handler_t *hbms);
-
-void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state);
-bool bms_check_for_fault(bms_handler_t *hbms);
+// ****** MEASUREMENT FUNCTIONS ******
+bms_fault_t therm_open_wire_check();
+bms_fault_t cell_open_wire_check();
+bms_fault_t therm_over_temp_check();
+bms_fault_t cell_voltage_in_range_check();
 
 //***** TESTING FUNCTIONS *****/
 void bms_test_init();
