@@ -638,7 +638,7 @@ void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
 }
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   comms_reg_t *comms;
   asic_mailbox_t *mailbox;
@@ -663,7 +663,7 @@ void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 
 // --- pwm parses ---
 void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   pwm_reg_a_t *pwm;
   asic_mailbox_t *mailbox;
@@ -689,7 +689,7 @@ void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   pwm_reg_b_t *pwm;
   asic_mailbox_t *mailbox;
@@ -708,7 +708,7 @@ void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 
 void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data) {
-  // TODO
+
   switch (group) {
   case PWM_REG_GROUP_A:
     bms_parse_pwm_a(asic_ctx, data);
@@ -830,7 +830,7 @@ void bms_create_clrflag_mb_data(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_create_comm(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   comms_reg_t *comms;
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
@@ -871,7 +871,6 @@ void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
-  // TODO: this shouldnt be wrong, but we need to check it
   pwm_reg_b_t *pwm;
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
@@ -885,7 +884,7 @@ void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_parse_sid(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   serial_id_reg_t *sid;
   asic_mailbox_t *mailbox;
