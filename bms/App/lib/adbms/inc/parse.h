@@ -20,6 +20,12 @@ typedef enum {
   MEASURE_AUX_ADC_REDNT,
 } parse_adc_measurement_type_t;
 
+typedef enum {
+  NO_OFFSET = 0,
+  RDASALL_RAUX_OFFSET = 24,
+  RDASALL_SR_OFFSET = 44
+} parse_offsets_t;
+
 float convert_voltage_human_readable(int16_t voltage);
 voltage_readings_t convert_voltage_machine_readable(float voltage);
 
@@ -59,7 +65,8 @@ void bms_parse_f_cell(cell_asic_ctx_t *asic_ctx, cfg_reg_group_select_t group,
 void bms_parse_aux(cell_asic_ctx_t *asic_ctx, aux_reg_group_select_t group,
                    uint8_t *aux_data);
 void bms_parse_rednt_aux(cell_asic_ctx_t *asic_ctx,
-                         aux_reg_group_select_t group, uint8_t *raux_data);
+                         aux_reg_group_select_t group, uint8_t *raux_data,
+                         parse_offsets_t offset);
 
 // --- status parses ---
 void bms_parse_status_a(cell_asic_ctx_t *asic_ctx, uint8_t *data);
@@ -68,7 +75,8 @@ void bms_parse_status_c(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_d(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_e(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
-                             cfg_reg_group_select_t group, uint8_t *data);
+                             cfg_reg_group_select_t group, uint8_t *data,
+                             parse_offsets_t offset);
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data);
 
