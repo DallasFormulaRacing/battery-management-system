@@ -4,9 +4,7 @@
 #include "config.h"
 #include "parse.h"
 
-#define NUM_CELLS_PER_SEGMENT 12
-#define NUM_CELL_MAX (IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
-#define NUM_PARALLEL_JOBS NUM_CELL_MAX
+
 
 typedef struct {
   voltage_readings_t cell_voltage;

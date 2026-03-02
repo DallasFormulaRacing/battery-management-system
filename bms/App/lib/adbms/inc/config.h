@@ -5,9 +5,12 @@
 #include "bms_types.h"
 #include <stdint.h>
 
-#define IC_COUNT_CHAIN 1 // TODO: this has to be at compile time.
+// This has to be at compile time.
+#define IC_COUNT_CHAIN 1
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
 #define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
+#define NUM_CELLS_PER_SEGMENT 12
+#define NUM_CELL_MAX (IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
 
 extern cell_asic_ctx_t *asic_ctx;
 extern uint8_t write_buffer[WRITE_SIZE];
@@ -38,10 +41,6 @@ typedef struct {
   uint32_t loop_counter;
   uint32_t periodic_adc_count;
 } voltage_config_t;
-
-typedef struct {
-  // todo:
-} emulate_fault_flagd_config_t; // reference: page 26 and 70
 
 typedef struct {
   loop_measurement_enable_t measure_cell;

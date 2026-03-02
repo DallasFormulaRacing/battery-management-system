@@ -27,12 +27,9 @@
  */
 
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
-  // copy cells from asic
   uint8_t segment_idx = 0;
   uint8_t battery_idx = 0;
   for (battery_idx = 0; battery_idx < NUM_CELL_MAX; battery_idx++) {
-    // TODO: Find out what this magic number in "cell_idx < 12" means,
-    // NUM_CELLS_PER_SEGMENT?
     for (uint8_t cell_idx = 0; cell_idx < 12; cell_idx++) {
       pcb->batteries[battery_idx].cell_voltage =
           asic_ctx[segment_idx].cell.cell_voltages_array[cell_idx];
@@ -41,7 +38,7 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   }
 }
 
-/** // TODO is there a better way to write this?
+/**
  * @brief maps a certain cell delta to an appropriate duty cycle (since time is
  * fixed). if saturated (i.e. above a certain value), clamp to 100%. intervals
  * and corresponding pwm values are listed in descending order.
