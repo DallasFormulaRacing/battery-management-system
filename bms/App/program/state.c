@@ -117,7 +117,12 @@ void bms_state_measure(bms_handler_t *hbms) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
   }
 
-  status = cell_open_wire_check();
+  status = cell_open_wire_check_odd();
+  if (BMS_ERR_CELL_OPENWIRE == status) {
+    bms_sm_transition(hbms, BMS_STATE_FAULT);
+  }
+
+  status = cell_open_wire_check_even();
   if (BMS_ERR_CELL_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
   }
