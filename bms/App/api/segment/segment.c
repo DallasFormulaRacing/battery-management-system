@@ -182,17 +182,17 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
                    g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
   spi_adc_snap_command();
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCA, REG_GROUP_A));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCA, REG_GROUP_A));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCB, REG_GROUP_B));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCB, REG_GROUP_B));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCC, REG_GROUP_C));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCC, REG_GROUP_C));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCD, REG_GROUP_D));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCD, REG_GROUP_D));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCE, REG_GROUP_E));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCE, REG_GROUP_E));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCF, REG_GROUP_F));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
   spi_adc_unsnap_command();
   return COMM_OK;
 }
@@ -356,12 +356,18 @@ comm_status_t adbms_read_filtered_cell_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   // spi_adc_snap_command();
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCA, REG_GROUP_A));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCB, REG_GROUP_B));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCC, REG_GROUP_C));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCD, REG_GROUP_D));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCE, REG_GROUP_E));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCF, REG_GROUP_F));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCA, REG_GROUP_A));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCB, REG_GROUP_B));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCC, REG_GROUP_C));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCD, REG_GROUP_D));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCE, REG_GROUP_E));
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
   // spi_adc_unsnap_command();
   return COMM_OK;
 }

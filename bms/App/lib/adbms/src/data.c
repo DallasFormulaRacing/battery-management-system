@@ -50,7 +50,7 @@ static void read_filtered_cell_voltage(cell_asic_ctx_t *asic_ctx,
                                        asic_status_buffers_t *status_buffers) {
   bms_parse_f_cell(asic_ctx, switch_group_cfg(group),
                    status_buffers->register_data);
-  check_crc_errors(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, status_buffers);
+  check_crc_errors(asic_ctx, BMS_REG_FILT_CELL_VOLT, status_buffers);
 }
 
 static void read_aux_voltage(cell_asic_ctx_t *asic_ctx,
@@ -136,7 +136,7 @@ static const read_handlers_t read_handlers[] = {
     [BMS_REG_CELL_VOLT] = read_cell_voltage,
     [BMS_REG_AVG_CELL_VOLT] = read_avg_cell_voltage,
     [BMS_REG_S_VOLT] = read_s_cell_voltage,
-    [BMS_REG_FILTERED_CELL_VOLT] = read_filtered_cell_voltage,
+    [BMS_REG_FILT_CELL_VOLT] = read_filtered_cell_voltage,
     [BMS_REG_AUX_VOLT] = read_aux_voltage,
     [BMS_REG_REDUNDANT_AUX_VOLT] = read_rednt_aux_voltage,
     [BMS_REG_STATUS] = read_status_select,
@@ -184,7 +184,7 @@ static uint8_t *get_pec(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group) {
   case BMS_REG_CELL_VOLT:
   case BMS_REG_S_VOLT:
   case BMS_REG_AVG_CELL_VOLT:
-  case BMS_REG_FILTERED_CELL_VOLT:
+  case BMS_REG_FILT_CELL_VOLT:
     return &asic_ctx->crc_err.cell_pec;
   case BMS_REG_AUX_VOLT:
     return &asic_ctx->crc_err.aux_channel_pec;
@@ -295,9 +295,11 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
 
+  // data
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
+  // parse
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
   return COMM_OK;
