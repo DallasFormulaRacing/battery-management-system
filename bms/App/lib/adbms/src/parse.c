@@ -735,7 +735,7 @@ void set_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
 }
 
 void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
-  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+  for (uint8_t ic = 0; ic < NUM_IC_COUNT_CHAIN; ic++) {
     if (cell_number < ADBMS_NUM_PWMA_CHANNELS) {
       asic_ctx[ic].pwm_ctl_a.pwm_a_ctl_array[cell_number] = 0;
     } else {
@@ -747,7 +747,7 @@ void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
 voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx) {
   voltage_readings_t lowest = INT16_MAX;
   voltage_readings_t *array = NULL;
-  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+  for (uint8_t ic = 0; ic < NUM_IC_COUNT_CHAIN; ic++) {
     array = asic_ctx[ic].cell.cell_voltages_array;
     // handle chain asic so surround this in a for loop this is O(N^2) 12 x 12
     for (voltage_readings_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {

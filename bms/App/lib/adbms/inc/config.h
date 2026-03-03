@@ -6,15 +6,15 @@
 #include <stdint.h>
 
 // This has to be at compile time.
-#define IC_COUNT_CHAIN 1
-#define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
-#define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
+#define NUM_IC_COUNT_CHAIN 1
+#define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
+#define READ_SIZE (ADBMS_RX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
 #define NUM_CELLS_PER_SEGMENT 12
-#define NUM_CELL_MAX (IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
+#define NUM_CELL_MAX (NUM_IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
 
 extern cell_asic_ctx_t *asic_ctx;
 extern uint8_t write_buffer[WRITE_SIZE];
-// asic_status_buffers_t read_buffer[IC_COUNT_CHAIN];
+// asic_status_buffers_t read_buffer[NUM_IC_COUNT_CHAIN];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;

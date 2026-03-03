@@ -212,6 +212,19 @@ comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
   return COMM_OK;
 }
 
+comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                        open_wire_detect_mode_t ow_mode) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+  return COMM_OK;
+  return COMM_OK;
+}
+
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
@@ -441,7 +454,8 @@ comm_status_t adbms_send_pwm_commands(cell_asic_ctx_t *asic_ctx) {
  * @return comm_status_t -- status of SPI transmission
  */
 comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
-  for (uint8_t segment_idx = 0; segment_idx < IC_COUNT_CHAIN; segment_idx++) {
+  for (uint8_t segment_idx = 0; segment_idx < NUM_IC_COUNT_CHAIN;
+       segment_idx++) {
     for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
       adbms_set_cell_pwm(asic_ctx, cell_idx, segment_idx,
                          PWM_0_0_PERCENT_DUTY_CYCLE);
@@ -631,11 +645,6 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 // }
 
 // comm_status_t adbms_read_rdacall_voltage(cell_asic_ctx_t *asic_ctx) {
-//
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx) {
 //
 //   return COMM_OK;
 // }

@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-cell_asic_ctx_t asic[IC_COUNT_CHAIN];
+cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
 static bms_cfg_t g_bms_cfg = {
@@ -41,14 +41,22 @@ bms_fault_t cell_voltage_in_range_check() {
 bms_fault_t cell_open_wire_check_odd() {
   // todo:
   // read S-ADC
-  adbms_read_rdcsall_voltage(hbms.asic, OW_ON_ODD_CH);
+  adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
-  for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {
-    if (convert_voltage_human_readable(
-            hbms.asic->s_cell.s_cell_voltages_array[i]) < 1.0F) {
-      return BMS_ERR_CELL_OPENWIRE;
-    }
+
+  // do odd cell taps (even indexs due to array indexing)
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+
+    for (uint16_t cell_num = 0; cell_num < NUM_CELL_MAX; cell_num += 2) {
+      int16_t this_cell =
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num];
+
+      if (1000 * convert_voltage_human_readable(this_cell) <
+          (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        return BMS_ERR_CELL_OPENWIRE;
+      } // endif
+    } // end inner fl
   }
   return BMS_ERR_NONE;
 }
@@ -56,14 +64,22 @@ bms_fault_t cell_open_wire_check_odd() {
 bms_fault_t cell_open_wire_check_even() {
   // todo:
   // read S-ADC
-  adbms_read_rdcsall_voltage(hbms.asic, OW_ON_EVEN_CH);
+  adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
-  for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {
-    if (convert_voltage_human_readable(
-            hbms.asic->s_cell.s_cell_voltages_array[i]) < 1.0F) {
-      return BMS_ERR_CELL_OPENWIRE;
-    }
+
+  // do even cell taps (odd indexs due to array indexing)
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+
+    for (uint16_t cell_num = 1; cell_num < NUM_CELL_MAX; cell_num += 2) {
+      int16_t this_cell =
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num];
+
+      if (1000 * convert_voltage_human_readable(this_cell) <
+          (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        return BMS_ERR_CELL_OPENWIRE;
+      } // endif
+    } // end inner fl
   }
   return BMS_ERR_NONE;
 }
@@ -93,8 +109,8 @@ void bms_test_init() {
   hbms.config->voltage = &g_voltage_cfg;
   hbms.config->measurement = &g_meas_cfg;
 
-  for (int i = 0; i < IC_COUNT_CHAIN; i++) {
-    asic[i].ic_count = IC_COUNT_CHAIN;
+  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
+    asic[i].ic_count = NUM_IC_COUNT_CHAIN;
   }
 
   adbms_init_config(hbms.asic);
