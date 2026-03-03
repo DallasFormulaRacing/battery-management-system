@@ -291,7 +291,7 @@ typedef enum {
   BMS_REG_PWM,                // PWM registers (RDPWMa/RDPWMb)
   BMS_REG_AVG_CELL_VOLT,      // Averaged cell groups A–F (RDACA..RDACF)
   BMS_REG_S_VOLT,             // S-voltage groups A–F (RDSVA..RDSVF)
-  BMS_REG_FILTERED_CELL_VOLT, // Filtered cell groups A–F (RDFCA..RDFCF)
+  BMS_REG_FILT_CELL_VOLT,     // Filtered cell groups A–F (RDFCA..RDFCF)
   BMS_REG_CONFIG,             // Config A/B (RDCFGx/WRCFGx)
   BMS_REG_COMM,               // Comm registers
   BMS_REG_SID,                // SID / device ID
