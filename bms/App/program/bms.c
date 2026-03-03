@@ -41,7 +41,7 @@ bms_fault_t cell_voltage_in_range_check() {
 bms_fault_t cell_open_wire_check_odd() {
   // todo:
   // read S-ADC
-  adbms_read_rdcsall_voltage(hbms.asic);
+  adbms_read_rdcsall_voltage(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {
@@ -56,7 +56,7 @@ bms_fault_t cell_open_wire_check_odd() {
 bms_fault_t cell_open_wire_check_even() {
   // todo:
   // read S-ADC
-  adbms_read_rdcsall_voltage(hbms.asic);
+  adbms_read_rdcsall_voltage(hbms.asic, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   for (uint16_t i = 0; i < NUM_CELL_MAX; i++) {

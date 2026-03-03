@@ -39,7 +39,8 @@ comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdacall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                         open_wire_detect_mode_t ow_mode);
 comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 
