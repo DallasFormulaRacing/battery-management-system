@@ -273,6 +273,9 @@ typedef struct {
   bms_stat_reg_d_t stat_d;
   bms_stat_reg_e_t stat_e;
 
+  segment_fault_type_t thermistor_fault_status[10];
+  segment_fault_type_t cell_fault_status[16];
+
   pwm_reg_a_t pwm_ctl_a;
   pwm_reg_b_t pwm_ctl_b;
 

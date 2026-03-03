@@ -310,12 +310,10 @@ typedef enum {
 typedef enum { PASS, FAIL } comm_result_t; // RESULT
 
 typedef enum {
-  OSC_MISMATCH = 0x0,
-  SUPPLY_ERROR,
-  THSD,
-  FUSE_ED,
-  FUSE_MED,
-  TMODCHK
-} diagnostic_type_t; // DIAG
+  NO_FAULT = 0x0,
+  UNDER_FAULT,
+  OVER_FAULT,
+  OPEN_WIRE_FAULT
+} segment_fault_type_t;
 
 #endif
