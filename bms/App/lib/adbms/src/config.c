@@ -36,7 +36,7 @@ adc_config_t g_thermistor_profile = {
     .ERR_en = WITHOUT_ERR,
 };
 
-adc_config_t g_open_wire_check_profile = {
+adc_config_t g_thermistor_open_wire_check_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
     .continuous_measurement = SINGLE,
