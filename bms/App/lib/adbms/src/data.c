@@ -312,31 +312,31 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
   case ALL_REG_GROUPS:
     switch (type) {
     case BMS_CMD_RDCVALL:
-      *read_buffer_size = ADBMS_RDCVALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDCVALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDCVALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDSALL:
-      *read_buffer_size = ADBMS_RDSALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDSALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDACALL:
-      *read_buffer_size = ADBMS_RDACALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDACALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDACALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDFCALL:
-      *read_buffer_size = ADBMS_RDFCALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDFCALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDFCALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDCSALL:
-      *read_buffer_size = ADBMS_RDCSALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDCSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDCSALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDASALL:
-      *read_buffer_size = ADBMS_RDASALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDASALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDASALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDACSALL:
-      *read_buffer_size = ADBMS_RDACSALL_FRAME_SIZE;
+      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDACSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDACSALL_FRAME_SIZE;
       break;
     default:
