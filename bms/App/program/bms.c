@@ -30,6 +30,9 @@ bms_handler_t hbms = {
     .asic = asic,
 };
 
+// todo: populate the following
+//  segment_fault_type_t thermistor_fault_status[10];
+// segment_fault_type_t cell_fault_status[16];
 bms_fault_t therm_over_temp_check() {
   adbms_read_rdasall_voltage(hbms.asic);
   bool over_temp_flag = false;
@@ -42,11 +45,13 @@ bms_fault_t therm_over_temp_check() {
   }
   // todo
 
+  if (over_temp_flag) {
+    return BMS_ERR_THERM_OVER_TEMP;
+  }
+
   return BMS_ERR_NONE;
 }
 
-//  segment_fault_type_t thermistor_fault_status[10];
-// segment_fault_type_t cell_fault_status[16];
 bms_fault_t therm_open_wire_check() {
   adbms_read_rdasall_voltage(hbms.asic);
   bool open_wire_flag = false;
