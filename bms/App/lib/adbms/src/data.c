@@ -45,9 +45,9 @@ static void read_s_cell_voltage(cell_asic_ctx_t *asic_ctx,
   check_crc_errors(asic_ctx, BMS_REG_S_VOLT, status_buffers);
 }
 
-static void read_filtered_cell_voltage(cell_asic_ctx_t *asic_ctx,
-                                       bms_group_select_t group,
-                                       asic_status_buffers_t *status_buffers) {
+static void read_filt_cell_voltage(cell_asic_ctx_t *asic_ctx,
+                                   bms_group_select_t group,
+                                   asic_status_buffers_t *status_buffers) {
   bms_parse_f_cell(asic_ctx, switch_group_cfg(group),
                    status_buffers->register_data);
   check_crc_errors(asic_ctx, BMS_REG_FILT_CELL_VOLT, status_buffers);
@@ -136,7 +136,7 @@ static const read_handlers_t read_handlers[] = {
     [BMS_REG_CELL_VOLT] = read_cell_voltage,
     [BMS_REG_AVG_CELL_VOLT] = read_avg_cell_voltage,
     [BMS_REG_S_VOLT] = read_s_cell_voltage,
-    [BMS_REG_FILT_CELL_VOLT] = read_filtered_cell_voltage,
+    [BMS_REG_FILT_CELL_VOLT] = read_filt_cell_voltage,
     [BMS_REG_AUX_VOLT] = read_aux_voltage,
     [BMS_REG_REDUNDANT_AUX_VOLT] = read_rednt_aux_voltage,
     [BMS_REG_STATUS] = read_status_select,
@@ -147,7 +147,7 @@ static const read_handlers_t read_handlers[] = {
     [BMS_CMD_RDCVALL] = read_cell_voltage,
     [BMS_CMD_RDACALL] = read_avg_cell_voltage,
     [BMS_CMD_RDSALL] = read_s_cell_voltage,
-    [BMS_CMD_RDFCALL] = read_filtered_cell_voltage,
+    [BMS_CMD_RDFCALL] = read_filt_cell_voltage,
     [BMS_CMD_RDCSALL] = read_cell_and_s_cell,
     [BMS_CMD_RDACSALL] = read_avg_and_s_cell,
     [BMS_CMD_RDASALL] = read_aux_rednt_aux_status,
