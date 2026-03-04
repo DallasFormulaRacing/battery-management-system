@@ -348,7 +348,7 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
     break;
 
   default:
-    *read_buffer_size = (asic_ctx->ic_count * READ_SIZE);
+    *read_buffer_size = READ_SIZE;
     *reg_data_size = READ_SIZE;
     return COMM_OK;
   }

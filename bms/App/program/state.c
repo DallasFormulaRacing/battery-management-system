@@ -86,6 +86,9 @@ void bms_state_transmit_data(bms_handler_t *hbms) {
   */
 }
 
+// NOTE
+// bms will not immediately transfer to fault upon bad value,
+// it will finish the current measurement task first.
 void bms_state_measure(bms_handler_t *hbms) {
   /*
   - this state must be able to:
@@ -99,15 +102,12 @@ void bms_state_measure(bms_handler_t *hbms) {
     - if UV or OV or OW, set fault flag and transition to fault state
     - if cell delta greater than target cell delta, transition to balancin state
     - if nothing is wrong, stay in this state
-//
-    // also needs to measure from the current sensor
-    // also needs to measure from the pack voltage sensor
-
   */
 
-  adbms_read_aux_open_wire(hbms->asic);
+  // adbms_read_aux_open_wire(hbms->asic);
 
-  bms_fault_t status = cell_voltage_in_range_check();
+  bms_fault_t status = BMS_ERR_NONE;
+  status = cell_voltage_in_range_check();
   if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
   }
