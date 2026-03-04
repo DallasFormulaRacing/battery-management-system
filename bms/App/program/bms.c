@@ -31,11 +31,41 @@ bms_handler_t hbms = {
 };
 
 bms_fault_t therm_over_temp_check() {
+  adbms_read_rdasall_voltage(hbms.asic);
+  bool over_temp_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint16_t therm_num = 0; therm_num < NUM_CELLS_PER_SEGMENT;
+         therm_num += 2) {
+      hbms.asic[seg_num].thermistor[therm_num] = thermistor_from_adc(
+          hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
+    }
   }
   // todo
+
   return BMS_ERR_NONE;
 }
+
+//  segment_fault_type_t thermistor_fault_status[10];
+// segment_fault_type_t cell_fault_status[16];
+bms_fault_t therm_open_wire_check() {
+  adbms_read_rdasall_voltage(hbms.asic);
+  bool open_wire_flag = false;
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
+      if (hbms.asic->aux.aux_voltages_array[i] >
+          g_voltage_cfg.openwire_aux_threshold_mv) {
+        hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
+        open_wire_flag = true;
+      }
+    }
+  }
+
+  if (open_wire_flag) {
+    return BMS_ERR_AUX_OPENWIRE;
+  }
+  return BMS_ERR_NONE;
+}
+
 bms_fault_t cell_voltage_in_range_check() {
   // todo: test this and make sure it updates the fault struct
 
@@ -123,27 +153,6 @@ bms_fault_t cell_open_wire_check_even() {
   if (cell_open_wire_flag)
     return BMS_ERR_CELL_OPENWIRE;
 
-  return BMS_ERR_NONE;
-}
-
-//  segment_fault_type_t thermistor_fault_status[10];
-// segment_fault_type_t cell_fault_status[16];
-bms_fault_t therm_open_wire_check() {
-  adbms_read_rdasall_voltage(hbms.asic);
-  bool open_wire_flag = false;
-  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-    for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
-      if (hbms.asic->aux.aux_voltages_array[i] >
-          g_voltage_cfg.openwire_aux_threshold_mv) {
-        hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
-        open_wire_flag = true;
-      }
-    }
-  }
-
-  if (open_wire_flag) {
-    return BMS_ERR_AUX_OPENWIRE;
-  }
   return BMS_ERR_NONE;
 }
 
