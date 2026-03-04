@@ -29,7 +29,7 @@
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   uint8_t segment_idx = 0;
   uint8_t battery_idx = 0;
-  for (battery_idx = 0; battery_idx < NUM_CELL_MAX; battery_idx++) {
+  for (battery_idx = 0; battery_idx < NUM_CELL_USING; battery_idx++) {
     for (uint8_t cell_idx = 0; cell_idx < 12; cell_idx++) {
       pcb->batteries[battery_idx].cell_voltage =
           asic_ctx[segment_idx].cell.cell_voltages_array[cell_idx];
@@ -97,7 +97,7 @@ void find_cell_deltas(pcb_ctx_t *pcb) {
   // First pass: find minimum cell
   voltage_readings_t min_voltage = INT16_MAX;
   battery_cell_t base;
-  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_USING; cell_idx++) {
     if (pcb->batteries[cell_idx].cell_voltage < min_voltage) {
       min_voltage = pcb->batteries[cell_idx].cell_voltage;
       base = pcb->batteries[cell_idx];
