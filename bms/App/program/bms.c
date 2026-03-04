@@ -4,6 +4,7 @@
 #include "charger.h"
 #include "config.h"
 #include "segment.h"
+#include "thermistor.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -30,84 +31,113 @@ bms_handler_t hbms = {
 };
 
 bms_fault_t therm_over_temp_check() {
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+  }
   // todo
   return BMS_ERR_NONE;
 }
 bms_fault_t cell_voltage_in_range_check() {
-  // todo
+  // todo: test this and make sure it updates the fault struct
 
   adbms_read_rdfcall_voltage(hbms.asic);
+  bool cell_over_flag = false;
+  bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 0; cell_num < NUM_CELL_USING; cell_num += 2) {
+    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT;
+         cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
 
       if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
-        return BMS_ERR_CELL_OV;
+        cell_over_flag = true;
       } // endif
 
       if (this_cell < g_voltage_cfg.undervoltage_threshold_v) {
-        return BMS_ERR_CELL_UV;
+        cell_under_flag = true;
       } // endif
     } // end inner fl
   }
+
+  if (cell_over_flag) {
+    return BMS_ERR_CELL_OV;
+  }
+
+  if (cell_under_flag) {
+    return BMS_ERR_CELL_UV;
+  }
+
   return BMS_ERR_NONE;
 }
 
 bms_fault_t cell_open_wire_check_odd() {
   // todo: test this & make sure odd/even is right
+  // todo: add: this function also updates the fault enum array
   // read S-ADC
   adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
+  bool cell_open_wire_flag = false;
 
   // do odd cell taps (even indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 0; cell_num < NUM_CELL_USING; cell_num += 2) {
+    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT;
+         cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
       if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
-        return BMS_ERR_CELL_OPENWIRE;
+        cell_open_wire_flag = true;
       } // endif
     } // end inner fl
   }
+  if (cell_open_wire_flag)
+    return BMS_ERR_CELL_OPENWIRE;
+
   return BMS_ERR_NONE;
 }
 
 bms_fault_t cell_open_wire_check_even() {
   // todo: test this & make sure odd/even is right
+  // todo: add: this function also updates the fault enum array
   // read S-ADC
   adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
+  bool cell_open_wire_flag = false;
 
   // do even cell taps (odd indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 1; cell_num < NUM_CELL_USING; cell_num += 2) {
-      int16_t this_cell =
-          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num];
+    for (uint16_t cell_num = 1; cell_num < NUM_CELLS_PER_SEGMENT;
+         cell_num += 2) {
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-      if (1000 * convert_voltage_human_readable(this_cell) <
-          (float)g_voltage_cfg.openwire_cell_threshold_mv) {
-        return BMS_ERR_CELL_OPENWIRE;
+      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        cell_open_wire_flag = true;
       } // endif
     } // end inner fl
   }
+  if (cell_open_wire_flag)
+    return BMS_ERR_CELL_OPENWIRE;
+
   return BMS_ERR_NONE;
 }
 
+//  segment_fault_type_t thermistor_fault_status[10];
+// segment_fault_type_t cell_fault_status[16];
 bms_fault_t therm_open_wire_check() {
   adbms_read_rdasall_voltage(hbms.asic);
   bool open_wire_flag = false;
-  for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
-    if (hbms.asic->aux.aux_voltages_array[i] >
-        g_voltage_cfg.openwire_aux_threshold_mv) {
-      hbms.asic->gpio.therm_ow_pull_up_array[i] = true;
-      open_wire_flag = true;
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
+      if (hbms.asic->aux.aux_voltages_array[i] >
+          g_voltage_cfg.openwire_aux_threshold_mv) {
+        hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
+        open_wire_flag = true;
+      }
     }
   }
 
@@ -116,6 +146,8 @@ bms_fault_t therm_open_wire_check() {
   }
   return BMS_ERR_NONE;
 }
+
+void measure_during_fault();
 
 /* ----------------------------------------------------- */
 /* testing functions ------------------------------------ */

@@ -244,12 +244,6 @@ typedef struct {
 } cell_openwire_t;
 
 typedef struct {
-  // NOTE: If there is a voltage present in any of the elements, there is an OW
-  bool therm_ow_pull_up_array[ADBMS_NUM_AUX_CHANNELS - 2];
-  bool therm_ow_pull_down_array[ADBMS_NUM_AUX_CHANNELS - 2];
-} aux_openwire_t;
-
-typedef struct {
   uint8_t ic_count;
   bms_cfg_reg_a_t tx_cfg_a;
   bms_cfg_reg_a_t rx_cfg_a;
@@ -294,8 +288,8 @@ typedef struct {
   asic_mailbox_t rsid_mb;
 
   error_detection_t crc_err;
-  aux_openwire_t gpio;
-  cell_openwire_t owcell;
+  // aux_openwire_t gpio;
+  // cell_openwire_t owcell;
   diag_test_t diag_result;
 } cell_asic_ctx_t;
 
