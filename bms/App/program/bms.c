@@ -39,7 +39,7 @@ bms_fault_t cell_voltage_in_range_check() {
   adbms_read_rdfcall_voltage(hbms.asic);
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 0; cell_num < NUM_CELL_MAX; cell_num += 2) {
+    for (uint16_t cell_num = 0; cell_num < NUM_CELL_USING; cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
 
@@ -65,7 +65,7 @@ bms_fault_t cell_open_wire_check_odd() {
   // do odd cell taps (even indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 0; cell_num < NUM_CELL_MAX; cell_num += 2) {
+    for (uint16_t cell_num = 0; cell_num < NUM_CELL_USING; cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
@@ -87,7 +87,7 @@ bms_fault_t cell_open_wire_check_even() {
   // do even cell taps (odd indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 1; cell_num < NUM_CELL_MAX; cell_num += 2) {
+    for (uint16_t cell_num = 1; cell_num < NUM_CELL_USING; cell_num += 2) {
       int16_t this_cell =
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num];
 
