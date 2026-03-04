@@ -1,4 +1,5 @@
 #include "config.h"
+#include "bms_enums.h"
 
 adc_config_t g_cell_profile = {
     .redundant_measurement_mode = RD_OFF,
@@ -51,9 +52,9 @@ adc_config_t g_thermistor_open_wire_check_profile = {
 adc_config_t g_cell_open_wire_check_profile = {
     .redundant_measurement_mode = RD_ON, // RD
     .channels = AUX_ALL,
-    .continuous_measurement = CONTINUOUS, // Cont
-    .ow_mode = OW_OFF_ALL_CH,             // OW OFF
-    .AUX_OW_en = AUX_OW_OFF,              // OW OFF
+    .continuous_measurement = SINGLE, // Cont
+    .ow_mode = OW_OFF_ALL_CH,         // OW OFF
+    .AUX_OW_en = AUX_OW_OFF,          // OW OFF
     .PUP_en = PUP_DOWN,
     .DCP_en = DCP_OFF,
     .RSTF_en = RSTF_OFF,
@@ -64,7 +65,7 @@ voltage_config_t g_voltage_cfg = {
     .overvoltage_threshold_v = 4.15F,
     .undervoltage_threshold_v = 2.51F,
     .openwire_cell_threshold_mv = 1000,
-    .openwire_aux_threshold_mv = 2900, // NOTE: Original value was 50000, typo?
+    .openwire_aux_threshold_mv = 2900,
     .loop_meas_count = 4,
     .meas_loop_time_ms = 1000,
 };

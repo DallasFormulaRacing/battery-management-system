@@ -30,22 +30,47 @@ bms_handler_t hbms = {
     .asic = asic,
 };
 
-// todo: populate the following
-//  segment_fault_type_t thermistor_fault_status[10];
-// segment_fault_type_t cell_fault_status[16];
-bms_fault_t therm_over_temp_check() {
+/*
+ * @brief Check thermistor temperature and see if between range
+ * @params None
+ * @return Fault status message for whether thermistor is over or under temp.
+ * Otherwise returns no error.
+ */
+bms_fault_t therm_temp_in_range_check() {
+  // NOTE: Read might need to be outside
   adbms_read_rdasall_voltage(hbms.asic);
   bool over_temp_flag = false;
+  bool under_temp_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-    for (uint16_t therm_num = 0; therm_num < NUM_CELLS_PER_SEGMENT;
-         therm_num += 2) {
-      hbms.asic[seg_num].thermistor[therm_num] = thermistor_from_adc(
+    for (uint16_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
+         therm_num++) {
+      float temp = thermistor_from_adc(
           hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
+
+      hbms.asic[seg_num].thermistor[therm_num] = temp;
+      // NOTE: we should define max and min temp constant somewhere
+      if (temp > 60.0F) {
+        over_temp_flag = true;
+        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
+          hbms.asic->thermistor_fault_status[therm_num] = OVER_FAULT;
+        }
+      }
+
+      if (temp < -20.0F) {
+        under_temp_flag = true;
+        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
+          hbms.asic->thermistor_fault_status[therm_num] = UNDER_FAULT;
+        }
+      }
     }
   }
-  // todo
 
+  // Over temp will take precedent over under temp in the near impossible event
+  // that both will happen
   if (over_temp_flag) {
+    return BMS_ERR_THERM_OVER_TEMP;
+  }
+  if (under_temp_flag) {
     return BMS_ERR_THERM_OVER_TEMP;
   }
 
@@ -56,7 +81,9 @@ bms_fault_t therm_open_wire_check() {
   adbms_read_rdasall_voltage(hbms.asic);
   bool open_wire_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-    for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
+    for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
+      // if voltage is greater than 2.9 V, there is probably an OW or it's
+      // really cold
       if (hbms.asic->aux.aux_voltages_array[i] >
           g_voltage_cfg.openwire_aux_threshold_mv) {
         hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
@@ -79,17 +106,18 @@ bms_fault_t cell_voltage_in_range_check() {
   bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT;
-         cell_num += 2) {
+    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
 
       if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
         cell_over_flag = true;
+        hbms.asic->cell_fault_status[cell_num] = OVER_FAULT;
       } // endif
 
       if (this_cell < g_voltage_cfg.undervoltage_threshold_v) {
         cell_under_flag = true;
+        hbms.asic->cell_fault_status[cell_num] = UNDER_FAULT;
       } // endif
     } // end inner fl
   }
@@ -106,8 +134,8 @@ bms_fault_t cell_voltage_in_range_check() {
 }
 
 bms_fault_t cell_open_wire_check_odd() {
-  // todo: test this & make sure odd/even is right
-  // todo: add: this function also updates the fault enum array
+  // TODO: test this & make sure odd/even is right
+  // TODO: add: this function also updates the fault enum array
   // read S-ADC
   adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
@@ -123,6 +151,7 @@ bms_fault_t cell_open_wire_check_odd() {
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
       if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
     } // end inner fl
@@ -151,6 +180,7 @@ bms_fault_t cell_open_wire_check_even() {
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
       if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
     } // end inner fl
@@ -225,6 +255,24 @@ static void thermtestvoltage() {
 // }
 
 static float vref2;
+
+void bms_safety_routine() {
+  bms_fault_t therm_ow_status = therm_open_wire_check();
+  bms_fault_t therm_temp_status = therm_temp_in_range_check();
+  bms_fault_t cell_ow_even_status = cell_open_wire_check_even();
+  bms_fault_t cell_ow_odd_status = cell_open_wire_check_odd();
+  bms_fault_t cell_in_range_status = cell_voltage_in_range_check();
+
+  // there may be a better way to do this
+  if (therm_ow_status != BMS_ERR_NONE || therm_temp_status != BMS_ERR_NONE ||
+      cell_ow_even_status != BMS_ERR_NONE ||
+      cell_ow_odd_status != BMS_ERR_NONE ||
+      cell_in_range_status != BMS_ERR_NONE) {
+    // shits fucked
+  }
+
+  // TODO: send all faults to GUI over CAN if any are present in one big packet
+}
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
