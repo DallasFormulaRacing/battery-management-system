@@ -108,8 +108,8 @@ typedef struct {
 } s_cell_voltage_t;
 
 typedef struct {
-  voltage_readings_t filtered_cell_voltages_array[ADBMS_NUM_CELLS_PER_IC];
-} filtered_cell_voltage_t;
+  voltage_readings_t filt_cell_voltages_array[ADBMS_NUM_CELLS_PER_IC];
+} filt_cell_voltage_t;
 
 typedef struct {
   voltage_readings_t aux_voltages_array[ADBMS_NUM_AUX_CHANNELS];
@@ -262,7 +262,7 @@ typedef struct {
   cell_voltage_t cell;
   avg_cell_voltage_t avg_cell;
   s_cell_voltage_t s_cell;
-  filtered_cell_voltage_t filtered_cell;
+  filt_cell_voltage_t filt_cell;
 
   aux_voltage_t aux;
   rednt_aux_voltage_t rednt_aux;

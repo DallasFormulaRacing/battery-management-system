@@ -220,7 +220,7 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     readings = &asic_ctx[curr_ic].cell.cell_voltages_array[0];
     break;
   case MEASURE_FILTERED:
-    readings = &asic_ctx[curr_ic].filtered_cell.filtered_cell_voltages_array[0];
+    readings = &asic_ctx[curr_ic].filt_cell.filt_cell_voltages_array[0];
     break;
   case MEASURE_AVG:
     readings = &asic_ctx[curr_ic].avg_cell.avg_cell_voltages_array[0];

@@ -30,16 +30,33 @@ bms_handler_t hbms = {
 };
 
 bms_fault_t therm_over_temp_check() {
-  // use
+  // todo
   return BMS_ERR_NONE;
 }
 bms_fault_t cell_voltage_in_range_check() {
-  // use
+  // todo
+
+  adbms_read_rdfcall_voltage(hbms.asic);
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+
+    for (uint16_t cell_num = 0; cell_num < NUM_CELL_MAX; cell_num += 2) {
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
+
+      if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
+        return BMS_ERR_CELL_OV;
+      } // endif
+
+      if (this_cell < g_voltage_cfg.undervoltage_threshold_v) {
+        return BMS_ERR_CELL_UV;
+      } // endif
+    } // end inner fl
+  }
   return BMS_ERR_NONE;
 }
 
 bms_fault_t cell_open_wire_check_odd() {
-  // todo:
+  // todo: test this & make sure odd/even is right
   // read S-ADC
   adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
@@ -49,11 +66,10 @@ bms_fault_t cell_open_wire_check_odd() {
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
     for (uint16_t cell_num = 0; cell_num < NUM_CELL_MAX; cell_num += 2) {
-      int16_t this_cell =
-          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num];
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-      if (1000 * convert_voltage_human_readable(this_cell) <
-          (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
         return BMS_ERR_CELL_OPENWIRE;
       } // endif
     } // end inner fl
@@ -62,7 +78,7 @@ bms_fault_t cell_open_wire_check_odd() {
 }
 
 bms_fault_t cell_open_wire_check_even() {
-  // todo:
+  // todo: test this & make sure odd/even is right
   // read S-ADC
   adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
@@ -166,31 +182,6 @@ static float vref2;
 
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
-  adbms_start_aux_voltage_measurement(hbms.asic);
-
-  // adbms_read_cell_voltages(hbms.asic);
-  // adbms_read_status_registers(hbms.asic);
-  // adbms_read_aux_voltages(hbms.asic);
-
-  // adbms_read_status_registers(hbms.asic);
-
-  // HAL_Delay(20);
-  // therm_open_wire_test();
-  // g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
-  // g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
-
-  // spi_adc_snap_command();
-  // HAL_Delay(8);
-
-  // adbms_read_rdcvall_voltage(hbms.asic);
-  // spi_adc_snap_command();
-  // adbms_read_cell_voltages(hbms.asic);
-  // Testing
-  // adbms_read_status_registers(hbms.asic);
-  // adbms_read_aux_voltages(hbms.asic);
-  // adbms_read_raux_voltages(hbms.asic);
-  //  adbms_read_filtered_cell_voltages(hbms.asic);
-  // spi_adc_unsnap_command();
 
   adbms_read_rdasall_voltage(hbms.asic);
 

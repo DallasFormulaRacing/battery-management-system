@@ -365,7 +365,7 @@ comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_read_filtered_cell_voltages(cell_asic_ctx_t *asic_ctx) {
+comm_status_t adbms_read_filt_cell_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   // spi_adc_snap_command();
