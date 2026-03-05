@@ -1,65 +1,49 @@
-
 #ifndef FDCAN_H
 #define FDCAN_H
 
+#include <stdint.h>
 #include "stm32g4xx_hal.h"
+#include "main.h"   // provides: extern FDCAN_HandleTypeDef hfdcan2
 
-// ID Construction Macro
-#define CAN_EXT_ID_MASK 0x1FFFFFFF
-#define BUILD_CAN_ID(priority, target, cmd, source) \
-((((uint32_t)(priority) & 0x07) << 26) | \
-(((uint32_t)(target) & 0x1F) << 21) | \
-(((uint32_t)(cmd) & 0xFFFF) << 5) | \
-(((uint32_t)(source) & 0x1F)))
+/* =========================================================
+   Application RX handler registration
+   ========================================================= */
+typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr,
+                                  const uint8_t *data,
+                                  void *ctx);
 
-// ID Extraction Macros
-#define CAN_ID_GET_PRIORITY(id)   (uint8_t)(((id) >> 26) & 0x07U)
-#define CAN_ID_GET_TARGET(id)     (uint8_t)(((id) >> 21) & 0x1FU)
-#define CAN_ID_GET_CMD(id)        (uint16_t)(((id) >> 5)  & 0xFFFFU)
-#define CAN_ID_GET_SOURCE(id)     (uint8_t)((id) & 0x1FU)
+/**
+ * @brief Register an application-level RX handler for FIFO0 frames.
+ * Called by api (bms_can_init()) exactly once.
+ */
+void fdcan_register_rx_handler(fdcan_rx_handler_t handler, void *ctx);
 
-// Can Segment Enums (following CANpute CANFD convention)
-// Priority Levels
-typedef enum{
-    CAN_PRIORITY_CRITICAL = 0x0,
-    CAN_PRIORITY_VERY_HIGH = 0x1,
-    CAN_PRIORITY_HIGH = 0x2,
-    CAN_PRIORITY_MEDIUM = 0x3,
-    CAN_PRIORITY_LOW = 0x4,
-    CAN_PRIORITY_VERY_LOW = 0x5
-} PriorityID_t;
+/* =========================================================
+   Transport primitive
+   ========================================================= */
+/**
+ * @brief Send an extended-ID CAN FD data frame (FDCAN2).
+ *
+ * @param ext_id   29-bit extended identifier (lower 29 bits used)
+ * @param data     payload buffer
+ * @param dlc_code HAL DLC code (e.g. FDCAN_DLC_BYTES_8, _12, _48, _64)
+ */
+HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data, uint32_t dlc_code);
 
-// Device IDs
-typedef enum{
-    BMS_DEVICE_ID = 0x1F,
-    GUI_DEVICE_ID = 0x1E
-} DeviceID_t;
+/* =========================================================
+   Hardware init + filter
+   ========================================================= */
 
-// Command Enums
-typedef enum {
-    CMD_ID_SVOLTAGE_ALL = 0xA0,
-    CMD_ID_SVOLTAGE_ALL_RESP = 0xA1,
-    CMD_ID_CVOLTAGE_ALL = 0xA2,
-    CMD_ID_CVOLTAGE_ALL_RESP = 0xA3
-} CommandID_t;
+/**
+ * @brief Configure FDCAN filter(s) to accept the messages you want (hardcoded for now).
+ * This is called inside can_hardware_init().
+ */
+void fdcan_configure_filter(void);
 
-// Complete FDCAN Headers
-#define READ_SVOLTAGE_ALL_ID BUILD_CAN_ID(CAN_PRIORITY_MEDIUM, BMS_DEVICE_ID, CMD_ID_SVOLTAGE_ALL, GUI_DEVICE_ID)
-#define READ_SVOLTAGE_ALL_RESP_ID BUILD_CAN_ID(CAN_PRIORITY_MEDIUM, GUI_DEVICE_ID, CMD_ID_SVOLTAGE_ALL_RESP, BMS_DEVICE_ID)
-#define READ_CVOLTAGE_ALL_ID BUILD_CAN_ID(CAN_PRIORITY_MEDIUM, BMS_DEVICE_ID, CMD_ID_CVOLTAGE_ALL, GUI_DEVICE_ID)
-#define READ_CVOLTAGE_ALL_RESP_ID BUILD_CAN_ID(CAN_PRIORITY_MEDIUM, GUI_DEVICE_ID, CMD_ID_CVOLTAGE_ALL_RESP, BMS_DEVICE_ID)
+/**
+ * @brief Start FDCAN2 and enable RX FIFO0 notifications.
+ * Called once from main.c before program/bms init runs.
+ */
+void can_hardware_init(void);
 
-// Prototypes
-void CAN_InitHeader(FDCAN_TxHeaderTypeDef *tx_header);
-HAL_StatusTypeDef CAN_Transmit(uint32_t commandHeader, uint8_t* pData, uint32_t dlc_bytes);
-void Process_CAN_Command(const FDCAN_RxHeaderTypeDef *hdr, uint8_t* data);
-
-// Function pointer for application-level CAN command processing in bms_can_handler.c
-typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx);
-extern void FDCAN_RegisterRxHandler(fdcan_rx_handler_t handler, void *ctx);
-
-// Hardware initialization functions
-void Configure_FDCAN_Filter(); // Configure FDCAN filters to accept only relevant messages
-void CAN_Hardware_Init(); // Initialize FDCAN peripheral and start it
-
-#endif
+#endif /* FDCAN_H */

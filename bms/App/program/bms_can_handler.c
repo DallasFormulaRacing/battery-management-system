@@ -1,7 +1,5 @@
 #include "bms.h"
 #include "bms_types.h"
-//#include "charger.h"
-//#include "stm32g4xx_hal.h"
 #include "fdcan.h"
 #include <stdint.h>
 #include "main.h"
@@ -24,16 +22,17 @@ static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltag
  */
 static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *data, void *ctx)
 {
-    bms_handler_t *bms = (bms_handler_t*)ctx;
+    cell_asic_ctx_t *asic = (cell_asic_ctx_t*)ctx; // Cast context to ASIC context pointer, can be used to access BMS state if needed
+    //bms_handler_t *bms = (bms_handler_t*)ctx;
 
     uint32_t rx_id = hdr->Identifier;
 
     switch (CAN_ID_GET_CMD(rx_id)) {
         case CMD_ID_SVOLTAGE_ALL:
-                BMS_Send_Voltages_All(bms, S_CELL);
+                BMS_Send_Voltages_All(asic, S_CELL);
             break;
         case CMD_ID_CVOLTAGE_ALL:
-                BMS_Send_Voltages_All(bms, CELL);
+                BMS_Send_Voltages_All(asic, CELL);
             break;
         default:
             // ignore
@@ -44,7 +43,7 @@ static void BMS_CAN_RxHandler(const FDCAN_RxHeaderTypeDef *hdr, const uint8_t *d
 /**
  * @brief Cell voltage can transmission wrapper
  */
-static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
+static void BMS_Transmit_Voltage_CAN_Frame(cell_voltage_type_t voltage_type, uint8_t *tx)
 {
     uint32_t can_id;
 
@@ -82,9 +81,9 @@ static void BMS_SendVoltageFrame(cell_voltage_type_t voltage_type, uint8_t *tx)
     * followed by 16 bytes of cell voltages for that IC (little endian, 2 bytes per voltage)
     * total payload is 1 + (16*2) = 33 bytes per IC
  */
-static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltage_type)
+static void BMS_Send_Voltages_All(cell_asic_ctx_t *asic, cell_voltage_type_t voltage_type)
 {
-    if (bms == NULL || bms->asic == NULL) return;
+    if (asic == NULL) return;
 
     for (uint8_t ic = 0; ic < (uint8_t)IC_COUNT_CHAIN; ic++) {
 
@@ -98,17 +97,17 @@ static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltag
 
             switch(voltage_type) {
                 case CELL:
-                    voltage = (int16_t)bms->asic[ic].cell.cell_voltages_array[current_cell];
+                    voltage = (int16_t)asic->cell.cell_voltages_array[current_cell];
                     break;
                 case S_CELL:
-                    voltage = (int16_t)bms->asic[ic].s_cell.s_cell_voltages_array[current_cell];
+                    voltage = (int16_t)asic->s_cell.s_cell_voltages_array[current_cell];
                     break;
                 
                 case AVG_CELL: //unused for now but can be added as a command later if needed
-                    voltage = (int16_t)bms->asic[ic].avg_cell.avg_cell_voltages_array[current_cell];
+                    voltage = (int16_t)asic->avg_cell.avg_cell_voltages_array[current_cell];
                     break;
                 case FILTERED_CELL: //unused for now but can be added as a command later if needed
-                    voltage = (int16_t)bms->asic[ic].filtered_cell.filtered_cell_voltages_array[current_cell];
+                    voltage = (int16_t)asic->filtered_cell.filtered_cell_voltages_array[current_cell];
                     break;
                 default:
                     voltage = 0;
@@ -122,7 +121,7 @@ static void BMS_Send_Voltages_All(bms_handler_t *bms, cell_voltage_type_t voltag
                 off += 2U;
         }
 
-        BMS_SendVoltageFrame(voltage_type, tx);
+        BMS_Transmit_Voltage_CAN_Frame(voltage_type, tx);
     }
 }
 
@@ -136,7 +135,6 @@ void CAN_Hardware_Init(){
         // Handle error 
     }
 
-    FDCAN_RegisterRxHandler(BMS_CAN_RxHandler, NULL); // Register the CAN RX handler
 
     if(HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
         // Handle error

@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "bms_can.h"
+
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -264,6 +266,7 @@ void bms_state_sleep(bms_handler_t *hbms) {
 /* testing functions ------------------------------------ */
 
 void bms_test_init() {
+
   hbms.config->adc = &g_cell_profile;
   hbms.config->voltage = &g_voltage_cfg;
   hbms.config->measurement = &g_meas_cfg;
@@ -271,6 +274,10 @@ void bms_test_init() {
   for (int i = 0; i < IC_COUNT_CHAIN; i++) {
     asic[i].ic_count = IC_COUNT_CHAIN;
   }
+
+  // link hbms to can handler context so we can access asic data
+  bms_can_init(hbms.asic);
+
 
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
@@ -339,6 +346,11 @@ static void thermtestvoltage() {
   for (int i = 0; i <= 11; i++) {
     VOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
   }
+}
+
+static void bms_can_setup(void)
+{
+    // Register API’s RX handler with core; ctx becomes hbms.asic inside the handler.
 }
 
 // static void thermtestvoltage() {

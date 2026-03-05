@@ -1,7 +1,7 @@
 #include "fdcan.h"
 #include "stm32g4xx_hal_fdcan.h"
 
-extern FDCAN_HandleTypeDef hfdcan2; // check if this configured to fdcan or standard
+FDCAN_HandleTypeDef hfdcan2; // check if this configured to fdcan or standard
 
 // rx handler registration (application-provided)
 static fdcan_rx_handler_t s_rx_handler = NULL;
