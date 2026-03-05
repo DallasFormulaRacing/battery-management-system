@@ -91,7 +91,6 @@ static inline bool can_id_is_valid(can_ext_id_t id)
 
 /* =========================================================
    Convenience constructors for current message IDs
-   (still functions, still type-safe)
    ========================================================= */
 
 static inline can_ext_id_t can_id_read_svoltage_all(void)
@@ -118,4 +117,4 @@ static inline can_ext_id_t can_id_read_cvoltage_all_resp(void)
                         CMD_ID_CVOLTAGE_ALL_RESP, BMS_DEVICE_ID);
 }
 
-#endif /* BMS_CAN_PROTOCOL_H */
+#endif 
