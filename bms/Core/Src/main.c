@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bms.h"
+#include "fdcan.h"
 
 /* USER CODE END Includes */
 
@@ -115,8 +116,7 @@ int main(void)
   MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
   
-  CAN_Hardware_Init(); // initialize CAN peripheral and filters
-
+  can_hardware_init();
   // bms_wake_test();
   /* USER CODE END 2 */
 

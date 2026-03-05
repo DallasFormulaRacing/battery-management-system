@@ -24,15 +24,11 @@ void fdcan_register_rx_handler(fdcan_rx_handler_t handler, void *ctx);
 /**
  * @brief Send an extended-ID CAN FD data frame (FDCAN2).
  *
- * @param ext_id   29-bit extended identifier (lower 29 bits used)
+ * @param ext_id   29-bit extended identifier
  * @param data     payload buffer
- * @param dlc_code HAL DLC code (e.g. FDCAN_DLC_BYTES_8, _12, _48, _64)
+ * @param dlc_code HAL DLC code
  */
 HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data, uint32_t dlc_code);
-
-/* =========================================================
-   Hardware init + filter
-   ========================================================= */
 
 /**
  * @brief Configure FDCAN filter(s) to accept the messages you want (hardcoded for now).
@@ -41,9 +37,9 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data, uint32_t dlc_
 void fdcan_configure_filter(void);
 
 /**
- * @brief Start FDCAN2 and enable RX FIFO0 notifications.
+ * @brief Start FDCAN2, configure filters, and enable RX FIFO0 notifications.
  * Called once from main.c before program/bms init runs.
  */
 void can_hardware_init(void);
 
-#endif /* FDCAN_H */
+#endif
