@@ -6,6 +6,7 @@
 // #include "config.h"
 #include "segment.h"
 #include "spi.h"
+#include "fdcan.h"
 
 #define IDLE_POLLING_INTERVAL_MS 1000
 #define MEASUREMENT_POLLING_INTERVAL_MS 10

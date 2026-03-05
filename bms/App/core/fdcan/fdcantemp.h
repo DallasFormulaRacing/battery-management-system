@@ -3,21 +3,29 @@
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 
-// RX handler registration (application-provided)
-static fdcan_rx_handler_t rx_handler = NULL;
-static void *rx_ctx = NULL;
+/*
+ * hfdcan2 is Cube-generated and declared as extern in main.h.
+ * Do NOT define it here.
+ */
 
+/* ---------------------------------------------------------
+   RX handler registration (application-provided)
+   --------------------------------------------------------- */
+static fdcan_rx_handler_t s_rx_handler = NULL;
+static void *s_rx_ctx = NULL;
 
-// assign callback function to rx handler outside this program
 void fdcan_register_rx_handler(fdcan_rx_handler_t handler, void *ctx)
 {
-    rx_handler = handler;
-    rx_ctx = ctx;
+    s_rx_handler = handler;
+    s_rx_ctx = ctx;
 }
 
-
+/* ---------------------------------------------------------
+   TX helpers
+   --------------------------------------------------------- */
 static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header)
 {
+    /* Caller fills Identifier + DataLength */
     tx_header->IdType              = FDCAN_EXTENDED_ID;
     tx_header->TxFrameType         = FDCAN_DATA_FRAME;
     tx_header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
@@ -39,9 +47,21 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data, uint32_t dlc_
     return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &tx_header, (uint8_t *)data);
 }
 
+/* ---------------------------------------------------------
+   RX dispatch
+   --------------------------------------------------------- */
+static void fdcan_rx_dispatch(const FDCAN_RxHeaderTypeDef *rx_header, const uint8_t *rx_data)
+{
+    if (s_rx_handler != NULL) {
+        s_rx_handler(rx_header, rx_data, s_rx_ctx);
+    }
+}
+
 /*
  * HAL callback invoked when a new message arrives in RX FIFO0
  * (assuming notifications are enabled).
+ *
+ * NOTE: This runs in interrupt context.
  */
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_its)
 {
@@ -53,10 +73,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
     uint8_t rx_data[64];
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) == HAL_OK) {
-            // Execute registered callback assuming its been assigned
-            if (rx_handler != NULL) {
-                rx_handler(&rx_header, rx_data, rx_ctx);
-            }
+        fdcan_rx_dispatch(&rx_header, rx_data);
     }
 }
 
@@ -90,7 +107,15 @@ void fdcan_configure_filter(void)
     filter_config.FilterID1 = bms_target;
     filter_config.FilterID2 = target_mask;
 
-    HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+    (void)HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+
+    /* Optional: if you use extended IDs, usually set global filters too.
+       Leave as-is unless you need to reject non-matching frames globally.
+       Example:
+       HAL_FDCAN_ConfigGlobalFilter(&hfdcan2,
+                                   FDCAN_REJECT, FDCAN_REJECT,
+                                   FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
+    */
 }
 
 /* ---------------------------------------------------------
