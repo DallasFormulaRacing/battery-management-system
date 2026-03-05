@@ -222,7 +222,7 @@ comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
   RETURN_IF_ERROR(
       // TODO: clear S-ADCs to ensure that the value is anything but the default
       // of 0x8000, CLRCELL cmd or clear array in struct?
-      bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSALL, ALL_REG_GROUPS));
+      bms_read_data(asic_ctx, BMS_CMD_RDSALL, RDSALL, ALL_REG_GROUPS));
   spi_adc_unsnap_command();
   return COMM_OK;
 }

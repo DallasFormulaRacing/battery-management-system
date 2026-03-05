@@ -68,6 +68,8 @@ bms_fault_t cell_open_wire_check_odd();
 bms_fault_t cell_open_wire_check_even();
 bms_fault_t therm_over_temp_check();
 bms_fault_t cell_voltage_in_range_check();
+void measure_during_fault();
+void open_shutdown_circuit();
 
 //***** TESTING FUNCTIONS *****/
 void bms_test_init();

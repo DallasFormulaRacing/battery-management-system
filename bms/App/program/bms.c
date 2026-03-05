@@ -191,7 +191,10 @@ bms_fault_t cell_open_wire_check_even() {
   return BMS_ERR_NONE;
 }
 
-void measure_during_fault();
+void measure_during_fault() {
+  adbms_read_rdfcall_voltage(hbms.asic);
+  adbms_read_rdasall_voltage(hbms.asic);
+}
 
 /* ----------------------------------------------------- */
 /* testing functions ------------------------------------ */
@@ -216,6 +219,8 @@ void bms_test_init() {
                    g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
+
+void open_shutdown_circuit() {}
 
 // static void volt_ow_loop() {}
 
@@ -244,7 +249,7 @@ static float VOLTAGE[12];
 
 static void thermtestvoltage() {
   for (int i = 0; i <= 11; i++) {
-    VOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+    VOLTAGE[i] = f2v(hbms.asic->filt_cell.filt_cell_voltages_array[i]);
   }
 }
 
@@ -256,43 +261,46 @@ static void thermtestvoltage() {
 
 static float vref2;
 
-void bms_safety_routine() {
-  bms_fault_t therm_ow_status = therm_open_wire_check();
-  bms_fault_t therm_temp_status = therm_temp_in_range_check();
-  bms_fault_t cell_ow_even_status = cell_open_wire_check_even();
-  bms_fault_t cell_ow_odd_status = cell_open_wire_check_odd();
-  bms_fault_t cell_in_range_status = cell_voltage_in_range_check();
-
-  // there may be a better way to do this
-  if (therm_ow_status != BMS_ERR_NONE || therm_temp_status != BMS_ERR_NONE ||
-      cell_ow_even_status != BMS_ERR_NONE ||
-      cell_ow_odd_status != BMS_ERR_NONE ||
-      cell_in_range_status != BMS_ERR_NONE) {
-    // shits fucked
-  }
-
-  // TODO: send all faults to GUI over CAN if any are present in one big packet
-}
-
 void bms_test_run() {
   adbms_write_read_config(hbms.asic);
 
-  adbms_read_rdasall_voltage(hbms.asic);
+  // adbms_read_rdfcall_voltage(hbms.asic);
+  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_read_rdsall_voltage(hbms.asic, OW_OFF_ALL_CH);
 
-  vref2 = f2v(hbms.asic->stat_a.VREF2);
-  therm_open_wire_check();
-  HAL_Delay(8);
-  thermtestvoltage();
+  // vref2 = f2v(hbms.asic->stat_a.VREF2);
+  // therm_open_wire_check();
+  // HAL_Delay(8);
+  // thermtestvoltage();
 }
 
 /*
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
-  adbms_poll_for_conversion_adc(hbms.asic);
-  adbms_read_cell_voltages(hbms.asic);
+adbms_start_adc_cell_voltage_measurment(hbms.asic);
+adbms_poll_for_conversion_adc(hbms.asic);
+adbms_read_cell_voltages(hbms.asic);
 
-  adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
-  adbms_read_aux_voltages(hbms.asic);
+adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
+adbms_read_aux_voltages(hbms.asic);
 
-  // reads 15 (14+1) on the scope
-  adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
+// reads 15 (14+1) on the scope
+adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
 */
+
+// void bms_safety_routine() {
+//   bms_fault_t therm_ow_status = therm_open_wire_check();
+//   bms_fault_t therm_temp_status = therm_temp_in_range_check();
+//   bms_fault_t cell_ow_even_status = cell_open_wire_check_even();
+//   bms_fault_t cell_ow_odd_status = cell_open_wire_check_odd();
+//   bms_fault_t cell_in_range_status = cell_voltage_in_range_check();
+
+//   // there may be a better way to do this
+//   if (therm_ow_status != BMS_ERR_NONE || therm_temp_status != BMS_ERR_NONE ||
+//       cell_ow_even_status != BMS_ERR_NONE ||
+//       cell_ow_odd_status != BMS_ERR_NONE ||
+//       cell_in_range_status != BMS_ERR_NONE) {
+//     // shits fucked
+//   }
+
+//   // TODO: send all faults to GUI over CAN if any are present in one big
+//   packet
+// }

@@ -100,7 +100,6 @@ void bms_state_measure(bms_handler_t *hbms) {
       - check for openwire
       - check for over temp
     - if UV or OV or OW, set fault flag and transition to fault state
-    - if cell delta greater than target cell delta, transition to balancin state
     - if nothing is wrong, stay in this state
   */
 
@@ -171,6 +170,9 @@ void bms_state_fault(bms_handler_t *hbms) {
   - this state cannot transition to any other state
   - once this state is reached it stays.
   */
+  open_shutdown_circuit();
+  measure_during_fault();
+  bms_sm_transition(hbms, BMS_STATE_FAULT);
 }
 
 void bms_state_sleep(bms_handler_t *hbms) {
