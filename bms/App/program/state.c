@@ -111,7 +111,7 @@ void bms_state_measure(bms_handler_t *hbms) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
   }
 
-  status = therm_over_temp_check();
+  status = therm_temp_in_range_check();
   if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
   }

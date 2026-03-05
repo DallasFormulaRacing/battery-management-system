@@ -62,11 +62,13 @@ typedef struct {
   pcb_ctx_t *pcb;
 } bms_handler_t;
 
+extern bms_handler_t hbms;
+
 // ****** MEASUREMENT FUNCTIONS ******
 bms_fault_t therm_open_wire_check();
 bms_fault_t cell_open_wire_check_odd();
 bms_fault_t cell_open_wire_check_even();
-bms_fault_t therm_over_temp_check();
+bms_fault_t therm_temp_in_range_check();
 bms_fault_t cell_voltage_in_range_check();
 void measure_during_fault();
 void open_shutdown_circuit();
