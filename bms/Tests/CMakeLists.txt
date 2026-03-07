@@ -1,2 +1,3 @@
 add_subdirectory(CellBalancing)
 add_subdirectory(Thermistor)
+add_subdirectory(App)

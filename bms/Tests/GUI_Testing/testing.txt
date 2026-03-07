@@ -1,0 +1,2 @@
+- Make a fake asic struct (or even fake voltage and temp arrays) and call it from here to send 
+- GUI should have serialization ability atp
