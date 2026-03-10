@@ -64,10 +64,17 @@ typedef struct {
 } bms_sm_ctx_t;
 
 typedef struct {
+  uint16_t packvoltage;
+  uint16_t state_of_charge;
+  uint16_t instantaneous_current;
+} pack_data_t;
+
+typedef struct {
   bms_cfg_t *config;
   bms_sm_ctx_t state;
   cell_asic_ctx_t *asic;
   pcb_ctx_t *pcb;
+  pack_data_t *pack;
 } bms_handler_t;
 
 extern adc_config_t g_cell_profile;
