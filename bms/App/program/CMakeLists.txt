@@ -7,4 +7,11 @@ add_library(bms_app STATIC
 )
 
 target_include_directories(bms_app PUBLIC .)
-target_link_libraries(bms_app PRIVATE thermal cb adbms charger segment fdcan interface)
+target_link_libraries(bms_app PRIVATE 
+thermal 
+cb 
+adbms 
+charger 
+segment 
+fdcan 
+interface_gui)

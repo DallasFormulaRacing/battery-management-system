@@ -1,12 +1,18 @@
 #ifndef BMS_H
 #define BMS_H
 
+#include "bms_can.h"
+#include "bms_enums.h"
+#include "bms_types.h"
 #include "cb.h"
 #include "charger.h"
-// #include "config.h"
+#include "config.h"
+#include "fdcan.h"
 #include "segment.h"
 #include "spi.h"
-#include "fdcan.h"
+#include "stm32g4xx_hal.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #define IDLE_POLLING_INTERVAL_MS 1000
 #define MEASUREMENT_POLLING_INTERVAL_MS 10

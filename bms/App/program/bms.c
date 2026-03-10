@@ -1,14 +1,4 @@
 #include "bms.h"
-#include "bms_enums.h"
-#include "bms_types.h"
-#include "charger.h"
-#include "config.h"
-#include "segment.h"
-#include "stm32g4xx_hal.h"
-#include <stdbool.h>
-#include <stdint.h>
-
-#include "bms_can.h"
 
 cell_asic_ctx_t asic[IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
