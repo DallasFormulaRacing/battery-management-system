@@ -266,8 +266,7 @@ void bms_test_init() {
   }
 
   // link hbms to can handler context so we can access asic data
-  bms_can_init(hbms.asic);
-
+  // bms_can_init(hbms.asic);
 
   adbms_init_config(hbms.asic);
   adbms_start_aux_voltage_measurement(hbms.asic);
@@ -338,9 +337,9 @@ static void thermtestvoltage() {
   }
 }
 
-static void bms_can_setup(void)
-{
-    // Register API’s RX handler with core; ctx becomes hbms.asic inside the handler.
+static void bms_can_setup(void) {
+  // Register API’s RX handler with core; ctx becomes hbms.asic inside the
+  // handler.
 }
 
 // static void thermtestvoltage() {

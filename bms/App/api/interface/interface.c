@@ -1,7 +1,7 @@
 // api/bms_can.c
 
-#include "bms_can.h"
-#include "bms_can_protocol.h" // CAN_ID_GET_CMD, CMD_ID_*, READ_*_RESP_ID
+// #include "bms_can.h"
+// #include "bms_can_protocol.h" // CAN_ID_GET_CMD, CMD_ID_*, READ_*_RESP_ID
 #include "bms_types.h"
 #include "config.h"
 #include "fdcan.h" // core: fdcan_register_rx_handler(), fdcan_send()
@@ -43,19 +43,19 @@ static void bms_can_rx_handler(const FDCAN_RxHeaderTypeDef *hdr,
   cell_asic_ctx_t *asic = (cell_asic_ctx_t *)ctx;
   const uint32_t rx_id = hdr->Identifier;
 
-  switch (can_id_get_cmd(rx_id)) {
-  case CMD_ID_SVOLTAGE_ALL:
-    bms_send_voltages_all(asic, S_CELL);
-    break;
+  // switch (can_id_get_cmd(rx_id)) {
+  //   // case CMD_ID_SVOLTAGE_ALL:
+  //   bms_send_voltages_all(asic, S_CELL);
+  //   break;
 
-  case CMD_ID_CVOLTAGE_ALL:
-    bms_send_voltages_all(asic, CELL);
-    break;
+  //   // case CMD_ID_CVOLTAGE_ALL:
+  //   bms_send_voltages_all(asic, CELL);
+  //   break;
 
-  default:
-    // ignore unknown commands
-    break;
-  }
+  // default:
+  //   // ignore unknown commands
+  //   break;
+  // }
 }
 
 /**
@@ -67,11 +67,11 @@ static void bms_transmit_voltage_can_frame(cell_voltage_type_t voltage_type,
 
   switch (voltage_type) {
   case CELL:
-    can_id = CMD_ID_CVOLTAGE_ALL_RESP;
+    // can_id = CMD_ID_CVOLTAGE_ALL_RESP;
     break;
 
   case S_CELL:
-    can_id = CMD_ID_SVOLTAGE_ALL_RESP;
+    // can_id = CMD_ID_SVOLTAGE_ALL_RESP;
     break;
 
   case AVG_CELL:

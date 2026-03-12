@@ -1,7 +1,7 @@
 #ifndef BMS_H
 #define BMS_H
 
-#include "bms_can.h"
+// #include "bms_can.h"
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "cb.h"
