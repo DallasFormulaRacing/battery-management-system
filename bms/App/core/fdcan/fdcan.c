@@ -34,12 +34,6 @@ void fdcan_configure_filter(void)
     /*
      * Hardcoded filter to accept messages whose "target" field (bits 25..21)
      * equals BMS device ID (0x1F), regardless of source/cmd/priority.
-     *
-     * This assumes your 29-bit layout:
-     *   [28:26] priority
-     *   [25:21] target
-     *   [20:5]  cmd
-     *   [4:0]   source
      */
 
     FDCAN_FilterTypeDef filter_config;

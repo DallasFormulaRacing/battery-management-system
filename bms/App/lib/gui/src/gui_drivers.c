@@ -1,4 +1,6 @@
 #include "fdcan.h"
+#include "gui_drivers.h"
+#include "gui_types.h"
 
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
@@ -21,6 +23,13 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
             //if (rx_handler != NULL) {
             //    rx_handler(&rx_header, rx_data, rx_ctx);
             //}
-            //IMPLEMENT THIS: process_can_command(rx_header, rx_data);
+            //IMPLEMENT THIS: 
+            process_can_command(rx_header.Identifier, rx_data);
     }
+}
+
+
+void process_can_command(uint32_t ext_id, uint8_t* data){
+    //switch case statement here to process the command and data received from the BMS
+    return;
 }
