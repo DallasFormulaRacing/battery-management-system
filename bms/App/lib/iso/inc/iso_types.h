@@ -2,7 +2,11 @@
 #define ISOMETER_TYPES_H
 
 #include <stdint.h>
-extern isometer_t imd;
+
+/*
+For firmware version ≥ D720V1.01 each CAN-ID and cycle time
+is configurable via CAN interface.
+*/
 
 typedef enum {
   IMD_INFO_GENERAL = 0x37,
@@ -42,5 +46,11 @@ typedef struct {
   imd_voltage_info_t *imd_volt_info;
   imd_capacity_info_t *imd_cap_info;
 } isometer_t;
+
+// typedef struct {
+//   imd_
+// }
+
+extern isometer_t imd;
 
 #endif

@@ -30,4 +30,4 @@ Relevant CAN info
 
 */
 
-const uint16_t min_insulation_resistance = 300000; // 300kΩ, maybe lower for FoS
+const uint32_t min_insulation_resistance = 300000; // 300kΩ, maybe lower for FoS

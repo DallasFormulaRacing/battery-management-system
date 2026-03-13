@@ -17,7 +17,7 @@ void imd_parse_general(isometer_t *imd, const uint8_t *buf) {
   imd->imd_iso_info->status_device = buf[6];
 }
 
-void imd_parse_isolation(isometer_t *imd, const uint8_t *buf) { imd-> }
+void imd_parse_isolation(isometer_t *imd, const uint8_t *buf) {}
 
 void imd_parse_voltage(isometer_t *imd, const uint8_t *buf) {}
 

@@ -12,4 +12,6 @@
 #ifndef IMD_H
 #define IMD_H
 
+#include <stdint.h>
+
 #endif
