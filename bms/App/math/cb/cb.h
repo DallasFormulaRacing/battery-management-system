@@ -19,6 +19,7 @@ typedef struct {
   voltage_readings_t maximum_cell_delta_allowed;
   battery_cell_t lowest_cell;
   battery_cell_t batteries[NUM_CELL_MAX];
+  bool cell_balancing_status[NUM_CELL_MAX];
   // uint8_t pwm_timer_flag;
 } pcb_ctx_t;
 
