@@ -28,6 +28,6 @@ uint8_t get_random_temp();
 uint16_t get_random_packvoltage();
 uint16_t get_random_currentreading();
 uint16_t get_random_soc();
-void get_cell_balancing_status();
+void get_cell_balancing_status(pcb_ctx_t *pcb);
 
 #endif
