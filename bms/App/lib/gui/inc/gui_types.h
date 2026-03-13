@@ -4,21 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// WAS PREVIOUS CAN_FRAME.H
-
-/* =========================================================
-   29-bit Extended CAN ID layout
-   [28:26] priority (3)
-   [25:21] target   (5)
-   [20:5]  cmd      (16)
-   [4:0]   source   (5)
-   ========================================================= */
-
 typedef uint32_t can_ext_id_t;
 
 enum { CAN_EXT_ID_MASK = 0x1FFFFFFFU };
-
-/* ---- Stronger types for each field ---- */
 
 typedef enum {
   CAN_PRIORITY_P0 = 0x0,
@@ -30,10 +18,15 @@ typedef enum {
 typedef enum { BMS_DEVICE_ID = 0x1F, GUI_DEVICE_ID = 0x1E } can_device_id_t;
 
 typedef enum {
-  CMD_ID_SVOLTAGE_ALL = 0x00A0,
-  CMD_ID_SVOLTAGE_ALL_RESP = 0x00A1,
-  CMD_ID_CVOLTAGE_ALL = 0x00A2,
-  CMD_ID_CVOLTAGE_ALL_RESP = 0x00A3
+  CMD_ID_FIRST_24_CELLS = 0x00A0,
+  CMD_ID_SECOND_24_CELLS = 0x00A1,
+  CMD_ID_THIRD_24_CELLS = 0x00A2,
+  CMD_ID_FOURTH_24_CELLS = 0x00A3,
+  CMD_ID_FIFTH_24_CELLS = 0x00A4,
+  CMD_ID_SIXTH_24_CELLS = 0x00A5,
+  CMD_ID_FIRST_60_TEMPS = 0x00B0,
+  CMD_ID_LAST_60_TEMPS = 0x00B1,
+  CMD_ID_CELL_METADATA = 0x00C0,
 } can_command_id_t;
 
 static inline can_ext_id_t can_id_build(can_priority_t priority,

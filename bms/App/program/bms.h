@@ -80,6 +80,7 @@ typedef struct {
 extern adc_config_t g_cell_profile;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
+extern bms_handler_t hbms;
 
 void bms_sm_init(bms_handler_t *hbms);
 void bms_sm_run(bms_handler_t *hbms);
