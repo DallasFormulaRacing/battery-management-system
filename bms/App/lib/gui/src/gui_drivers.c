@@ -18,8 +18,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) == HAL_OK) {
             // Execute registered callback assuming its been assigned
-            if (rx_handler != NULL) {
-                rx_handler(&rx_header, rx_data, rx_ctx);
-            }
+            //if (rx_handler != NULL) {
+            //    rx_handler(&rx_header, rx_data, rx_ctx);
+            //}
+            //IMPLEMENT THIS: process_can_command(rx_header, rx_data);
     }
 }

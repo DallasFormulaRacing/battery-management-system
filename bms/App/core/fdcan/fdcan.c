@@ -3,19 +3,6 @@
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 
-// RX handler registration (application-provided)
-static fdcan_rx_handler_t rx_handler = NULL;
-static void *rx_ctx = NULL;
-
-
-// assign callback function to rx handler outside this program
-void fdcan_register_rx_handler(fdcan_rx_handler_t handler, void *ctx)
-{
-    rx_handler = handler;
-    rx_ctx = ctx;
-}
-
-
 static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header)
 {
     tx_header->IdType              = FDCAN_EXTENDED_ID;
@@ -37,27 +24,6 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data, uint32_t dlc_
 
     /* HAL expects a non-const pointer; we won't mutate it. */
     return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &tx_header, (uint8_t *)data);
-}
-
-/*
- * HAL callback invoked when a new message arrives in RX FIFO0
- * (assuming notifications are enabled).
- */
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_its)
-{
-    if ((rx_fifo0_its & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) == 0U) {
-        return;
-    }
-
-    FDCAN_RxHeaderTypeDef rx_header;
-    uint8_t rx_data[64];
-
-    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) == HAL_OK) {
-            // Execute registered callback assuming its been assigned
-            if (rx_handler != NULL) {
-                rx_handler(&rx_header, rx_data, rx_ctx);
-            }
-    }
 }
 
 /* ---------------------------------------------------------
@@ -93,9 +59,8 @@ void fdcan_configure_filter(void)
     HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
 }
 
-/* ---------------------------------------------------------
-   Hardware init
-   --------------------------------------------------------- */
+// Called once from main.c before program/bms init runs.
+// configures filter, starts FDCAN, and enables RX FIFO0 notification
 void can_hardware_init(void)
 {
     fdcan_configure_filter();
