@@ -17,6 +17,10 @@ typedef struct {
   uint16_t iso_measurement_cntr;
   uint16_t status_warnings;
   uint8_t status_device;
+  uint16_t r_iso_neg;
+  uint16_t r_iso_pos;
+  uint16_t r_iso_org;
+  uint8_t isolation_quality;
 } imd_isolation_info_t;
 
 typedef struct {

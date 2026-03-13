@@ -14,9 +14,9 @@
 #include "can.h"
 #include "iso_types.h"
 
-void imd_parse_general();
-void imd_parse_isolation();
-void imd_parse_voltage();
-void imd_parse_IT_system();
+void imd_parse_general(isometer_t *imd, const uint8_t *buf);
+void imd_parse_isolation(isometer_t *imd, const uint8_t *buf);
+void imd_parse_voltage(isometer_t *imd, const uint8_t *buf);
+void imd_parse_IT_system(isometer_t *imd, const uint8_t *buf);
 
 #endif
