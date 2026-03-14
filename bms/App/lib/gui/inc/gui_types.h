@@ -15,7 +15,10 @@ typedef enum {
   CAN_PRIORITY_P3 = 0x3,
 } can_priority_t;
 
-typedef enum { BMS_DEVICE_ID = 0x1F, GUI_DEVICE_ID = 0x1E } can_device_id_t;
+typedef enum { 
+  BMS_DEVICE_ID = 0x1F, 
+  GUI_DEVICE_ID = 0x1E 
+} can_device_id_t;
 
 typedef enum {
   CMD_ID_FIRST_24_CELLS = 0x00A0,
