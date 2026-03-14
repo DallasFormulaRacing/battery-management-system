@@ -366,6 +366,11 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
     *reg_data_size = ADBMS_RX_FRAME_BYTES;
   }
 
+  // should never happen but just in case
+  if (*reg_data_size > *read_buffer_size) {
+    return COMM_INVALID_PARAMETERS;
+  }
+
   return COMM_OK;
 }
 
