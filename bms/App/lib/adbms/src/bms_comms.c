@@ -230,7 +230,16 @@ static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
   comm_status_t command_status = COMM_OK;
 
   for (uint8_t current_ic = 0U; current_ic < ic_count; ++current_ic) {
-    const uint8_t *asic_data = &rx_data[current_ic * bytes_in_reg];
+    /**
+     *
+     * the new asic data is retrieved by taking the offset base of the
+     * data buffer array by using pointer decay
+     * this: &rx_data[current_ic * bytes_in_reg]
+     * needs to be tested
+     */
+    uint8_t physical_offset = current_ic * bytes_in_reg;
+    const uint8_t *asic_data = &rx_data[physical_offset];
+
     comm_status_t current_status =
         handle_single_asic(asic_data, bytes_in_reg, status, current_ic);
 

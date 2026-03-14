@@ -164,12 +164,14 @@ static void check_crc_errors(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group,
                              asic_status_buffers_t *status_buffers) {
   // NOTE: There might be a better way for letting the user know if
   // get_mailbox_type returned null or not
-  uint8_t *pec = get_pec(asic_ctx, reg_group);
-  if (pec == NULL) {
-    return;
-  }
+
   for (uint8_t cic = 0; cic < asic_ctx->ic_count; cic++) {
-    *pec = status_buffers->pec_error_flags[cic];
+    uint8_t *pec = get_pec(&asic_ctx[cic], reg_group);
+
+    if (pec != NULL) {
+      *pec = status_buffers->pec_error_flags[cic];
+    }
+
     asic_ctx[cic].crc_err.command_counter =
         status_buffers->command_counter[cic];
   }
@@ -349,7 +351,7 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
 
   default:
     *read_buffer_size = READ_SIZE;
-    *reg_data_size = READ_SIZE;
+    *reg_data_size = ADBMS_RX_FRAME_BYTES; // was READ_SIZE BEFORE
     return COMM_OK;
   }
   return COMM_OK;
@@ -393,7 +395,8 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   }
 
   asic_wakeup(asic_ctx->ic_count);
-  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer, WRITE_SIZE);
+  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer,
+                         ADBMS_TX_FRAME_BYTES);
 
   return COMM_OK;
 }
