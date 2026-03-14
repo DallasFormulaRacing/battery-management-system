@@ -307,13 +307,25 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   return COMM_OK;
 }
 
+/**
+ * @brief Get the read buffer sizes object
+ *
+ * @param asic_ctx
+ * @param group of registers
+ * @param type of operation / command
+ * @param read_buffer_size -> how big is the entire packet
+ * @param reg_data_size -> how big is the packet PER ASIC
+
+ * reg_data_size should be smaller than read_buffer_size ALWAYS
+ * @return comm_status_t
+ */
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
                                            bms_group_select_t group,
                                            bms_op_t type,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size) {
-  switch (group) {
-  case ALL_REG_GROUPS:
+
+  if (ALL_REG_GROUPS == group) {
     switch (type) {
     case BMS_CMD_RDCVALL:
       *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDCVALL_FRAME_SIZE);
@@ -347,13 +359,13 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
       return COMM_INVALID_COMMAND;
       break;
     }
-    break;
-
-  default:
-    *read_buffer_size = READ_SIZE;
-    *reg_data_size = ADBMS_RX_FRAME_BYTES; // was READ_SIZE BEFORE
-    return COMM_OK;
   }
+
+  else {
+    *read_buffer_size = (asic_ctx->ic_count * ADBMS_RX_FRAME_BYTES);
+    *reg_data_size = ADBMS_RX_FRAME_BYTES;
+  }
+
   return COMM_OK;
 }
 
