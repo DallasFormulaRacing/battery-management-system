@@ -33,8 +33,8 @@ typedef struct {
   const float overvoltage_threshold_v;
   const float undervoltage_threshold_v;
 
-  const int openwire_cell_threshold_mv;
-  const int openwire_aux_threshold_mv;
+  const uint32_t openwire_cell_threshold_mv;
+  const uint32_t openwire_aux_threshold_mv;
 
   const uint32_t loop_meas_count;
   const uint16_t meas_loop_time_ms;
