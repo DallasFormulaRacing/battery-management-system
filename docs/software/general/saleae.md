@@ -30,3 +30,9 @@ The pins from top to bottom:
 ```
 
 So use pins 5,6,7,8 for SPI waveform measurements.
+
+## Extension for multicell
+
+Please remember to set the `Number of Devices` parameter properly in the isoSPI extension settings.
+
+![img](../assets/multicell-extension.png)
