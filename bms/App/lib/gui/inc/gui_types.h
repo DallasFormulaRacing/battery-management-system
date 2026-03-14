@@ -43,4 +43,24 @@ static inline can_ext_id_t can_id_build(can_priority_t priority,
           CAN_EXT_ID_MASK);
 }
 
+inline can_priority_t can_id_get_priority(can_ext_id_t id) {
+  return (can_priority_t)((id >> 26) & 0x07U);
+}
+
+inline can_device_id_t can_id_get_target(can_ext_id_t id) {
+  return (can_device_id_t)((id >> 21) & 0x1FU);
+}
+
+inline can_command_id_t can_id_get_cmd(can_ext_id_t id) {
+  return (can_command_id_t)((id >> 5) & 0xFFFFU);
+}
+
+inline can_device_id_t can_id_get_source(can_ext_id_t id) {
+  return (can_device_id_t)(id & 0x1FU);
+}
+
+inline bool can_id_is_valid(can_ext_id_t id) {
+  return (id & ~CAN_EXT_ID_MASK) == 0U;
+}
+
 #endif
