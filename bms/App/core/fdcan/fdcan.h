@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_fdcan.h" 
 #include "main.h"   // provides: extern FDCAN_HandleTypeDef hfdcan2
 
 /* =========================================================

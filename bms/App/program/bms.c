@@ -290,26 +290,26 @@ static bms_fault_t volt_ow_eval() {
   return BMS_ERR_NONE;
 }
 
-static void volt_ow_loop() {}
+// static void volt_ow_loop() {}
 
 static inline float f2v(int16_t xin) {
   float volt = (0.00015F * (float)xin) + 1.5F;
   return volt;
 }
 
-static inline float thermpoly(float xin) {
-  // 2.3487131 * v * * 8 - 35.359734 * v * * 7 + 218.27577 * v * * 6 -
-  //     724.54830 * v * * 5 + 1417.8324 * v * * 4 - 1687.9102 * v * * 3 +
-  //     1225.0384 * v * * 2 - 565.64244 * v +
-  //     209.04676
+// static inline float thermpoly(float xin) {
+//   // 2.3487131 * v * * 8 - 35.359734 * v * * 7 + 218.27577 * v * * 6 -
+//   //     724.54830 * v * * 5 + 1417.8324 * v * * 4 - 1687.9102 * v * * 3 +
+//   //     1225.0384 * v * * 2 - 565.64244 * v +
+//   //     209.04676
 
-  return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
-         (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
-         (218.27577F * xin * xin * xin * xin * xin * xin) -
-         (724.54830F * xin * xin * xin * xin * xin) +
-         (1417.8324F * xin * xin * xin * xin) - (1687.9102F * xin * xin * xin) +
-         (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
-}
+//   return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
+//          (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
+//          (218.27577F * xin * xin * xin * xin * xin * xin) -
+//          (724.54830F * xin * xin * xin * xin * xin) +
+//          (1417.8324F * xin * xin * xin * xin) - (1687.9102F * xin * xin * xin) +
+//          (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
+// }
 
 static float VOLTAGE[12];
 // static float g_thermtesterTEMPERATURE;
@@ -337,10 +337,10 @@ static void thermtestvoltage() {
   }
 }
 
-static void bms_can_setup(void) {
-  // Register API’s RX handler with core; ctx becomes hbms.asic inside the
-  // handler.
-}
+// static void bms_can_setup(void) {
+//   // Register API’s RX handler with core; ctx becomes hbms.asic inside the
+//   // handler.
+// }
 
 // static void thermtestvoltage() {
 //   for (int i = 0; i <= 11; i++) {

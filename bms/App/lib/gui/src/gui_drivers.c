@@ -1,9 +1,5 @@
-#include "fdcan.h"
 #include "gui_drivers.h"
-#include "gui_types.h"
 
-#include "stm32g4xx_hal_fdcan.h"
-#include <string.h>
 
 /*
  * HAL callback invoked when a new message arrives in RX FIFO0
