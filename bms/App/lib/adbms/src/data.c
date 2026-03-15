@@ -298,6 +298,7 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   status_buffers.command_counter = cmd_count;
 
   // data
+  asic_wakeup(asic_ctx->ic_count);
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
@@ -459,15 +460,17 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
 static void write_to_all_ics(cell_asic_ctx_t *asic_ctx,
                              asic_mailbox_id_select_t mailbox) {
   uint8_t data_len = ADBMS_TX_FRAME_BYTES;
-  for (uint8_t cic = 0; cic < asic_ctx->ic_count; cic++) {
-    asic_mailbox_t *mailbox_id = get_mailbox_type(asic_ctx, mailbox);
+  for (uint8_t current_ic = 0; current_ic < asic_ctx->ic_count; current_ic++) {
+    asic_mailbox_t *mailbox_id =
+        get_mailbox_type(&asic_ctx[current_ic], mailbox);
     // NOTE: There might be a better way for letting the user know if
     // get_mailbox_type returned null or not
     if (mailbox_id == NULL) {
       return;
     }
     for (uint8_t data = 0; data < data_len; data++) {
-      write_buffer[(cic * data_len) + data] = mailbox_id->tx_data_array[data];
+      write_buffer[(current_ic * data_len) + data] =
+          mailbox_id->tx_data_array[data];
     }
   }
 }
