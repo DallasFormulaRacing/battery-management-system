@@ -170,9 +170,10 @@ void bms_state_fault(bms_handler_t *hbms) {
   - this state cannot transition to any other state
   - once this state is reached it stays.
   */
-  open_shutdown_circuit();
+  if (BMS_STATE_FAULT != hbms->state.previous_state) {
+    open_shutdown_circuit();
+  }
   measure_during_fault();
-  bms_sm_transition(hbms, BMS_STATE_FAULT);
 }
 
 void bms_state_sleep(bms_handler_t *hbms) {
