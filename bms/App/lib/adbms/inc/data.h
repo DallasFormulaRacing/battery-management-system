@@ -5,6 +5,8 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "command_list.h"
+#include "config.h"
+#include "parse.h"
 #include <stdint.h>
 
 cfg_reg_group_select_t switch_group_cfg(bms_group_select_t group);

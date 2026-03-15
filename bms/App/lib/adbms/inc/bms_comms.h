@@ -4,6 +4,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "command_list.h"
+#include "config.h"
 #include "pec.h"
 #include "spi.h"
 #include <stdint.h>
