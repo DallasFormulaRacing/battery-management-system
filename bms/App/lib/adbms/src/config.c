@@ -1,5 +1,4 @@
 #include "config.h"
-#include "bms_enums.h"
 
 adc_config_t g_cell_profile = {
     .redundant_measurement_mode = RD_OFF,

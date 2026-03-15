@@ -1,9 +1,10 @@
 #include "data.h"
-#include "bms_enums.h"
-#include "bms_types.h"
-#include "config.h"
-#include "parse.h"
-#include <stdint.h>
+
+// where does 100 come from? -> its just a conservative guesstimate. should be
+// enough. if not, well, good thing it lives in BSS.
+static uint8_t read_buffer[NUM_IC_COUNT_CHAIN * 100];
+static uint8_t pec_error[NUM_IC_COUNT_CHAIN];
+static uint8_t cmd_count[NUM_IC_COUNT_CHAIN];
 
 static uint8_t *get_pec(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group);
 
@@ -290,9 +291,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
   asic_status_buffers_t status_buffers;
 
-  uint8_t read_buffer[read_buffer_size];
-  uint8_t pec_error[asic_ctx->ic_count];
-  uint8_t cmd_count[asic_ctx->ic_count];
   status_buffers.register_data = read_buffer;
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
