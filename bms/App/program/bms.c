@@ -191,7 +191,22 @@ bms_fault_t cell_open_wire_check_even() {
   return BMS_ERR_NONE;
 }
 
+void hard_fault_disable_openwire_on_profiles() {
+  g_cell_profile.ow_mode = OW_OFF_ALL_CH;
+  g_cell_profile.AUX_OW_en = AUX_OW_OFF;
+  g_cell_profile.DCP_en = DCP_OFF;
+
+  g_thermistor_profile.ow_mode = OW_OFF_ALL_CH;
+  g_thermistor_profile.AUX_OW_en = AUX_OW_OFF;
+  g_thermistor_profile.DCP_en = DCP_OFF;
+}
+
+/**
+ * @brief this is a special mesurement loop designed to operate under fault
+ * it should NOT: bleed cells or do open wire checks, since ow injects current
+ */
 void measure_during_fault() {
+  hard_fault_disable_openwire_on_profiles();
   adbms_read_rdfcall_voltage(hbms.asic);
   adbms_read_rdasall_voltage(hbms.asic);
 }
