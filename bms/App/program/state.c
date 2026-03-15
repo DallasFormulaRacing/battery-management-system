@@ -37,6 +37,9 @@ void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
   hbms->state.current_state = new_state;
   hbms->state.state_entry_tick = HAL_GetTick();
 
+  if (BMS_STATE_FAULT == new_state)
+    open_shutdown_circuit();
+
   // todo: maybe reset flags here on transition
 }
 
@@ -170,9 +173,8 @@ void bms_state_fault(bms_handler_t *hbms) {
   - this state cannot transition to any other state
   - once this state is reached it stays.
   */
-  if (BMS_STATE_FAULT != hbms->state.previous_state) {
-    open_shutdown_circuit();
-  }
+  // todo: add logging the previous state here before we lose the context
+  // keep monitoring so the we can see wtf is happening
   measure_during_fault();
 }
 
