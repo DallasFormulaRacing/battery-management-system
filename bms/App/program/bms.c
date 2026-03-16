@@ -102,7 +102,7 @@ bms_fault_t therm_open_wire_check() {
 bms_fault_t cell_voltage_in_range_check() {
   // todo: test this and make sure it updates the fault struct
 
-  adbms_read_rdfcall_voltage(hbms.asic);
+  adbms_read_filt_cell_voltages(hbms.asic);
   bool cell_over_flag = false;
   bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
@@ -226,7 +226,7 @@ void bms_test_init() {
 
   adbms_init_config(hbms.asic);
   // adbms_start_aux_voltage_measurement(hbms.asic);
-  // adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_start_adc_cell_voltage_measurment(hbms.asic);
   adbms_start_fcell_voltage_measurment(hbms.asic);
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
@@ -254,7 +254,7 @@ typedef struct {
   float array[16];
 } lookhere;
 
-static lookhere look[2];
+static lookhere look[4];
 
 static void pop() {
   for (uint8_t i = 0; i < 16; i++) {
@@ -266,13 +266,23 @@ static void pop() {
     look[1].array[i] = convert_voltage_human_readable(
         hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
   }
+
+  for (uint8_t i = 0; i < 16; i++) {
+    look[2].array[i] = convert_voltage_human_readable(
+        hbms.asic[0].cell.cell_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 16; i++) {
+    look[3].array[i] = convert_voltage_human_readable(
+        hbms.asic[1].cell.cell_voltages_array[i]);
+  }
 }
 
 void bms_test_run() {
   // keep
   // adbms_read_rdasall_voltage(hbms.asic);
   adbms_init_config(hbms.asic);
-  adbms_read_rdfcall_voltage(hbms.asic);
   adbms_read_fcell_voltages(hbms.asic);
+  adbms_read_cell_voltages(hbms.asic);
   pop();
 }
