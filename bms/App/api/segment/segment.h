@@ -5,6 +5,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "command_list.h"
+#include "config.h"
 #include "data.h"
 #include "parse.h"
 #include "spi.h"
@@ -35,6 +36,7 @@ comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_filt_cell_voltages(cell_asic_ctx_t *asic_ctx);
 
+#if SINGLEBOARD
 /*
  * @group Read All commands
  */
@@ -48,6 +50,7 @@ comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
 comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 
+#endif
 /*
  * @group Reading AUX ADC measurement types
  */
