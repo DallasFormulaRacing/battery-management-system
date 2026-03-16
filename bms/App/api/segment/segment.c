@@ -83,7 +83,7 @@ comm_status_t adbms_start_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adc_snap_command();
+  spi_adc_snap_command();
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -96,20 +96,7 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVE, REG_GROUP_E));
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVF, REG_GROUP_F));
-  // spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_CMD_RDCVALL, RDCVALL, ALL_REG_GROUPS));
   spi_adc_unsnap_command();
-
   return COMM_OK;
 }
 
@@ -195,45 +182,6 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCE, REG_GROUP_E));
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
-  spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCALL, ALL_REG_GROUPS));
-  spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
-                                         open_wire_detect_mode_t ow_mode) {
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
-                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
-  spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCSALL, ALL_REG_GROUPS));
-  spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
-                                        open_wire_detect_mode_t ow_mode) {
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
-                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
-  // NOTE: may need to wait before the snap
-  spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      // TODO: clear S-ADCs to ensure that the value is anything but the default
-      // of 0x8000, CLRCELL cmd or clear array in struct?
-      bms_read_data(asic_ctx, BMS_CMD_RDSALL, RDSALL, ALL_REG_GROUPS));
   spi_adc_unsnap_command();
   return COMM_OK;
 }
@@ -343,33 +291,6 @@ comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-/**
- * @brief Reads all AUX and Status Registers
- * BMS_CMD_RDASALL,
- * @param asic_ctx
- * @return comm_status_t
- */
-comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
-  asic_wakeup(asic_ctx->ic_count);
-  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
-  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
-
-  spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
-                   g_thermistor_profile.channels);
-
-  // NOTE: why is C-ADC command being sent inside of the read command of AUX?
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adax2_command(g_thermistor_profile.channels);
-
-  // spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_CMD_RDASALL, RDASALL, ALL_REG_GROUPS));
-  // spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
 /** : Needs to be tested
  * @brief Sets the pwm duty cycle for each cell, but does not send the command
  * yet. This allows for multiple cells to be bled in parallel as you can call
@@ -449,3 +370,86 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
 
   return adbms_send_pwm_commands(asic_ctx);
 }
+
+/* =============== READ ALL COMMANDS ================== */
+#if SINGLEBOARD
+comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDCVALL, RDCVALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+
+  return COMM_OK;
+}
+
+comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+  return COMM_OK;
+}
+
+comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                         open_wire_detect_mode_t ow_mode) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCSALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+  return COMM_OK;
+}
+
+comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                        open_wire_detect_mode_t ow_mode) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+  // NOTE: may need to wait before the snap
+  spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      // TODO: clear S-ADCs to ensure that the value is anything but the default
+      // of 0x8000, CLRCELL cmd or clear array in struct?
+      bms_read_data(asic_ctx, BMS_CMD_RDSALL, RDSALL, ALL_REG_GROUPS));
+  spi_adc_unsnap_command();
+  return COMM_OK;
+}
+
+/**
+ * @brief Reads all AUX and Status Registers
+ * BMS_CMD_RDASALL,
+ * @param asic_ctx
+ * @return comm_status_t
+ */
+comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
+  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
+
+  spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
+                   g_thermistor_profile.channels);
+
+  // NOTE: why is C-ADC command being sent inside of the read command of AUX?
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adax2_command(g_thermistor_profile.channels);
+
+  // spi_adc_snap_command();
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDASALL, RDASALL, ALL_REG_GROUPS));
+  // spi_adc_unsnap_command();
+  return COMM_OK;
+}
+
+#endif
