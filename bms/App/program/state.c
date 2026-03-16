@@ -155,7 +155,7 @@ void bms_state_charging(bms_handler_t *hbms) {
 
 void bms_state_balancing(bms_handler_t *hbms) {
   /*
-  adbms_start_adc_cell_voltage_measurment(asic_ctx);
+  adbms_start_cell_voltage_measurment(asic_ctx);
   adbms_read_cell_voltages(asic_ctx);
 
   --> if bad cell, stop execution and move to fault state

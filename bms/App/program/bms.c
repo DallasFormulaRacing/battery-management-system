@@ -39,7 +39,9 @@ bms_handler_t hbms = {
  */
 bms_fault_t therm_temp_in_range_check() {
   // NOTE: Read might need to be outside
-  adbms_read_rdasall_voltage(hbms.asic);
+  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_s_voltages(hbms.asic);
   bool over_temp_flag = false;
   bool under_temp_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
@@ -79,7 +81,10 @@ bms_fault_t therm_temp_in_range_check() {
 }
 
 bms_fault_t therm_open_wire_check() {
-  adbms_read_rdasall_voltage(hbms.asic);
+  // adbms_read_rdasall_voltage(hbms.asic);
+
+  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_s_voltages(hbms.asic);
   bool open_wire_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
@@ -138,7 +143,8 @@ bms_fault_t cell_open_wire_check_odd() {
   // TODO: test this & make sure odd/even is right
   // TODO: add: this function also updates the fault enum array
   // read S-ADC
-  adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
+  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
+  adbms_read_s_voltages(hbms.asic, OW_ON_ODD_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -226,7 +232,7 @@ void bms_test_init() {
 
   adbms_init_config(hbms.asic);
   // adbms_start_aux_voltage_measurement(hbms.asic);
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_start_cell_voltage_measurment(hbms.asic);
   adbms_start_fcell_voltage_measurment(hbms.asic);
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
