@@ -22,17 +22,18 @@ comm_status_t adbms_set_dtrng_dcto_value(cell_asic_ctx_t *asic_ctx);
 /*
  * @group Reading and starting CELL voltage measurement types
  */
-comm_status_t adbms_start_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_cell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx);
 
-comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
                                     open_wire_detect_mode_t ow_mode);
 
-comm_status_t adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t
+adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);
 
-comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_filt_cell_voltages(cell_asic_ctx_t *asic_ctx);
 
@@ -56,7 +57,7 @@ comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
  */
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx);
 
