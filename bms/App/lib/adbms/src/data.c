@@ -2,7 +2,7 @@
 
 // where does 100 come from? -> its just a conservative guesstimate. should be
 // enough. if not, well, good thing it lives in BSS.
-static uint8_t read_buffer[NUM_IC_COUNT_CHAIN * 100];
+static uint8_t read_buffer[NUM_IC_COUNT_CHAIN * 50];
 static uint8_t pec_error[NUM_IC_COUNT_CHAIN];
 static uint8_t cmd_count[NUM_IC_COUNT_CHAIN];
 
