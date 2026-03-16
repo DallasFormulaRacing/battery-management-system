@@ -71,7 +71,7 @@ comm_status_t adbms_read_config(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
+comm_status_t adbms_start_cell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
@@ -100,7 +100,7 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
+comm_status_t adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   spi_adsv_command(g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
@@ -126,7 +126,7 @@ comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
 }
 
 comm_status_t
-adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
+adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
@@ -154,7 +154,7 @@ comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
+comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
@@ -231,7 +231,7 @@ comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
+comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     asic_ctx[ic].tx_cfg_a.REFON = POWER_UP;

@@ -234,8 +234,8 @@ void bms_test_init() {
   adbms_init_config(hbms.asic);
   // adbms_start_aux_voltage_measurement(hbms.asic);
   adbms_clear_all_pwm(hbms.asic);
-  adbms_start_cell_voltage_measurment(hbms.asic);
-  adbms_start_fcell_voltage_measurment(hbms.asic);
+  adbms_start_cell_voltage_measurement(hbms.asic);
+  adbms_start_fcell_voltage_measurement(hbms.asic);
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
                    g_cell_filtered_profile.continuous_measurement,
@@ -258,39 +258,50 @@ void bms_light() {
 }
 
 // static float TEST_VOLTAGE[12];
-typedef struct {
-  float array[16];
-} lookhere;
-
-static lookhere look[4];
+float look[4][12];
 
 static void pop() {
-  for (uint8_t i = 0; i < 16; i++) {
-    look[0].array[i] = convert_voltage_human_readable(
+  for (uint8_t i = 0; i < 12; i++) {
+    look[0][i] = convert_voltage_human_readable(
         hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
   }
 
-  for (uint8_t i = 0; i < 16; i++) {
-    look[1].array[i] = convert_voltage_human_readable(
+  for (uint8_t i = 0; i < 12; i++) {
+    look[1][i] = convert_voltage_human_readable(
         hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
   }
 
-  for (uint8_t i = 0; i < 16; i++) {
-    look[2].array[i] = convert_voltage_human_readable(
-        hbms.asic[0].cell.cell_voltages_array[i]);
+  for (uint8_t i = 0; i < 12; i++) {
+    look[2][i] =
+        convert_voltage_human_readable(hbms.asic[0].aux.aux_voltages_array[i]);
   }
 
-  for (uint8_t i = 0; i < 16; i++) {
-    look[3].array[i] = convert_voltage_human_readable(
-        hbms.asic[1].cell.cell_voltages_array[i]);
+  for (uint8_t i = 0; i < 12; i++) {
+    look[3][i] =
+        convert_voltage_human_readable(hbms.asic[1].aux.aux_voltages_array[i]);
+  }
+}
+
+void pop_pwm() {
+  for (uint8_t cell = 0; cell < 16; cell++) {
+    adbms_set_cell_pwm(hbms.asic, cell, 1, (pwm_duty_cycle_t)(cell + 2));
+  }
+
+  for (uint8_t cell = 0; cell < 16; cell++) {
+    adbms_set_cell_pwm(hbms.asic, cell, 0, (pwm_duty_cycle_t)(cell + 2));
   }
 }
 
 void bms_test_run() {
   // keep
   // adbms_read_rdasall_voltage(hbms.asic);
-  adbms_init_config(hbms.asic);
+  // adbms_init_config(hbms.asic);
   adbms_read_fcell_voltages(hbms.asic);
-  adbms_read_cell_voltages(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
+  adbms_read_aux_voltages(hbms.asic);
+
+  // pop_pwm();
+  // adbms_send_pwm_commands(hbms.asic);
+
   pop();
 }
