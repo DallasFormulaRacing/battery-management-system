@@ -339,7 +339,7 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
       *reg_data_size = ADBMS_RDACALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDFCALL:
-      *read_buffer_size = (asic_ctx->ic_count * ADBMS_RDFCALL_FRAME_SIZE);
+      *read_buffer_size = (ADBMS_RDFCALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDFCALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDCSALL:
@@ -359,7 +359,8 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
       break;
     }
   }
-
+  // possible issues, pec is not accounted for in either read buffer size or reg
+  // data size
   else {
     *read_buffer_size = (asic_ctx->ic_count * ADBMS_RX_FRAME_BYTES);
     *reg_data_size = ADBMS_RX_FRAME_BYTES;

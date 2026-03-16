@@ -121,8 +121,8 @@ int main(void) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // bms_test_run();
-    bms_state_measure(&hbms);
+    bms_test_run();
+    // bms_state_measure(&hbms);
   }
   /* USER CODE END 3 */
 }

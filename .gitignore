@@ -41,3 +41,4 @@ compile_commands.json
 .vscode 
 build/
 logs
+/venv/
