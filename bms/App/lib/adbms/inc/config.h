@@ -13,6 +13,8 @@
 #define NUM_THERM_PER_SEGMENT 10
 #define NUM_CELL_USING (NUM_IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
 
+#define SINGLEBOARD !(NUM_IC_COUNT_CHAIN > 1)
+
 extern cell_asic_ctx_t *asic_ctx;
 extern uint8_t write_buffer[WRITE_SIZE];
 // asic_status_buffers_t read_buffer[NUM_IC_COUNT_CHAIN];

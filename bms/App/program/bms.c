@@ -173,7 +173,8 @@ bms_fault_t cell_open_wire_check_even() {
   // todo: test this & make sure odd/even is right
   // todo: add: this function also updates the fault enum array
   // read S-ADC
-  adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
+  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
+  adbms_read_s_voltages(hbms.asic, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -211,11 +212,11 @@ void hard_fault_disable_openwire_on_profiles() {
 /**
  * @brief this is a special mesurement loop designed to operate under fault
  * it should NOT: bleed cells or do open wire checks, since ow injects current
- */
+ */ // todo
 void measure_during_fault() {
   hard_fault_disable_openwire_on_profiles();
-  adbms_read_rdfcall_voltage(hbms.asic);
-  adbms_read_rdasall_voltage(hbms.asic);
+  // measure voltages (top level task)
+  // measure temps (top level task)
 }
 
 /* ----------------------------------------------------- */
