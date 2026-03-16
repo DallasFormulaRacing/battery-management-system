@@ -3,6 +3,7 @@
 #include "bms_types.h"
 #include "charger.h"
 #include "config.h"
+#include "parse.h"
 #include "segment.h"
 #include "thermistor.h"
 #include <stdbool.h>
@@ -224,8 +225,9 @@ void bms_test_init() {
   }
 
   adbms_init_config(hbms.asic);
-  adbms_start_aux_voltage_measurement(hbms.asic);
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  // adbms_start_aux_voltage_measurement(hbms.asic);
+  // adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  adbms_start_fcell_voltage_measurment(hbms.asic);
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
                    g_cell_filtered_profile.continuous_measurement,
@@ -248,7 +250,29 @@ void bms_light() {
 }
 
 // static float TEST_VOLTAGE[12];
+typedef struct {
+  float array[16];
+} lookhere;
+
+static lookhere look[2];
+
+static void pop() {
+  for (uint8_t i = 0; i < 16; i++) {
+    look[0].array[i] = convert_voltage_human_readable(
+        hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 16; i++) {
+    look[1].array[i] = convert_voltage_human_readable(
+        hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
+  }
+}
 
 void bms_test_run() {
   // keep
+  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_init_config(hbms.asic);
+  adbms_read_rdfcall_voltage(hbms.asic);
+  adbms_read_fcell_voltages(hbms.asic);
+  pop();
 }
