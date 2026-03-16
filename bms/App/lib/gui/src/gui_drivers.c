@@ -4,6 +4,8 @@
 #include "bms_types.h"
 #include "stm32g4xx_hal_fdcan.h"
 
+$include "bms.h"
+
 #include <stdint.h>
 
 /*
@@ -36,7 +38,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
             //uint8_t *data = build_data_buffer(&asic_array, filtered_voltage_field, start, end);
             //send can frame with first_24_cells_resp as command id
             can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
-            fdcan_send(tx_header, &data, FDCAN_DLC_BYTES_48);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             //same for other branches
             break;
         }
