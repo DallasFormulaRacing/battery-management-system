@@ -233,6 +233,7 @@ void bms_test_init() {
 
   adbms_init_config(hbms.asic);
   // adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_clear_all_pwm(hbms.asic);
   adbms_start_cell_voltage_measurment(hbms.asic);
   adbms_start_fcell_voltage_measurment(hbms.asic);
   // Needed for filtered cell readings
