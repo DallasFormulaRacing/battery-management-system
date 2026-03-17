@@ -12,8 +12,8 @@
 
 cell_asic_ctx_t *asic_array = hbms.asic;
 
-static void send_filtered_voltage_frame(int start_seg, int end_seg);
-static void send_therm_temp_frame(int start_seg, int end_seg);
+static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
+static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
 
 /*
  * HAL callback invoked when a new message arrives in RX FIFO0
@@ -41,30 +41,30 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
 
     switch(can_id_get_cmd(ext_id)){
         case CMD_ID_FIRST_24_CELLS:
-            send_filtered_voltage_frame(0, 2);
+            send_filtered_voltage_frame(0, 2 , CMD_ID_FIRST_24_CELLS_RESP);
             break;
         case CMD_ID_SECOND_24_CELLS:
-            send_filtered_voltage_frame(2, 4);
+            send_filtered_voltage_frame(2, 4, CMD_ID_SECOND_24_CELLS_RESP);
             break;
         case CMD_ID_THIRD_24_CELLS:
-            send_filtered_voltage_frame(4, 6);
+            send_filtered_voltage_frame(4, 6, CMD_ID_THIRD_24_CELLS_RESP);
             break;
         case CMD_ID_FOURTH_24_CELLS:
-            send_filtered_voltage_frame(6, 8);
+            send_filtered_voltage_frame(6, 8, CMD_ID_FOURTH_24_CELLS_RESP);
             break;
         case CMD_ID_FIFTH_24_CELLS:
-            send_filtered_voltage_frame(8, 10);
+            send_filtered_voltage_frame(8, 10, CMD_ID_FIFTH_24_CELLS_RESP);
             break;
         case CMD_ID_SIXTH_24_CELLS:
-            send_filtered_voltage_frame(10, 12);
+            send_filtered_voltage_frame(10, 12, CMD_ID_SIXTH_24_CELLS_RESP);
             break;
         case CMD_ID_FIRST_60_TEMPS:
             //technically means seg [0,6)
-            send_therm_temp_frame(0, 6);
+            send_therm_temp_frame(0, 6, CMD_ID_FIRST_60_TEMPS_RESP);
             break;
         case CMD_ID_LAST_60_TEMPS:
             //technically means seg [6,12)
-            send_therm_temp_frame(6, 12);
+            send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS_RESP);
             break;
         case CMD_ID_PACK_METADATA:
             break;
@@ -77,23 +77,21 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
 }
 
 
-static void send_filtered_voltage_frame(int start_seg, int end_seg){
+static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
     //build data function call with first 24 cell configured in parameters
     uint8_t tx_frame[FDCAN_DLC_BYTES_48];
     cell_voltage_readings(asic_array, start_seg, end_seg, &tx_frame);
 
     //send can frame with first_24_cells_resp as command id
-    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
 
-static void send_therm_temp_frame(int start_seg, int end_seg){
-    //build data function call with first 24 cell configured in parameters
+static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
     uint8_t tx_frame[FDCAN_DLC_BYTES_64];
-    cell_voltage_readings(asic_array, start_seg, end_seg, &tx_frame);
+    therm_temp_readings_(start_seg, end_seg, tx_frame);
 
-    //send can frame with first_24_cells_resp as command id
-    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
 }
