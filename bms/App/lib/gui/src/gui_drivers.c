@@ -1,5 +1,6 @@
 #include "gui_drivers.h"
 #include "gui_types.h"
+#include "gui_data_handler.h"
 
 #include "bms_types.h"
 #include "stm32g4xx_hal_fdcan.h"
@@ -35,6 +36,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
     switch(can_id_get_cmd(ext_id)){
         case CMD_ID_FIRST_24_CELLS:{
             //build data function call with first 24 cell configured in parameters
+            uint8_t *tx_frame[64];
             //uint8_t *data = build_data_buffer(&asic_array, filtered_voltage_field, start, end);
             //send can frame with first_24_cells_resp as command id
             can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
