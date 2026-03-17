@@ -3,6 +3,7 @@
 #define GUI_DRIVER
 
 #include "gui_types.h"
+#include "gui_data_handler.h"
 
 #include "fdcan.h"
 #include <string.h>
