@@ -1,6 +1,9 @@
 #include <stdint.h>
 
 #include "bms_types.h"
+
+cell_asic_ctx_t *asic_array = hbms.asic;
+
 /**
  * @brief Sends all cell voltages (for each IC) in the requested voltage domain.
  *
