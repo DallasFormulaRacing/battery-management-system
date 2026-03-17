@@ -1,19 +1,4 @@
 #include "gui_drivers.h"
-#include "gui_types.h"
-#include "gui_data_handler.h"
-
-#include "bms_types.h"
-#include "stm32g4xx_hal_fdcan.h"
-
-//for hbms
-#include "bms.h"
-
-#include <stdint.h>
-
-cell_asic_ctx_t *asic_array = hbms.asic;
-ack_data_t *pack_data = hbms.pack;
-pcb_ctx_t *pcb = hbms.pcb;
-
 
 static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
 static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
@@ -78,14 +63,15 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
         default:
             return;
     }
-    //switch case statement here to process the command and data received from the BMS
 }
 
 
 void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+    cell_asic_ctx_t *asic_array = hbms.asic;
+
     //build data function call with first 24 cell configured in parameters
     uint8_t tx_frame[FDCAN_DLC_BYTES_48];
-    cell_voltage_readings(asic_array, start_seg, end_seg, &tx_frame);
+    cell_voltage_readings(asic_array, start_seg, end_seg, tx_frame);
 
     //send can frame with first_24_cells_resp as command id
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
@@ -94,6 +80,8 @@ void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_
 
 
 void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+    cell_asic_ctx_t *asic_array = hbms.asic;
+
     uint8_t tx_frame[FDCAN_DLC_BYTES_64] = {0}; // since first 4 bytes are 0
     therm_temp_readings(asic_array, start_seg, end_seg, tx_frame);
 
@@ -102,10 +90,12 @@ void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
 }
 
 void send_metadata_frame(can_resp_id_t resp_id){
-        uint8_t tx_frame[FDCAN_DLC_BYTES_24];
-        metadata_readings(&pack_data, &pcb, tx_frame);
+    pack_data_t *pack_data = hbms.pack;
+    pcb_ctx_t *pcb = hbms.pcb;
+    uint8_t tx_frame[FDCAN_DLC_BYTES_24];
+    metadata_readings(pack_data, pcb, tx_frame);
 
-        can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
-        fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
+    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
+    fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
 
 }

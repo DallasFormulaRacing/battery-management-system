@@ -1,9 +1,5 @@
-#include <stdint.h>
-#include <stdbool.h>
-
-
-#include "bms_types.h"
-
+#include "gui_data_handler.h"
+#include "cb.h"
 void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr){
 
     //counter array to keep track of index outside of each segment loop
@@ -11,7 +7,7 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, ui
     for (int seg_idx = start_seg; seg_idx < end_seg; seg_idx++){
         //grab cell reading from asic array
         for (int cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++){
-        int16_t voltage = asic[seg_idx].filtered_cell[cell_idx];
+        int16_t voltage = asic[seg_idx].filtered_cell.filtered_cell_voltages_array[cell_idx];
 
         //convert 16 bit signed int into 2 bytes, big endian
         //conversion here:
@@ -37,8 +33,8 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint
     for (int i = start_seg; i < end_seg; i++){
         //grab cell reading from asic array
         for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++){
-        uint16_t temp = asic[i]//.thermistor reading, semicolon just for 
-
+        //uint16_t temp = asic[i];//.thermistor reading, semicolon just for 
+        uint8_t temp = 0;
         //only take top 8 MSB
         uint8_t byte_0 = (uint8_t)((temp >> 8) & 0xFF);
         //uint8_t byte_1 = (uint8_t)(voltage & 0xFF);
@@ -55,26 +51,35 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint
 
 
 void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
-        uint16_t pack_voltage = pack->packvoltage;
-        uint16_t soc = pack->state_of_charge;
-        uint16_t current = pack->instantaneous_current;
-        bool *cell_balancing_status = pcb->cell_balancing_status;
+    uint16_t pack_voltage = pack->packvoltage;
+    uint16_t soc = pack->state_of_charge;
+    uint16_t current = pack->instantaneous_current;
 
-        uint8_t pv0 = (uint8_t)((pack_voltage >> 8) & 0xFF);
-        uint8_t pv1 = (uint8_t)(pack_voltage & 0xFF);
+    uint8_t pv0 = (uint8_t)((pack_voltage >> 8) & 0xFF);
+    uint8_t pv1 = (uint8_t)(pack_voltage & 0xFF);
 
-        uint8_t soc0 = (uint8_t)((soc >> 8) & 0xFF);
-        uint8_t soc1 = (uint8_t)(soc & 0xFF);
+    uint8_t soc0 = (uint8_t)((soc >> 8) & 0xFF);
+    uint8_t soc1 = (uint8_t)(soc & 0xFF);
 
-        uint8_t c0 = (uint8_t)((current >> 8) & 0xFF);
-        uint8_t c1 = (uint8_t)(current & 0xFF);
+    uint8_t c0 = (uint8_t)((current >> 8) & 0xFF);
+    uint8_t c1 = (uint8_t)(current & 0xFF);
 
-        data_arr[0] = pv0;
-        data_arr[1] = pv1;
-        data_arr[2] = soc0;
-        data_arr[3] = soc1;
-        data_arr[4] = c0;
-        data_arr[5] = c1;
+    data_arr[0] = pv0;
+    data_arr[1] = pv1;
+    data_arr[2] = soc0;
+    data_arr[3] = soc1;
+    data_arr[4] = c0;
+    data_arr[5] = c1;
 
+    //pack 144 cell bools into bytes
+    bool *cell_balancing_status = pcb->cell_balancing_status;
 
+    for (int i = 0; i < NUM_CELL_MAX; i++) {
+        int byte_index = (i / 8) + 6; // 6 is the offset from the previous metadata
+        int bit_index  = 7 - (i % 8);   //pack left to right
+
+        if (cell_balancing_status[i]) {
+            data_arr[byte_index] |= (1U << bit_index);
+        }
+}
 }
