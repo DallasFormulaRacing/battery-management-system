@@ -40,40 +40,40 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
     if (can_id_get_target(ext_id) != BMS_DEVICE_ID) return;
 
     switch(can_id_get_cmd(ext_id)){
-        case CMD_ID_FIRST_24_CELLS:{
+        case CMD_ID_FIRST_24_CELLS:
             send_filtered_voltage_frame(0, 2);
-        }
-        case CMD_ID_SECOND_24_CELLS:{
+            break;
+        case CMD_ID_SECOND_24_CELLS:
             send_filtered_voltage_frame(2, 4);
-        }
-        case CMD_ID_THIRD_24_CELLS:{
+            break;
+        case CMD_ID_THIRD_24_CELLS:
             send_filtered_voltage_frame(4, 6);
-        }
-
-        case CMD_ID_FOURTH_24_CELLS:{
+            break;
+        case CMD_ID_FOURTH_24_CELLS:
             send_filtered_voltage_frame(6, 8);
-        }
-
-        case CMD_ID_FIFTH_24_CELLS:{
+            break;
+        case CMD_ID_FIFTH_24_CELLS:
             send_filtered_voltage_frame(8, 10);
-        }
-
-        case CMD_ID_SIXTH_24_CELLS:{
+            break;
+        case CMD_ID_SIXTH_24_CELLS:
             send_filtered_voltage_frame(10, 12);
-        }
-
+            break;
         case CMD_ID_FIRST_60_TEMPS:
+            //technically means seg [0,6)
+            send_therm_temp_frame(0, 6);
             break;
         case CMD_ID_LAST_60_TEMPS:
+            //technically means seg [6,12)
+            send_therm_temp_frame(6, 12);
             break;
         case CMD_ID_PACK_METADATA:
             break;
         case CMD_ID_IMD_DATA:
             break;
-        default: return;
+        default:
+            return;
     }
     //switch case statement here to process the command and data received from the BMS
-    return;
 }
 
 
