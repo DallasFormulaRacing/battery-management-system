@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdbool.h>
+
 
 #include "bms_types.h"
 
@@ -52,17 +54,27 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint
 }
 
 
-void metadata_readings(pack_data_t pack, pcb_ctx_t pcb, uint8_t *data_arr){
+void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
+        uint16_t pack_voltage = pack->packvoltage;
+        uint16_t soc = pack->state_of_charge;
+        uint16_t current = pack->instantaneous_current;
+        bool *cell_balancing_status = pcb->cell_balancing_status;
 
-        uint16_t voltage = asic[i].filtered_cell[j];
+        uint8_t pv0 = (uint8_t)((pack_voltage >> 8) & 0xFF);
+        uint8_t pv1 = (uint8_t)(pack_voltage & 0xFF);
 
-        //convert 16 bit signed int into 2 bytes, big endian
-        //conversion here:
-        uint8_t byte_0 = (uint8_t)((voltage >> 8) & 0xFF);
-        uint8_t byte_1 = (uint8_t)(voltage & 0xFF);
+        uint8_t soc0 = (uint8_t)((soc >> 8) & 0xFF);
+        uint8_t soc1 = (uint8_t)(soc & 0xFF);
 
-        //writing to data array
-        data_arr[j] = byte_0;
-        data_arr[j+1] = byte_1;
+        uint8_t c0 = (uint8_t)((current >> 8) & 0xFF);
+        uint8_t c1 = (uint8_t)(current & 0xFF);
+
+        data_arr[0] = pv0;
+        data_arr[1] = pv1;
+        data_arr[2] = soc0;
+        data_arr[3] = soc1;
+        data_arr[4] = c0;
+        data_arr[5] = c1;
+
 
 }
