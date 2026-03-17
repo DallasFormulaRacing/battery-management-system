@@ -4,10 +4,6 @@
 #include "config.h"
 #include "parse.h"
 
-#define NUM_CELLS_PER_SEGMENT 12
-#define NUM_CELL_MAX (IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
-#define NUM_PARALLEL_JOBS NUM_CELL_MAX
-
 typedef struct {
   voltage_readings_t cell_voltage;
   uint8_t cell_number;
@@ -18,8 +14,7 @@ typedef struct {
 typedef struct {
   voltage_readings_t maximum_cell_delta_allowed;
   battery_cell_t lowest_cell;
-  battery_cell_t batteries[NUM_CELL_MAX];
-  bool cell_balancing_status[NUM_CELL_MAX];
+  battery_cell_t batteries[NUM_CELL_USING];
   // uint8_t pwm_timer_flag;
 } pcb_ctx_t;
 

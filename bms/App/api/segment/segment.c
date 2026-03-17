@@ -10,13 +10,6 @@
 #include <assert.h>
 #include <stdint.h>
 
-extern adc_config_t g_cell_profile;
-extern adc_config_t g_thermistor_profile;
-extern adc_config_t g_open_wire_check_profile;
-extern voltage_config_t g_voltage_cfg;
-extern measurement_config_t g_meas_cfg;
-extern adc_config_t g_cell_filtered_profile;
-
 #define RETURN_IF_ERROR(status)                                                \
   do {                                                                         \
     comm_status_t _s = (status);                                               \
@@ -78,9 +71,8 @@ comm_status_t adbms_read_config(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t
-adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_start_cell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
                    g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
@@ -89,9 +81,9 @@ adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adc_snap_command();
+
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -104,48 +96,38 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVE, REG_GROUP_E));
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVF, REG_GROUP_F));
-  // spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
-  asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_CMD_RDCVALL, RDCVALL, ALL_REG_GROUPS));
-  spi_adc_unsnap_command();
 
   return COMM_OK;
 }
 
-comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adsv_command(g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
                    g_cell_profile.ow_mode);
   return COMM_OK;
 }
 
-comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
+                                    open_wire_detect_mode_t ow_mode) {
+
   asic_wakeup(asic_ctx->ic_count);
-  spi_adc_snap_command();
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVA, REG_GROUP_A));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVB, REG_GROUP_B));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVC, REG_GROUP_C));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVD, REG_GROUP_D));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVE, REG_GROUP_E));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVF, REG_GROUP_F));
-  spi_adc_unsnap_command();
+
   return COMM_OK;
 }
 
 comm_status_t
-adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
                    g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
@@ -154,8 +136,7 @@ adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
-  spi_adc_snap_command();
+
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -168,12 +149,12 @@ comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACE, REG_GROUP_E));
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACF, REG_GROUP_F));
-  spi_adc_unsnap_command();
+
   return COMM_OK;
 }
 
-comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
                    g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
@@ -182,30 +163,30 @@ comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adcv_command(g_cell_profile.redundant_measurement_mode,
                    g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
                    g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adc_snap_command();
+
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCA, REG_GROUP_A));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCA, REG_GROUP_A));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCB, REG_GROUP_B));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCB, REG_GROUP_B));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCC, REG_GROUP_C));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCC, REG_GROUP_C));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCD, REG_GROUP_D));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCD, REG_GROUP_D));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCE, REG_GROUP_E));
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCE, REG_GROUP_E));
   RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, RDFCF, REG_GROUP_F));
-  spi_adc_unsnap_command();
+      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
+
   return COMM_OK;
 }
 
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     asic_ctx[ic].tx_cfg_a.REFON = POWER_UP;
     asic_ctx[ic].tx_cfg_a.GPIOx = 0X3FF; // All GPIO pull down off
@@ -218,7 +199,7 @@ comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
                    g_thermistor_profile.channels);
@@ -235,9 +216,9 @@ comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
 
 comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
-  spi_adax_command(g_open_wire_check_profile.AUX_OW_en,
-                   g_open_wire_check_profile.PUP_en,
-                   g_open_wire_check_profile.channels);
+  spi_adax_command(g_thermistor_open_wire_check_profile.AUX_OW_en,
+                   g_thermistor_open_wire_check_profile.PUP_en,
+                   g_thermistor_open_wire_check_profile.channels);
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -249,8 +230,8 @@ comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+
   for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
     asic_ctx[ic].tx_cfg_a.REFON = POWER_UP;
     asic_ctx[ic].tx_cfg_a.GPIOx = 0X3FF; // All GPIO pull down off
@@ -269,7 +250,7 @@ comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx) {
  * @return comm_status_t
  */
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adax2_command(g_thermistor_profile.channels);
   RETURN_IF_ERROR(
@@ -284,7 +265,7 @@ comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   asic_wakeup(asic_ctx->ic_count);
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
   bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
@@ -309,104 +290,7 @@ comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-/**
- * @brief
- * BMS_CMD_RDASALL,
- * @param asic_ctx
- * @return comm_status_t
- */
-comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
-  asic_wakeup(asic_ctx->ic_count);
-  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
-  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
-
-  spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
-                   g_thermistor_profile.channels);
-
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
-  spi_adax2_command(g_thermistor_profile.channels);
-
-  // spi_adc_snap_command();
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_CMD_RDASALL, RDASALL, ALL_REG_GROUPS));
-  // spi_adc_unsnap_command();
-  return COMM_OK;
-}
-
-comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx) {
-  // ! might not work due to duplicate asicwake
-  // todo: finish this if we need it
-  if (g_meas_cfg.measure_cell == ENABLED) {
-    adbms_start_adc_cell_voltage_measurment(asic_ctx);
-    adbms_read_cell_voltages(asic_ctx);
-  }
-  if (g_meas_cfg.measure_avg_cell == ENABLED) {
-    adbms_start_avgcell_voltage_measurment(asic_ctx);
-    adbms_read_avgcell_voltages(asic_ctx);
-  }
-  return COMM_OK;
-}
-
-bool is_conversion_done(const volatile uint8_t *poll_bytes,
-                        cell_asic_ctx_t *asic_ctx) {
-  for (uint8_t ic = 0; ic < asic_ctx->ic_count; ic++) {
-    uint8_t status_byte = poll_bytes[(2 * ic) + 1];
-
-    if (status_byte == 0xFF) {
-      return false;
-    }
-  }
-  return true;
-}
-
-comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx) {
-  uint8_t poll_bytes[2 * asic_ctx->ic_count];
-
-  do {
-    spi_poll_command_raw(PLADC, asic_ctx->ic_count, poll_bytes);
-  } while (!is_conversion_done(poll_bytes, asic_ctx));
-  return COMM_OK;
-}
-
-comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx) {
-  uint8_t poll_bytes[2 * asic_ctx->ic_count];
-
-  do {
-    spi_poll_command_raw(PLCADC, asic_ctx->ic_count, poll_bytes);
-  } while (!is_conversion_done(poll_bytes, asic_ctx));
-  return COMM_OK;
-}
-
-comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx) {
-  uint8_t poll_bytes[2 * asic_ctx->ic_count];
-
-  do {
-    spi_poll_command_raw(PLSADC, asic_ctx->ic_count, poll_bytes);
-  } while (!is_conversion_done(poll_bytes, asic_ctx));
-  return COMM_OK;
-}
-
-comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx) {
-  uint8_t poll_bytes[2 * asic_ctx->ic_count];
-
-  do {
-    spi_poll_command_raw(PLAUX1, asic_ctx->ic_count, poll_bytes);
-  } while (!is_conversion_done(poll_bytes, asic_ctx));
-  return COMM_OK;
-}
-
-comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx) {
-  uint8_t poll_bytes[2 * asic_ctx->ic_count];
-
-  do {
-    spi_poll_command_raw(PLAUX2, asic_ctx->ic_count, poll_bytes);
-  } while (!is_conversion_done(poll_bytes, asic_ctx));
-  return COMM_OK;
-}
-
-/** // TODO: Needs to be tested
+/** : Needs to be tested
  * @brief Sets the pwm duty cycle for each cell, but does not send the command
  * yet. This allows for multiple cells to be bled in parallel as you can call
  * this function as many times as necessary until you need to send the PWM
@@ -475,7 +359,8 @@ comm_status_t adbms_send_pwm_commands(cell_asic_ctx_t *asic_ctx) {
  * @return comm_status_t -- status of SPI transmission
  */
 comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
-  for (uint8_t segment_idx = 0; segment_idx < IC_COUNT_CHAIN; segment_idx++) {
+  for (uint8_t segment_idx = 0; segment_idx < NUM_IC_COUNT_CHAIN;
+       segment_idx++) {
     for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
       adbms_set_cell_pwm(asic_ctx, cell_idx, segment_idx,
                          PWM_0_0_PERCENT_DUTY_CYCLE);
@@ -485,194 +370,19 @@ comm_status_t adbms_clear_all_pwm(cell_asic_ctx_t *asic_ctx) {
   return adbms_send_pwm_commands(asic_ctx);
 }
 
-// comm_status_t adbms_read_device_sid(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
+/* =============== READ ALL COMMANDS ================== */
+#if SINGLEBOARD
+comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
 
-//   return COMM_OK;
-// }
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDCVALL, RDCVALL, ALL_REG_GROUPS));
 
-// comm_status_t adbms_set_reset_gpio_pins(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_enable_mute(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_disable_mute(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_soft_reset() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_reset_cmd_count() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_reset_pec_error_flag(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_cell_measurement() {
-//   // TODO
-//   asic_wakeup(asic_ctx->ic_count);
-//   bms_send_command(CLRCELL);
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_aux_measurement() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_s_pin_measurement() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_fcell_measurement() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_ovuv_measurement() {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_all_flags(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_set_dcc_discharge(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_clear_dcc_discharge(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_write_read_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_gpio_spi_communication(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_set_dtrng_dcto_value(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_run_osc_mismatch_self_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_run_thermal_shutdown_self_test(cell_asic_ctx_t *asic_ctx)
-// {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t
-// adbms_run_post(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_run_fuse_ed_self_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_run_fuse_med_self_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_run_tmodchk_self_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t
-// adbms_check_latent_fault_csflt_status_bits(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t
-// adbms_check_rdstatc_err_fn(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_cell_openwire_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_redundant_cell_openwire_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_cell_ow_voltage_collect(cell_asic_ctx_t *asic_ctx,
-//                                             bms_op_t type,
-//                                             open_wire_detect_mode_t
-//                                             ow_c_s) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_aux_openwire_test(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t
-// adbms_gpio_pup_voltage_collect(cell_asic_ctx_t *asic_ctx,
-//                                        pull_down_current_mode_t pup) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t
-// adbms_open_wire_detection_condition_check(cell_asic_ctx_t *asic_ctx,
-//                                          bms_op_t type) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_read_rdacall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
-
-// comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
+  return COMM_OK;
+}
 
 comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
   asic_wakeup(asic_ctx->ic_count);
@@ -683,31 +393,61 @@ comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_read_filtered_cell_voltages(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                         open_wire_detect_mode_t ow_mode) {
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adc_snap_command();
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCA, REG_GROUP_A));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCB, REG_GROUP_B));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCC, REG_GROUP_C));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCD, REG_GROUP_D));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCE, REG_GROUP_E));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_CMD_RDFCALL, RDFCF, REG_GROUP_F));
-  // spi_adc_unsnap_command();
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDCSALL, ALL_REG_GROUPS));
+
   return COMM_OK;
 }
 
-// comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
+comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                        open_wire_detect_mode_t ow_mode) {
+  asic_wakeup(asic_ctx->ic_count);
+  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
+                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+  // NOTE: may need to wait before the snap
 
-// comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
+  RETURN_IF_ERROR(
+      // TODO: clear S-ADCs to ensure that the value is anything but the default
+      // of 0x8000, CLRCELL cmd or clear array in struct?
+      bms_read_data(asic_ctx, BMS_CMD_RDSALL, RDSALL, ALL_REG_GROUPS));
 
-// comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
-//   // TODO
-//   return COMM_OK;
-// }
+  return COMM_OK;
+}
+
+/**
+ * @brief Reads all AUX and Status Registers
+ * BMS_CMD_RDASALL,
+ * @param asic_ctx
+ * @return comm_status_t
+ */
+comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGA, REG_GROUP_A);
+  bms_write_data(asic_ctx, BMS_REG_CONFIG, WRCFGB, REG_GROUP_B);
+
+  spi_adax_command(g_thermistor_profile.AUX_OW_en, g_thermistor_profile.PUP_en,
+                   g_thermistor_profile.channels);
+
+  // NOTE: why is C-ADC command being sent inside of the read command of AUX?
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
+                   g_cell_profile.RSTF_en, g_cell_profile.ow_mode);
+  spi_adax2_command(g_thermistor_profile.channels);
+
+  //
+  RETURN_IF_ERROR(
+      bms_read_data(asic_ctx, BMS_CMD_RDASALL, RDASALL, ALL_REG_GROUPS));
+  //
+  return COMM_OK;
+}
+
+#endif

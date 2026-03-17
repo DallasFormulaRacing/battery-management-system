@@ -1,7 +1,4 @@
 #include "bms_comms.h"
-#include "command_list.h"
-#include "spi.h"
-#include <stdint.h>
 
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
 
@@ -112,6 +109,8 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
 
   uint8_t idx = 4U;
 
+  // NOTE: this is where you read backwards for receiving data
+  // reference: table 46, pg 56
   for (uint8_t current_ic = ic_count; current_ic > 0U; --current_ic) {
     const uint8_t *src =
         &per_asic_data[(uint16_t)(current_ic - 1U) * bytes_per_asic_data];
@@ -187,8 +186,10 @@ static comm_status_t handle_single_asic(const uint8_t *rx_data,
   uint8_t *cmd_counter = &status->command_counter[index];
   uint8_t *pec_err = &status->pec_error_flags[index];
 
+  // reference is table 49
   *cmd_counter = (uint8_t)(rx_data[bytes_in_reg - 2U] >> 2);
 
+  // reference is table 48
   rx_pec = (uint16_t)(((rx_data[bytes_in_reg - 2U] & 0x03U) << 8) |
                       rx_data[bytes_in_reg - 1U]);
 
@@ -230,7 +231,16 @@ static comm_status_t read_all_asics(uint8_t ic_count, uint8_t bytes_in_reg,
   comm_status_t command_status = COMM_OK;
 
   for (uint8_t current_ic = 0U; current_ic < ic_count; ++current_ic) {
-    const uint8_t *asic_data = &rx_data[current_ic * bytes_in_reg];
+    /**
+     *
+     * the new asic data is retrieved by taking the offset base of the
+     * data buffer array by using pointer decay
+     * this: &rx_data[current_ic * bytes_in_reg]
+     * needs to be tested
+     */
+    uint8_t physical_offset = current_ic * bytes_in_reg;
+    const uint8_t *asic_data = &rx_data[physical_offset];
+
     comm_status_t current_status =
         handle_single_asic(asic_data, bytes_in_reg, status, current_ic);
 

@@ -5,13 +5,19 @@
 #include "bms_types.h"
 #include <stdint.h>
 
-#define IC_COUNT_CHAIN 1 // TODO: this has to be at compile time.
-#define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * IC_COUNT_CHAIN)
-#define READ_SIZE (ADBMS_RX_FRAME_BYTES * IC_COUNT_CHAIN)
+// This has to be at compile time.
+#define NUM_IC_COUNT_CHAIN 2
+#define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
+// #define READ_SIZE (ADBMS_RX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
+#define NUM_CELLS_PER_SEGMENT 12
+#define NUM_THERM_PER_SEGMENT 10
+#define NUM_CELL_USING (NUM_IC_COUNT_CHAIN * NUM_CELLS_PER_SEGMENT)
+
+#define SINGLEBOARD !(NUM_IC_COUNT_CHAIN > 1)
 
 extern cell_asic_ctx_t *asic_ctx;
 extern uint8_t write_buffer[WRITE_SIZE];
-// asic_status_buffers_t read_buffer[IC_COUNT_CHAIN];
+// asic_status_buffers_t read_buffer[NUM_IC_COUNT_CHAIN];
 
 typedef struct {
   redundant_enable_t redundant_measurement_mode;
@@ -29,8 +35,8 @@ typedef struct {
   const float overvoltage_threshold_v;
   const float undervoltage_threshold_v;
 
-  const int openwire_cell_threshold_mv;
-  const int openwire_aux_threshold_mv;
+  const uint32_t openwire_cell_threshold_mv;
+  const uint32_t openwire_aux_threshold_mv;
 
   const uint32_t loop_meas_count;
   const uint16_t meas_loop_time_ms;
@@ -38,10 +44,6 @@ typedef struct {
   uint32_t loop_counter;
   uint32_t periodic_adc_count;
 } voltage_config_t;
-
-typedef struct {
-  // todo:
-} emulate_fault_flagd_config_t; // reference: page 26 and 70
 
 typedef struct {
   loop_measurement_enable_t measure_cell;
@@ -58,6 +60,14 @@ typedef struct {
   voltage_config_t *voltage;
   measurement_config_t *measurement;
 } bms_cfg_t;
+
+extern adc_config_t g_cell_profile;
+extern adc_config_t g_cell_filtered_profile;
+extern adc_config_t g_thermistor_profile;
+extern adc_config_t g_thermistor_open_wire_check_profile;
+extern adc_config_t g_cell_open_wire_check_profile;
+extern voltage_config_t g_voltage_cfg;
+extern measurement_config_t g_meas_cfg;
 
 #endif
 

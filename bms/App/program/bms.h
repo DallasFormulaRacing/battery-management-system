@@ -42,16 +42,16 @@ typedef enum {
   BMS_ERR_AUX_OPENWIRE,
   BMS_ERR_THERM_OVER_TEMP,
   BMS_ERR_THERM_UNDER_TEMP,
-  BMS_ERR_VA_OV,
-  BMS_ERR_VA_UV,
-  BMS_ERR_VD_OV,
-  BMS_ERR_VD_UV,
-  BMS_ERR_VDE,
-  BMS_ERR_THSD,
-  BMS_ERR_OSC_MISMATCH,
-  BMS_ERR_FUSE_ED,
-  BMS_ERR_FUSE_MED,
-  BMS_ERR_TMODCHK,
+  // BMS_ERR_VA_OV,
+  // BMS_ERR_VA_UV,
+  // BMS_ERR_VD_OV,
+  // BMS_ERR_VD_UV,
+  // BMS_ERR_VDE,
+  // BMS_ERR_THSD,
+  // BMS_ERR_OSC_MISMATCH,
+  // BMS_ERR_FUSE_ED,
+  // BMS_ERR_FUSE_MED,
+  // BMS_ERR_TMODCHK,
 } bms_fault_t;
 
 typedef struct {
@@ -76,25 +76,16 @@ typedef struct {
   pack_data_t *pack;
 } bms_handler_t;
 
-extern adc_config_t g_cell_profile;
-extern voltage_config_t g_voltage_cfg;
-extern measurement_config_t g_meas_cfg;
 extern bms_handler_t hbms;
 
-void bms_sm_init(bms_handler_t *hbms);
-void bms_sm_run(bms_handler_t *hbms);
-
-void bms_state_entry(bms_handler_t *hbms);
-void bms_state_init(bms_handler_t *hbms);
-void bms_state_transmit_data(bms_handler_t *hbms);
-void bms_state_measure(bms_handler_t *hbms);
-void bms_state_charging(bms_handler_t *hbms);
-void bms_state_balancing(bms_handler_t *hbms);
-void bms_state_fault(bms_handler_t *hbms);
-void bms_state_sleep(bms_handler_t *hbms);
-
-void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state);
-bool bms_check_for_fault(bms_handler_t *hbms);
+// ****** MEASUREMENT FUNCTIONS ******
+bms_fault_t therm_open_wire_check();
+bms_fault_t cell_open_wire_check_odd();
+bms_fault_t cell_open_wire_check_even();
+bms_fault_t therm_temp_in_range_check();
+bms_fault_t cell_voltage_in_range_check();
+void measure_during_fault();
+void open_shutdown_circuit();
 
 //***** TESTING FUNCTIONS *****/
 void bms_test_init();

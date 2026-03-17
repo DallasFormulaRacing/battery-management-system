@@ -108,8 +108,8 @@ typedef struct {
 } s_cell_voltage_t;
 
 typedef struct {
-  voltage_readings_t filtered_cell_voltages_array[ADBMS_NUM_CELLS_PER_IC];
-} filtered_cell_voltage_t;
+  voltage_readings_t filt_cell_voltages_array[ADBMS_NUM_CELLS_PER_IC];
+} filt_cell_voltage_t;
 
 typedef struct {
   voltage_readings_t aux_voltages_array[ADBMS_NUM_AUX_CHANNELS];
@@ -244,12 +244,6 @@ typedef struct {
 } cell_openwire_t;
 
 typedef struct {
-  // NOTE: If there is a voltage present in any of the elements, there is an OW
-  bool therm_ow_pull_up_array[ADBMS_NUM_AUX_CHANNELS - 2];
-  bool therm_ow_pull_down_array[ADBMS_NUM_AUX_CHANNELS - 2];
-} aux_openwire_t;
-
-typedef struct {
   uint8_t ic_count;
   bms_cfg_reg_a_t tx_cfg_a;
   bms_cfg_reg_a_t rx_cfg_a;
@@ -262,7 +256,7 @@ typedef struct {
   cell_voltage_t cell;
   avg_cell_voltage_t avg_cell;
   s_cell_voltage_t s_cell;
-  filtered_cell_voltage_t filtered_cell;
+  filt_cell_voltage_t filt_cell;
 
   aux_voltage_t aux;
   rednt_aux_voltage_t rednt_aux;
@@ -272,6 +266,11 @@ typedef struct {
   bms_stat_reg_c_t stat_c;
   bms_stat_reg_d_t stat_d;
   bms_stat_reg_e_t stat_e;
+
+  segment_fault_type_t thermistor_fault_status[10];
+  segment_fault_type_t cell_fault_status[16];
+
+  float thermistor[10];
 
   pwm_reg_a_t pwm_ctl_a;
   pwm_reg_b_t pwm_ctl_b;
@@ -291,8 +290,8 @@ typedef struct {
   asic_mailbox_t rsid_mb;
 
   error_detection_t crc_err;
-  aux_openwire_t gpio;
-  cell_openwire_t owcell;
+  // aux_openwire_t gpio;
+  // cell_openwire_t owcell;
   diag_test_t diag_result;
 } cell_asic_ctx_t;
 

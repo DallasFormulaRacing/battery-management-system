@@ -1,86 +1,16 @@
 #include "bms.h"
+#include "bms_enums.h"
+#include "bms_types.h"
+#include "charger.h"
+#include "config.h"
+#include "parse.h"
+#include "segment.h"
+#include "thermistor.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-cell_asic_ctx_t asic[IC_COUNT_CHAIN];
+cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
-
-adc_config_t g_cell_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = SINGLE,
-    .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
-};
-
-adc_config_t g_cell_filtered_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = CONTINUOUS,
-    .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_ON,
-    .ERR_en = WITHOUT_ERR,
-};
-
-adc_config_t g_thermistor_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = SINGLE,
-    .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_OFF,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
-};
-
-adc_config_t g_open_wire_check_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = SINGLE,
-    .ow_mode = OW_ON_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
-};
-
-adc_config_t g_cell_open_wire_check_profile = {
-    .redundant_measurement_mode = RD_ON, // RD
-    .channels = AUX_ALL,
-    .continuous_measurement = CONTINUOUS, // Cont
-    .ow_mode = OW_OFF_ALL_CH,             // OW OFF
-    .AUX_OW_en = AUX_OW_OFF,              // OW OFF
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
-};
-
-voltage_config_t g_voltage_cfg = {
-    .overvoltage_threshold_v = 4.15F,
-    .undervoltage_threshold_v = 2.51F,
-    .openwire_cell_threshold_mv = 2000,
-    .openwire_aux_threshold_mv = 2900, // NOTE: Original value was 50000, typo?
-    .loop_meas_count = 4,
-    .meas_loop_time_ms = 1000,
-};
-
-measurement_config_t g_meas_cfg = {
-    .measure_cell = ENABLED,
-    .measure_avg_cell = ENABLED,
-    .measure_f_cell = ENABLED,
-    .measure_s_voltage = ENABLED,
-    .measure_aux = ENABLED,
-    .measure_raux = ENABLED,
-    .measure_stat = ENABLED,
-};
 
 static bms_cfg_t g_bms_cfg = {
     .adc = &g_cell_profile,
@@ -101,155 +31,192 @@ bms_handler_t hbms = {
     .asic = asic,
 };
 
-typedef void (*state_handler_t)(bms_handler_t *hbms);
+/*
+ * @brief Check thermistor temperature and see if between range
+ * @params None
+ * @return Fault status message for whether thermistor is over or under temp.
+ * Otherwise returns no error.
+ */
+bms_fault_t therm_temp_in_range_check() {
+  // NOTE: Read might need to be outside
+  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_s_voltages(hbms.asic);
+  bool over_temp_flag = false;
+  bool under_temp_flag = false;
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint16_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
+         therm_num++) {
+      float temp = thermistor_from_adc(
+          hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
 
-static const state_handler_t state_handlers[] = {
-    [BMS_STATE_BOOT] = bms_state_entry,
-    [BMS_STATE_INIT] = bms_state_init,
-    [BMS_STATE_TRANSMIT_DATA] = bms_state_transmit_data,
-    [BMS_STATE_MEASURE] = bms_state_measure,
-    [BMS_STATE_CHARGING] = bms_state_charging,
-    [BMS_STATE_BALANCING] = bms_state_balancing,
-    [BMS_STATE_FAULT] = bms_state_fault,
-    [BMS_STATE_SLEEP] = bms_state_sleep,
-};
+      hbms.asic[seg_num].thermistor[therm_num] = temp;
+      // NOTE: we should define max and min temp constant somewhere
+      if (temp > 60.0F) {
+        over_temp_flag = true;
+        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
+          hbms.asic->thermistor_fault_status[therm_num] = OVER_FAULT;
+        }
+      }
 
-void bms_sm_init(bms_handler_t *hbms) {
-  hbms->state.current_state = BMS_STATE_BOOT;
-  hbms->state.previous_state = BMS_STATE_BOOT;
-  hbms->state.error_code = BMS_ERR_NONE;
-  hbms->state.state_entry_tick = 0;
-  hbms->state.fault_flags = 0;
-}
-
-void bms_sm_run(bms_handler_t *hbms) {
-  if (hbms->state.current_state != BMS_STATE_FAULT &&
-      bms_check_for_fault(hbms)) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
-    return;
+      if (temp < -20.0F) {
+        under_temp_flag = true;
+        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
+          hbms.asic->thermistor_fault_status[therm_num] = UNDER_FAULT;
+        }
+      }
+    }
   }
 
-  state_handlers[hbms->state.current_state](hbms);
-}
-
-void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
-  hbms->state.previous_state = hbms->state.current_state;
-  hbms->state.current_state = new_state;
-  hbms->state.state_entry_tick = HAL_GetTick();
-
-  // todo: maybe reset flags here on transition
-}
-
-// state handlers
-
-/**
- * @brief sm_run entry point and triggers the rest of the state machine
- *
- * @param hbms, bms handler struct
- */
-void bms_state_entry(bms_handler_t *hbms) {
-  // todo: maybe reset flags here on entry
-  hbms->config->adc = &g_cell_profile;
-  hbms->config->voltage = &g_voltage_cfg;
-  hbms->config->measurement = &g_meas_cfg;
-}
-
-/**
- * @brief initializes the bms config registers and starts the measurement loop
- *
- * @param hbms, bms handler struct
- */
-void bms_state_init(bms_handler_t *hbms) {
-  comm_status_t status = adbms_init_config(hbms->asic);
-
-  if (status != COMM_OK) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
-    return;
+  // Over temp will take precedent over under temp in the near impossible event
+  // that both will happen
+  if (over_temp_flag) {
+    return BMS_ERR_THERM_OVER_TEMP;
+  }
+  if (under_temp_flag) {
+    return BMS_ERR_THERM_OVER_TEMP;
   }
 
-  bms_sm_transition(hbms, BMS_STATE_MEASURE);
+  return BMS_ERR_NONE;
 }
 
-void bms_state_transmit_data(bms_handler_t *hbms) {
-  /*
-  - needs to transmit the following data to the host computer:
-    - all 144 cell voltages
-    - current
-    - pack voltage
-    - all 120 temperature readings
-    - which cells are being balanced
-    - any faults that have occurred
-    - transmit the onboard SoC calculation
-    -
+bms_fault_t therm_open_wire_check() {
+  // adbms_read_rdasall_voltage(hbms.asic);
 
-  */
+  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_s_voltages(hbms.asic);
+  bool open_wire_flag = false;
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
+      // if voltage is greater than 2.9 V, there is probably an OW or it's
+      // really cold
+      if (hbms.asic->aux.aux_voltages_array[i] >
+          g_voltage_cfg.openwire_aux_threshold_mv) {
+        hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
+        open_wire_flag = true;
+      }
+    }
+  }
+
+  if (open_wire_flag) {
+    return BMS_ERR_AUX_OPENWIRE;
+  }
+  return BMS_ERR_NONE;
 }
 
-void bms_state_measure(bms_handler_t *hbms) {
-  /*
-  - this state must be able to:
-    - start all adcs
-    - measure from all adcs
-    - pack into structs
-    - do both
-      - check for undeervoltage and overvoltage
-      - check for openwire
-      - check for over temp
-      - check if real cell delta greater than target cell delta
-    - if UV or OV or OW, set fault flag and transition to fault state
-    - if cell delta greater than target cell delta, transition to balancin state
-    - if nothing is wrong, stay in this state
+bms_fault_t cell_voltage_in_range_check() {
+  // todo: test this and make sure it updates the fault struct
 
-    also needs to measure from the current sensor
-    also needs to measure from the pack voltage sensor
+  adbms_read_filt_cell_voltages(hbms.asic);
+  bool cell_over_flag = false;
+  bool cell_under_flag = false;
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-  */
+    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
+
+      if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
+        cell_over_flag = true;
+        hbms.asic->cell_fault_status[cell_num] = OVER_FAULT;
+      } // endif
+
+      if (this_cell < g_voltage_cfg.undervoltage_threshold_v) {
+        cell_under_flag = true;
+        hbms.asic->cell_fault_status[cell_num] = UNDER_FAULT;
+      } // endif
+    } // end inner fl
+  }
+
+  if (cell_over_flag) {
+    return BMS_ERR_CELL_OV;
+  }
+
+  if (cell_under_flag) {
+    return BMS_ERR_CELL_UV;
+  }
+
+  return BMS_ERR_NONE;
 }
 
-void bms_state_charging(bms_handler_t *hbms) {
-  /*
-  how do we want to handle this state?
+bms_fault_t cell_open_wire_check_odd() {
+  // TODO: test this & make sure odd/even is right
+  // TODO: add: this function also updates the fault enum array
+  // read S-ADC
+  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
+  adbms_read_s_voltages(hbms.asic, OW_ON_ODD_CH);
+  // if less than 1V call openwire check
+  // does not have to use C-ADC at all
+  bool cell_open_wire_flag = false;
 
-  we need to interface with the charger here
+  // do odd cell taps (even indexs due to array indexing)
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-  we need to alternate between charging and measuring states
-  */
-  cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
-  // need to handle errors
-  // todo: handle safety as in check for UV and OV
-  // todo: put this in a loop to stop when no cells need balancing
+    for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT;
+         cell_num += 2) {
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-  bms_sm_transition(hbms, BMS_STATE_MEASURE);
+      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
+        cell_open_wire_flag = true;
+      } // endif
+    } // end inner fl
+  }
+  if (cell_open_wire_flag)
+    return BMS_ERR_CELL_OPENWIRE;
+
+  return BMS_ERR_NONE;
 }
 
-void bms_state_balancing(bms_handler_t *hbms) {
-  /*
-  adbms_start_adc_cell_voltage_measurment(asic_ctx);
-  adbms_read_cell_voltages(asic_ctx);
+bms_fault_t cell_open_wire_check_even() {
+  // todo: test this & make sure odd/even is right
+  // todo: add: this function also updates the fault enum array
+  // read S-ADC
+  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
+  adbms_read_s_voltages(hbms.asic, OW_ON_EVEN_CH);
+  // if less than 1V call openwire check
+  // does not have to use C-ADC at all
+  bool cell_open_wire_flag = false;
 
-  --> if bad cell, stop execution and move to fault state
+  // do even cell taps (odd indexs due to array indexing)
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
-  cell_delta_policy_enforcer;
+    for (uint16_t cell_num = 1; cell_num < NUM_CELLS_PER_SEGMENT;
+         cell_num += 2) {
+      float this_cell = convert_voltage_human_readable(
+          hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-  */
+      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
+        cell_open_wire_flag = true;
+      } // endif
+    } // end inner fl
+  }
+  if (cell_open_wire_flag)
+    return BMS_ERR_CELL_OPENWIRE;
+
+  return BMS_ERR_NONE;
 }
 
-void bms_state_fault(bms_handler_t *hbms) {
-  /*
-  - this state opens the shut down circuit and stays in fault state until the
-  MCU is manually reset via NRST or Power cycled
+void hard_fault_disable_openwire_on_profiles() {
+  g_cell_profile.ow_mode = OW_OFF_ALL_CH;
+  g_cell_profile.AUX_OW_en = AUX_OW_OFF;
+  g_cell_profile.DCP_en = DCP_OFF;
 
-  - this state cannot transition to any other state
-  - once this state is reached it stays.
-  */
+  g_thermistor_profile.ow_mode = OW_OFF_ALL_CH;
+  g_thermistor_profile.AUX_OW_en = AUX_OW_OFF;
+  g_thermistor_profile.DCP_en = DCP_OFF;
 }
 
-void bms_state_sleep(bms_handler_t *hbms) {
-  /*
-  idk what this state does
-
-  maybe triggers lpcm?
-  */
+/**
+ * @brief this is a special mesurement loop designed to operate under fault
+ * it should NOT: bleed cells or do open wire checks, since ow injects current
+ */ // todo
+void measure_during_fault() {
+  hard_fault_disable_openwire_on_profiles();
+  // measure voltages (top level task)
+  // measure temps (top level task)
 }
 
 /* ----------------------------------------------------- */
@@ -261,16 +228,18 @@ void bms_test_init() {
   hbms.config->voltage = &g_voltage_cfg;
   hbms.config->measurement = &g_meas_cfg;
 
-  for (int i = 0; i < IC_COUNT_CHAIN; i++) {
-    asic[i].ic_count = IC_COUNT_CHAIN;
+  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
+    asic[i].ic_count = NUM_IC_COUNT_CHAIN;
   }
 
   // link hbms to can handler context so we can access asic data
   // bms_can_init(hbms.asic);
 
   adbms_init_config(hbms.asic);
-  adbms_start_aux_voltage_measurement(hbms.asic);
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
+  // adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_clear_all_pwm(hbms.asic);
+  adbms_start_cell_voltage_measurement(hbms.asic);
+  adbms_start_fcell_voltage_measurement(hbms.asic);
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
                    g_cell_filtered_profile.continuous_measurement,
@@ -280,119 +249,63 @@ void bms_test_init() {
   HAL_Delay(8);
 }
 
-static bms_fault_t volt_ow_eval() {
-  for (uint16_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
-    if (hbms.asic->s_cell.s_cell_voltages_array[i] <
-        0.9 * hbms.asic->cell.cell_voltages_array[i]) {
-      return BMS_ERR_CELL_OPENWIRE;
-    }
-  }
-  return BMS_ERR_NONE;
+void open_shutdown_circuit() {
+  // todo
+  // just a gpio flip
+  // check rules
 }
 
-// static void volt_ow_loop() {}
-
-static inline float f2v(int16_t xin) {
-  float volt = (0.00015F * (float)xin) + 1.5F;
-  return volt;
+void bms_light() {
+  // todo
+  // just a gpio flip
+  // check rules
 }
 
-// static inline float thermpoly(float xin) {
-//   // 2.3487131 * v * * 8 - 35.359734 * v * * 7 + 218.27577 * v * * 6 -
-//   //     724.54830 * v * * 5 + 1417.8324 * v * * 4 - 1687.9102 * v * * 3 +
-//   //     1225.0384 * v * * 2 - 565.64244 * v +
-//   //     209.04676
+// static float TEST_VOLTAGE[12];
+float look[4][12];
 
-//   return (2.3487131F * xin * xin * xin * xin * xin * xin * xin * xin) -
-//          (35.359734F * xin * xin * xin * xin * xin * xin * xin) +
-//          (218.27577F * xin * xin * xin * xin * xin * xin) -
-//          (724.54830F * xin * xin * xin * xin * xin) +
-//          (1417.8324F * xin * xin * xin * xin) - (1687.9102F * xin * xin * xin) +
-//          (1225.0384F * xin * xin) - (565.64244F * xin) + (209.04676F);
-// }
-
-static float VOLTAGE[12];
-// static float g_thermtesterTEMPERATURE;
-// static float g_thermistorVOLTAGE;
-
-static bms_fault_t therm_open_wire_test() {
-  bool anyOpenWire = false;
-  for (uint16_t i = 0; i < ADBMS_NUM_AUX_CHANNELS - 2; i++) {
-    if (hbms.asic->aux.aux_voltages_array[i] >
-        g_voltage_cfg.openwire_aux_threshold_mv) {
-      hbms.asic->gpio.therm_ow_pull_up_array[i] = true;
-      anyOpenWire = true;
-    }
+static void pop() {
+  for (uint8_t i = 0; i < 12; i++) {
+    look[0][i] = convert_voltage_human_readable(
+        hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
   }
 
-  if (anyOpenWire) {
-    return BMS_ERR_AUX_OPENWIRE;
+  for (uint8_t i = 0; i < 12; i++) {
+    look[1][i] = convert_voltage_human_readable(
+        hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
   }
-  return BMS_ERR_NONE;
-}
 
-static void thermtestvoltage() {
-  for (int i = 0; i <= 11; i++) {
-    VOLTAGE[i] = f2v(hbms.asic->aux.aux_voltages_array[i]);
+  for (uint8_t i = 0; i < 12; i++) {
+    look[2][i] =
+        convert_voltage_human_readable(hbms.asic[0].aux.aux_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 12; i++) {
+    look[3][i] =
+        convert_voltage_human_readable(hbms.asic[1].aux.aux_voltages_array[i]);
   }
 }
 
-// static void bms_can_setup(void) {
-//   // Register API’s RX handler with core; ctx becomes hbms.asic inside the
-//   // handler.
-// }
+void pop_pwm() {
+  for (uint8_t cell = 0; cell < 16; cell++) {
+    adbms_set_cell_pwm(hbms.asic, cell, 1, (pwm_duty_cycle_t)(cell + 2));
+  }
 
-// static void thermtestvoltage() {
-//   for (int i = 0; i <= 11; i++) {
-//     VOLTAGE[i] = f2v(hbms.asic->cell.cell_voltages_array[i]);
-//   }
-// }
-
-static float vref2;
+  for (uint8_t cell = 0; cell < 16; cell++) {
+    adbms_set_cell_pwm(hbms.asic, cell, 0, (pwm_duty_cycle_t)(cell + 2));
+  }
+}
 
 void bms_test_run() {
-  adbms_write_read_config(hbms.asic);
-  adbms_start_aux_voltage_measurement(hbms.asic);
-
+  // keep
+  // adbms_read_rdasall_voltage(hbms.asic);
+  // adbms_init_config(hbms.asic);
+  adbms_read_fcell_voltages(hbms.asic);
   // adbms_read_cell_voltages(hbms.asic);
-  // adbms_read_status_registers(hbms.asic);
-  // adbms_read_aux_voltages(hbms.asic);
-
-  // adbms_read_status_registers(hbms.asic);
-
-  // HAL_Delay(20);
-  // therm_open_wire_test();
-  // g_thermistorVOLTAGE = g_thermtesterVOLTAGE[9];
-  // g_thermtesterTEMPERATURE = thermpoly(g_thermtesterVOLTAGE[9]);
-
-  // spi_adc_snap_command();
-  // HAL_Delay(8);
-
-  // adbms_read_rdcvall_voltage(hbms.asic);
-  // spi_adc_snap_command();
-  // adbms_read_cell_voltages(hbms.asic);
-  // Testing
-
-  adbms_read_rdasall_voltage(hbms.asic);
-  // adbms_read_status_registers(hbms.asic);
-  // adbms_read_aux_voltages(hbms.asic);
-  // adbms_read_raux_voltages(hbms.asic);
-  //  adbms_read_filtered_cell_voltages(hbms.asic);
-  vref2 = f2v(hbms.asic->stat_a.VREF2);
-  // spi_adc_unsnap_command();
-  therm_open_wire_test();
-  HAL_Delay(8);
-  thermtestvoltage();
-}
-
-/*
-  adbms_start_adc_cell_voltage_measurment(hbms.asic);
-  adbms_poll_for_conversion_adc(hbms.asic);
-  adbms_read_cell_voltages(hbms.asic);
-
-  adbms_set_cell_pwm(hbms.asic, 11, 0, PWM_19_8_PERCENT_DUTY_CYCLE);
   adbms_read_aux_voltages(hbms.asic);
 
-  // reads 15 (14+1) on the scope
-  adbms_bleed_cell_pwm(hbms.asic, 14, 0, PWM_85_8_PERCENT_DUTY_CYCLE);
-*/
+  // pop_pwm();
+  // adbms_send_pwm_commands(hbms.asic);
+
+  pop();
+}

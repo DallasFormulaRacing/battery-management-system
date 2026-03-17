@@ -46,7 +46,7 @@ void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
 void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   battery_cell_t *cell;
   // Second pass: find all cell deltas
-  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_MAX; cell_idx++) {
+  for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_USING; cell_idx++) {
     cell = &pcb->batteries[cell_idx];
     cell->delta = (voltage_readings_t)(cell->cell_voltage -
                                        pcb->lowest_cell.cell_voltage);

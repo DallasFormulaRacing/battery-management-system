@@ -1,9 +1,10 @@
 #include "data.h"
-#include "bms_enums.h"
-#include "bms_types.h"
-#include "config.h"
-#include "parse.h"
-#include <stdint.h>
+
+// where does 50 come from? -> its just a conservative guesstimate. should be
+// enough. if not, well, good thing it lives in BSS.
+static uint8_t read_buffer[NUM_IC_COUNT_CHAIN * 50];
+static uint8_t pec_error[NUM_IC_COUNT_CHAIN];
+static uint8_t cmd_count[NUM_IC_COUNT_CHAIN];
 
 static uint8_t *get_pec(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group);
 
@@ -45,12 +46,12 @@ static void read_s_cell_voltage(cell_asic_ctx_t *asic_ctx,
   check_crc_errors(asic_ctx, BMS_REG_S_VOLT, status_buffers);
 }
 
-static void read_filtered_cell_voltage(cell_asic_ctx_t *asic_ctx,
-                                       bms_group_select_t group,
-                                       asic_status_buffers_t *status_buffers) {
+static void read_filt_cell_voltage(cell_asic_ctx_t *asic_ctx,
+                                   bms_group_select_t group,
+                                   asic_status_buffers_t *status_buffers) {
   bms_parse_f_cell(asic_ctx, switch_group_cfg(group),
                    status_buffers->register_data);
-  check_crc_errors(asic_ctx, BMS_REG_FILTERED_CELL_VOLT, status_buffers);
+  check_crc_errors(asic_ctx, BMS_REG_FILT_CELL_VOLT, status_buffers);
 }
 
 static void read_aux_voltage(cell_asic_ctx_t *asic_ctx,
@@ -136,7 +137,7 @@ static const read_handlers_t read_handlers[] = {
     [BMS_REG_CELL_VOLT] = read_cell_voltage,
     [BMS_REG_AVG_CELL_VOLT] = read_avg_cell_voltage,
     [BMS_REG_S_VOLT] = read_s_cell_voltage,
-    [BMS_REG_FILTERED_CELL_VOLT] = read_filtered_cell_voltage,
+    [BMS_REG_FILT_CELL_VOLT] = read_filt_cell_voltage,
     [BMS_REG_AUX_VOLT] = read_aux_voltage,
     [BMS_REG_REDUNDANT_AUX_VOLT] = read_rednt_aux_voltage,
     [BMS_REG_STATUS] = read_status_select,
@@ -147,7 +148,7 @@ static const read_handlers_t read_handlers[] = {
     [BMS_CMD_RDCVALL] = read_cell_voltage,
     [BMS_CMD_RDACALL] = read_avg_cell_voltage,
     [BMS_CMD_RDSALL] = read_s_cell_voltage,
-    [BMS_CMD_RDFCALL] = read_filtered_cell_voltage,
+    [BMS_CMD_RDFCALL] = read_filt_cell_voltage,
     [BMS_CMD_RDCSALL] = read_cell_and_s_cell,
     [BMS_CMD_RDACSALL] = read_avg_and_s_cell,
     [BMS_CMD_RDASALL] = read_aux_rednt_aux_status,
@@ -164,12 +165,14 @@ static void check_crc_errors(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group,
                              asic_status_buffers_t *status_buffers) {
   // NOTE: There might be a better way for letting the user know if
   // get_mailbox_type returned null or not
-  uint8_t *pec = get_pec(asic_ctx, reg_group);
-  if (pec == NULL) {
-    return;
-  }
+
   for (uint8_t cic = 0; cic < asic_ctx->ic_count; cic++) {
-    *pec = status_buffers->pec_error_flags[cic];
+    uint8_t *pec = get_pec(&asic_ctx[cic], reg_group);
+
+    if (pec != NULL) {
+      *pec = status_buffers->pec_error_flags[cic];
+    }
+
     asic_ctx[cic].crc_err.command_counter =
         status_buffers->command_counter[cic];
   }
@@ -184,7 +187,7 @@ static uint8_t *get_pec(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group) {
   case BMS_REG_CELL_VOLT:
   case BMS_REG_S_VOLT:
   case BMS_REG_AVG_CELL_VOLT:
-  case BMS_REG_FILTERED_CELL_VOLT:
+  case BMS_REG_FILT_CELL_VOLT:
     return &asic_ctx->crc_err.cell_pec;
   case BMS_REG_AUX_VOLT:
     return &asic_ctx->crc_err.aux_channel_pec;
@@ -288,68 +291,85 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
   asic_status_buffers_t status_buffers;
 
-  uint8_t read_buffer[read_buffer_size];
-  uint8_t pec_error[asic_ctx->ic_count];
-  uint8_t cmd_count[asic_ctx->ic_count];
   status_buffers.register_data = read_buffer;
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
 
+  // data
+  asic_wakeup(asic_ctx->ic_count);
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
+  // parse
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
   return COMM_OK;
 }
 
+/**
+ * @brief Get the read buffer sizes object
+ *
+ * @param asic_ctx
+ * @param group of registers
+ * @param type of operation / command
+ * @param read_buffer_size -> how big is the entire packet
+ * @param reg_data_size -> how big is the packet PER ASIC
+
+ * reg_data_size should be smaller than read_buffer_size ALWAYS
+ * @return comm_status_t
+ */
 static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
                                            bms_group_select_t group,
                                            bms_op_t type,
                                            uint16_t *read_buffer_size,
                                            uint8_t *reg_data_size) {
-  switch (group) {
-  case ALL_REG_GROUPS:
+
+  if (ALL_REG_GROUPS == group) {
     switch (type) {
+#if SINGLEBOARD
     case BMS_CMD_RDCVALL:
-      *read_buffer_size = ADBMS_RDCVALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDCVALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDCVALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDSALL:
-      *read_buffer_size = ADBMS_RDSALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDSALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDACALL:
-      *read_buffer_size = ADBMS_RDACALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDACALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDACALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDFCALL:
-      *read_buffer_size = ADBMS_RDFCALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDFCALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDFCALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDCSALL:
-      *read_buffer_size = ADBMS_RDCSALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDCSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDCSALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDASALL:
-      *read_buffer_size = ADBMS_RDASALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDASALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDASALL_FRAME_SIZE;
       break;
     case BMS_CMD_RDACSALL:
-      *read_buffer_size = ADBMS_RDACSALL_FRAME_SIZE;
+      *read_buffer_size = (ADBMS_RDACSALL_FRAME_SIZE);
       *reg_data_size = ADBMS_RDACSALL_FRAME_SIZE;
       break;
+#endif
     default:
       return COMM_INVALID_COMMAND;
       break;
     }
-    break;
-
-  default:
-    *read_buffer_size = (asic_ctx->ic_count * READ_SIZE);
-    *reg_data_size = READ_SIZE;
-    return COMM_OK;
+  } else {
+    *read_buffer_size = (asic_ctx->ic_count * ADBMS_RX_FRAME_BYTES);
+    *reg_data_size = ADBMS_RX_FRAME_BYTES;
   }
+
+  // should never happen but just in case
+  if (*reg_data_size > *read_buffer_size) {
+    return COMM_INVALID_PARAMETERS;
+  }
+
   return COMM_OK;
 }
 
@@ -391,7 +411,8 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   }
 
   asic_wakeup(asic_ctx->ic_count);
-  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer, WRITE_SIZE);
+  bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer,
+                         ADBMS_TX_FRAME_BYTES);
 
   return COMM_OK;
 }
@@ -437,15 +458,17 @@ static comm_status_t pwm_a_b(cell_asic_ctx_t *asic_ctx,
 static void write_to_all_ics(cell_asic_ctx_t *asic_ctx,
                              asic_mailbox_id_select_t mailbox) {
   uint8_t data_len = ADBMS_TX_FRAME_BYTES;
-  for (uint8_t cic = 0; cic < asic_ctx->ic_count; cic++) {
-    asic_mailbox_t *mailbox_id = get_mailbox_type(asic_ctx, mailbox);
+  for (uint8_t current_ic = 0; current_ic < asic_ctx->ic_count; current_ic++) {
+    asic_mailbox_t *mailbox_id =
+        get_mailbox_type(&asic_ctx[current_ic], mailbox);
     // NOTE: There might be a better way for letting the user know if
     // get_mailbox_type returned null or not
     if (mailbox_id == NULL) {
       return;
     }
     for (uint8_t data = 0; data < data_len; data++) {
-      write_buffer[(cic * data_len) + data] = mailbox_id->tx_data_array[data];
+      write_buffer[(current_ic * data_len) + data] =
+          mailbox_id->tx_data_array[data];
     }
   }
 }

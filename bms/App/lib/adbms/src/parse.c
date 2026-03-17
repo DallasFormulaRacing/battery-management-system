@@ -220,7 +220,7 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     readings = &asic_ctx[curr_ic].cell.cell_voltages_array[0];
     break;
   case MEASURE_FILTERED:
-    readings = &asic_ctx[curr_ic].filtered_cell.filtered_cell_voltages_array[0];
+    readings = &asic_ctx[curr_ic].filt_cell.filt_cell_voltages_array[0];
     break;
   case MEASURE_AVG:
     readings = &asic_ctx[curr_ic].avg_cell.avg_cell_voltages_array[0];
@@ -638,7 +638,7 @@ void bms_parse_status_select(cell_asic_ctx_t *asic_ctx,
 }
 
 void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   comms_reg_t *comms;
   asic_mailbox_t *mailbox;
@@ -663,7 +663,7 @@ void bms_parse_comm(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 
 // --- pwm parses ---
 void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   pwm_reg_a_t *pwm;
   asic_mailbox_t *mailbox;
@@ -689,7 +689,7 @@ void bms_parse_pwm_a(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 }
 
 void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   pwm_reg_b_t *pwm;
   asic_mailbox_t *mailbox;
@@ -708,7 +708,7 @@ void bms_parse_pwm_b(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
 
 void bms_parse_pwm(cell_asic_ctx_t *asic_ctx, pwm_reg_group_select_t group,
                    uint8_t *data) {
-  // TODO
+
   switch (group) {
   case PWM_REG_GROUP_A:
     bms_parse_pwm_a(asic_ctx, data);
@@ -735,7 +735,7 @@ void set_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
 }
 
 void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
-  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+  for (uint8_t ic = 0; ic < NUM_IC_COUNT_CHAIN; ic++) {
     if (cell_number < ADBMS_NUM_PWMA_CHANNELS) {
       asic_ctx[ic].pwm_ctl_a.pwm_a_ctl_array[cell_number] = 0;
     } else {
@@ -747,7 +747,7 @@ void clear_cell_pwm_duty_cycle(cell_asic_ctx_t *asic_ctx, uint8_t cell_number) {
 voltage_readings_t find_lowest_cell_voltage(cell_asic_ctx_t *asic_ctx) {
   voltage_readings_t lowest = INT16_MAX;
   voltage_readings_t *array = NULL;
-  for (uint8_t ic = 0; ic < IC_COUNT_CHAIN; ic++) {
+  for (uint8_t ic = 0; ic < NUM_IC_COUNT_CHAIN; ic++) {
     array = asic_ctx[ic].cell.cell_voltages_array;
     // handle chain asic so surround this in a for loop this is O(N^2) 12 x 12
     for (voltage_readings_t i = 0; i < ADBMS_NUM_CELLS_PER_IC; i++) {
@@ -830,7 +830,7 @@ void bms_create_clrflag_mb_data(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_create_comm(cell_asic_ctx_t *asic_ctx) {
-  // TODO
+
   comms_reg_t *comms;
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
@@ -871,7 +871,6 @@ void bms_create_pwm_a(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
-  // TODO: this shouldnt be wrong, but we need to check it
   pwm_reg_b_t *pwm;
   asic_mailbox_t *mailbox;
   for (uint8_t curr_ic = 0; curr_ic < asic_ctx->ic_count; curr_ic++) {
@@ -885,7 +884,7 @@ void bms_create_pwm_b(cell_asic_ctx_t *asic_ctx) {
 }
 
 void bms_parse_sid(cell_asic_ctx_t *asic_ctx, uint8_t *data) {
-  // TODO
+
   uint8_t address = 0;
   serial_id_reg_t *sid;
   asic_mailbox_t *mailbox;

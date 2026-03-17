@@ -5,6 +5,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "command_list.h"
+#include "config.h"
 #include "data.h"
 #include "parse.h"
 #include "spi.h"
@@ -21,52 +22,50 @@ comm_status_t adbms_set_dtrng_dcto_value(cell_asic_ctx_t *asic_ctx);
 /*
  * @group Reading and starting CELL voltage measurement types
  */
-comm_status_t
-adbms_start_adc_cell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_cell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_adc_s_voltage_measurment(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_avgcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_fcell_voltage_measurment(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_filtered_cell_voltages(cell_asic_ctx_t *asic_ctx);
 
+comm_status_t adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
+                                    open_wire_detect_mode_t ow_mode);
+
+comm_status_t
+adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);
+
+comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_filt_cell_voltages(cell_asic_ctx_t *asic_ctx);
+
+#if SINGLEBOARD
 /*
  * @group Read All commands
  */
 comm_status_t adbms_read_rdcvall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdacall_voltage(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_rdsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                        open_wire_detect_mode_t ow_mode);
 comm_status_t adbms_read_rdfcall_voltage(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_rdcsall_voltage(cell_asic_ctx_t *asic_ctx,
+                                         open_wire_detect_mode_t ow_mode);
 comm_status_t adbms_read_rdacsall_voltage(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_rdasall_voltage(cell_asic_ctx_t *asic_ctx);
 
+#endif
 /*
  * @group Reading AUX ADC measurement types
  */
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_start_raux_voltage_measurment(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx);
+comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx);
 
 /*
  * @group Retrieve status registers
  */
 comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_check_rdstatc_err_fn(cell_asic_ctx_t *asic_ctx);
-
-/*
- * @group Reading AUX ADC measurement types
- */
-comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx);
-bool is_conversion_done(const volatile uint8_t *poll_bytes,
-                        cell_asic_ctx_t *asic_ctx);
 
 /*
  * @group Cell discharge control functions
@@ -137,5 +136,15 @@ comm_status_t adbms_open_wire_detect(cell_asic_ctx_t *asic_ctx, bms_op_t type);
 // comm_status_t adbms_gpio_i2c_write_to_slave(cell_asic_ctx_t *asic_ctx);
 // comm_status_t adbms_gpio_i2c_read_from_slave(cell_asic_ctx_t *asic_ctx);
 // comm_status_t measurement_loop(cell_asic_ctx_t *asic_ctx);
+
+/*
+ comm_status_t adbms_poll_for_conversion_adc(cell_asic_ctx_t *asic_ctx);
+ comm_status_t adbms_poll_for_conversion_c_adc(cell_asic_ctx_t *asic_ctx);
+ comm_status_t adbms_poll_for_conversion_s_adc(cell_asic_ctx_t *asic_ctx);
+ comm_status_t adbms_poll_for_conversion_aux_adc(cell_asic_ctx_t *asic_ctx);
+ comm_status_t adbms_poll_for_conversion_aux2_adc(cell_asic_ctx_t *asic_ctx);
+ bool is_conversion_done(const volatile uint8_t *poll_bytes,
+                         cell_asic_ctx_t *asic_ctx);
+ */
 
 #endif

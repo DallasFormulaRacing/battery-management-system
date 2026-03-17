@@ -1,5 +1,6 @@
 #include "gui_data_handler.h"
 #include "cb.h"
+#include "config.h"
 void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr){
 
     //counter array to keep track of index outside of each segment loop
@@ -7,7 +8,7 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, ui
     for (int seg_idx = start_seg; seg_idx < end_seg; seg_idx++){
         //grab cell reading from asic array
         for (int cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++){
-        int16_t voltage = asic[seg_idx].filtered_cell.filtered_cell_voltages_array[cell_idx];
+        int16_t voltage = asic[seg_idx].filt_cell.filt_cell_voltages_array[cell_idx];
 
         //convert 16 bit signed int into 2 bytes, big endian
         //conversion here:
@@ -74,7 +75,7 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
     //pack 144 cell bools into bytes
     bool *cell_balancing_status = pcb->cell_balancing_status;
 
-    for (int i = 0; i < NUM_CELL_MAX; i++) {
+    for (int i = 0; i < NUM_CELL_USING; i++) {
         int byte_index = (i / 8) + 6; // 6 is the offset from the previous metadata
         int bit_index  = 7 - (i % 8);   //pack left to right
 
