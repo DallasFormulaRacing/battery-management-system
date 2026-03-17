@@ -39,8 +39,8 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
     switch(can_id_get_cmd(ext_id)){
         case CMD_ID_FIRST_24_CELLS:{
             //build data function call with first 24 cell configured in parameters
-            uint8_t *tx_frame[48];
-            uint8_t *data = cell_voltage_readings(asic_array, 0, 2, &tx_frame);
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 0, 2, &tx_frame);
 
             //send can frame with first_24_cells_resp as command id
             can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
