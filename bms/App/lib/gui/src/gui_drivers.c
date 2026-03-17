@@ -14,6 +14,7 @@ cell_asic_ctx_t *asic_array = hbms.asic;
 
 static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
 static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
+static void send_metadata_frame(can_resp_id_t resp_id);
 
 /*
  * HAL callback invoked when a new message arrives in RX FIFO0
@@ -89,9 +90,18 @@ static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_
 
 
 static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
-    uint8_t tx_frame[FDCAN_DLC_BYTES_64];
-    therm_temp_readings_(start_seg, end_seg, tx_frame);
+    uint8_t tx_frame[FDCAN_DLC_BYTES_64] = {0}; // since first 4 bytes are 0
+    therm_temp_readings(asic_array, start_seg, end_seg, tx_frame);
 
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
+}
+
+static void send_metadata_frame(can_resp_id_t resp_id){
+        uint8_t tx_frame[FDCAN_DLC_BYTES_24];
+        metadata_readings(asic_array, tx_frame);
+
+        can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
+        fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
+
 }

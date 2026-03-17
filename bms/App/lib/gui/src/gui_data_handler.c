@@ -24,10 +24,13 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, ui
 }
 
 /*
+
+#define 4_BYTE_OFFSET = 3u
+
 void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint_8 *data_arr){
     for (int i = start_seg; i < end_seg; i++){
         //grab cell reading from asic array
-        for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++){
+        for (int j = 4_BYTE_OFFSET; j < ADBMS_NUM_CELLS_PER_IC; j++){
         //uint16_t voltage = asic[i].filtered_cell[j];
 
         //convert 16 bit signed int into 2 bytes, big endian
@@ -43,3 +46,7 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint
 }
 
 */
+
+void metadata_readings(cell_asic_ctx_t *asic, uint8_t data_arr){
+
+}
