@@ -68,6 +68,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
             send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS_RESP);
             break;
         case CMD_ID_PACK_METADATA:
+            send_metadata_frame(CMD_ID_PACK_METADATA_RESP);
             break;
         case CMD_ID_IMD_DATA:
             break;
@@ -78,7 +79,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
 }
 
 
-static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
     //build data function call with first 24 cell configured in parameters
     uint8_t tx_frame[FDCAN_DLC_BYTES_48];
     cell_voltage_readings(asic_array, start_seg, end_seg, &tx_frame);
@@ -89,7 +90,7 @@ static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_
 }
 
 
-static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
     uint8_t tx_frame[FDCAN_DLC_BYTES_64] = {0}; // since first 4 bytes are 0
     therm_temp_readings(asic_array, start_seg, end_seg, tx_frame);
 
@@ -97,7 +98,7 @@ static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
 }
 
-static void send_metadata_frame(can_resp_id_t resp_id){
+void send_metadata_frame(can_resp_id_t resp_id){
         uint8_t tx_frame[FDCAN_DLC_BYTES_24];
         metadata_readings(asic_array, tx_frame);
 
