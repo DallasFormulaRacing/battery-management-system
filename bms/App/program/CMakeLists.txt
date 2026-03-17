@@ -14,4 +14,5 @@ adbms
 charger 
 segment 
 fdcan 
-interface_gui)
+interface_gui
+gui)

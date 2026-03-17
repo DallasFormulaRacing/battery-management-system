@@ -10,4 +10,4 @@ target_include_directories(cb PUBLIC .)
 target_include_directories(cb PRIVATE "${CMAKE_SOURCE_DIR}/App/lib/adbms/inc")
 
 # Don't forget to hook into the HAL so cb can use stm32g4xx_hal.h
-target_link_libraries(cb PUBLIC stm32_hal adbms)
+target_link_libraries(cb PUBLIC stm32_hal adbms bms_app)
