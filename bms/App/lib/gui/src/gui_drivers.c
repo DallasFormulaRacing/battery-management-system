@@ -45,19 +45,57 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
             //send can frame with first_24_cells_resp as command id
             can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
             fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
-            //same for other branches
             break;
         }
-        case CMD_ID_SECOND_24_CELLS:
+        case CMD_ID_SECOND_24_CELLS:{
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 2, 4, &tx_frame);
+
+            //send can frame with first_24_cells_resp as command id
+            can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             break;
-        case CMD_ID_THIRD_24_CELLS:
+        }
+        case CMD_ID_THIRD_24_CELLS:{
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 4, 6, &tx_frame);
+
+            //send can frame with first_24_cells_resp as command id
+            can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             break;
-        case CMD_ID_FOURTH_24_CELLS:
+        }
+
+        case CMD_ID_FOURTH_24_CELLS:{
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 6, 8, &tx_frame);
+
+            //send can frame with first_24_cells_resp as command id
+            can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             break;
-        case CMD_ID_FIFTH_24_CELLS:
+        }
+
+        case CMD_ID_FIFTH_24_CELLS:{
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 8, 10, &tx_frame);
+
+            //send can frame with first_24_cells_resp as command id
+            can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             break;
-        case CMD_ID_SIXTH_24_CELLS:
+        }
+
+        case CMD_ID_SIXTH_24_CELLS:{
+            uint8_t tx_frame[48];
+            cell_voltage_readings(asic_array, 10, 12, &tx_frame);
+
+            //send can frame with first_24_cells_resp as command id
+            can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_FIRST_24_CELLS, BMS_DEVICE_ID);
+            fdcan_send(tx_header, data, FDCAN_DLC_BYTES_48);
             break;
+        }
+
         case CMD_ID_FIRST_60_TEMPS:
             break;
         case CMD_ID_LAST_60_TEMPS:
