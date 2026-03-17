@@ -11,6 +11,9 @@
 #include <stdint.h>
 
 cell_asic_ctx_t *asic_array = hbms.asic;
+ack_data_t *pack_data = hbms.pack;
+pcb_ctx_t *pcb = hbms.pcb;
+
 
 static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
 static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
@@ -100,7 +103,7 @@ void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
 
 void send_metadata_frame(can_resp_id_t resp_id){
         uint8_t tx_frame[FDCAN_DLC_BYTES_24];
-        metadata_readings(asic_array, tx_frame);
+        metadata_readings(&pack_data, &pcb, tx_frame);
 
         can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
         fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);

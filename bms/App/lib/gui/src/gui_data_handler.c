@@ -43,6 +43,6 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint
 }
 
 
-void metadata_readings(pack_data_t pack, uint_8 *data_arr){
+void metadata_readings(pack_data_t pack, pcb_ctx_t pcb, uint_8 *data_arr){
 
 }
