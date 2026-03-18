@@ -35,7 +35,7 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_
     for (int ic = start_ic; ic < end_ic; ic++){
 
         for (int therm_num = 0; therm_num < NUM_THERM_PER_IC; therm_num++){
-            uin16_t temp = asic[ic].aux.aux_voltages_array[therm_num];
+            uint16_t temp = asic[ic].aux.aux_voltages_array[therm_num];
 
             //only take top 8 MSB
             uint8_t byte_0 = (uint8_t)((temp >> 8) & 0xFF);
@@ -74,6 +74,7 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
     data_arr[5] = c1;
 
     //pack 144 cell bools into bytes
+    /*
     bool *cell_balancing_status = pcb->cell_balancing_status;
 
     for (int i = 0; i < NUM_CELL_USING; i++) {
@@ -83,5 +84,6 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
         if (cell_balancing_status[i]) {
             data_arr[byte_index] |= (1U << bit_index);
         }
-}
+    }
+    */
 }

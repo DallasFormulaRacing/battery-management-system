@@ -1,7 +1,7 @@
 #include "gui_drivers.h"
 
-static void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
-static void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id);
+static void send_filtered_voltage_frame(int start_ic, int end_ic, can_resp_id_t resp_id);
+static void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id);
 static void send_metadata_frame(can_resp_id_t resp_id);
 
 /*
@@ -18,7 +18,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
     uint8_t rx_data[64];
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) == HAL_OK) {
-            process_can_command(rx_header.Identifier, rx_data);
+            process_can_command(rx_header.Identifier, rx_data); //rx_data never used since only cmd id matters
     }
 }
 
@@ -66,12 +66,12 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
 }
 
 
-void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+void send_filtered_voltage_frame(int start_ic, int end_ic, can_resp_id_t resp_id){
     cell_asic_ctx_t *asic_array = hbms.asic;
 
     //build data function call with first 24 cell configured in parameters
-    uint8_t tx_frame[FDCAN_DLC_BYTES_48];
-    cell_voltage_readings(asic_array, start_seg, end_seg, tx_frame);
+    uint8_t tx_frame[48];
+    cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
 
     //send can frame with first_24_cells_resp as command id
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
@@ -79,11 +79,11 @@ void send_filtered_voltage_frame(int start_seg, int end_seg, can_resp_id_t resp_
 }
 
 
-void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
+void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id){
     cell_asic_ctx_t *asic_array = hbms.asic;
 
-    uint8_t tx_frame[FDCAN_DLC_BYTES_64] = {0}; // since first 4 bytes are 0
-    therm_temp_readings(asic_array, start_seg, end_seg, tx_frame);
+    uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
+    therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);
 
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
@@ -92,7 +92,7 @@ void send_therm_temp_frame(int start_seg, int end_seg, can_resp_id_t resp_id){
 void send_metadata_frame(can_resp_id_t resp_id){
     pack_data_t *pack_data = hbms.pack;
     pcb_ctx_t *pcb = hbms.pcb;
-    uint8_t tx_frame[FDCAN_DLC_BYTES_24];
+    uint8_t tx_frame[24] = {0};
     metadata_readings(pack_data, pcb, tx_frame);
 
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
