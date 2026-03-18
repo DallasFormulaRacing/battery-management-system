@@ -170,10 +170,10 @@ comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
-  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-                   g_cell_profile.continuous_measurement,
-                   g_cell_profile.discharge_permit, g_cell_profile.reset_filter,
-                   g_cell_profile.ow_mode);
+  // spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+  //                  g_cell_profile.continuous_measurement,
+  //                  g_cell_profile.discharge_permit,
+  //                  g_cell_profile.reset_filter, g_cell_profile.ow_mode);
 
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCA, REG_GROUP_A));
@@ -208,9 +208,9 @@ comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
-  spi_adax_command(g_thermistor_profile.aux_ow_mode,
-                   g_thermistor_profile.pull_up_resistor_ow,
-                   g_thermistor_profile.channels);
+  // spi_adax_command(g_thermistor_profile.aux_ow_mode,
+  //                  g_thermistor_profile.pull_up_resistor_ow,
+  //                  g_thermistor_profile.channels);
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
   RETURN_IF_ERROR(
@@ -261,7 +261,7 @@ comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx) {
 
   asic_wakeup(asic_ctx->ic_count);
-  spi_adax2_command(g_thermistor_profile.channels);
+  // spi_adax2_command(g_thermistor_profile.channels);
   RETURN_IF_ERROR(
       bms_read_data(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, RDRAXA, REG_GROUP_A));
   RETURN_IF_ERROR(

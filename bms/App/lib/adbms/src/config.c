@@ -2,28 +2,28 @@
 #include "bms_enums.h"
 
 adc_config_t g_cell_profile = {
-    .redundant_measurement_mode = RD_OFF,
+    .redundant_measurement_mode = RD_ON,
     .channels = AUX_ALL,
-    .continuous_measurement = SINGLE,
+    .continuous_measurement = CONTINUOUS,
     .ow_mode = OW_OFF_ALL_CH,
-    .aux_ow_mode = AUX_OW_ON,
+    .aux_ow_mode = AUX_OW_OFF,
     .pull_up_resistor_ow = PUP_DOWN,
     .discharge_permit = DCP_OFF,
     .reset_filter = RSTF_OFF,
     .error_injection_mode = WITHOUT_ERR,
 };
 
-adc_config_t g_cell_filtered_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = CONTINUOUS,
-    .ow_mode = OW_OFF_ALL_CH,
-    .aux_ow_mode = AUX_OW_ON,
-    .pull_up_resistor_ow = PUP_DOWN,
-    .discharge_permit = DCP_OFF,
-    .reset_filter = RSTF_ON,
-    .error_injection_mode = WITHOUT_ERR,
-};
+// adc_config_t g_cell_filtered_profile = {
+//     .redundant_measurement_mode = RD_OFF,
+//     .channels = AUX_ALL,
+//     .continuous_measurement = CONTINUOUS,
+//     .ow_mode = OW_OFF_ALL_CH,
+//     .aux_ow_mode = AUX_OW_ON,
+//     .pull_up_resistor_ow = PUP_DOWN,
+//     .discharge_permit = DCP_OFF,
+//     .reset_filter = RSTF_ON,
+//     .error_injection_mode = WITHOUT_ERR,
+// };
 
 adc_config_t g_thermistor_profile = {
     .redundant_measurement_mode = RD_OFF,
