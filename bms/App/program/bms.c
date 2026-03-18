@@ -1,10 +1,12 @@
 #include "bms.h"
+#include "bms_comms.h"
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "charger.h"
 #include "config.h"
 #include "parse.h"
 #include "segment.h"
+#include "stm32g4xx_hal.h"
 #include "thermistor.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -144,7 +146,7 @@ bms_fault_t cell_open_wire_check_odd() {
   // TODO: add: this function also updates the fault enum array
   // read S-ADC
   // adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
-  adbms_read_s_voltages(hbms.asic, OW_ON_ODD_CH);
+  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_ODD_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -174,7 +176,7 @@ bms_fault_t cell_open_wire_check_even() {
   // todo: add: this function also updates the fault enum array
   // read S-ADC
   // adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
-  adbms_read_s_voltages(hbms.asic, OW_ON_EVEN_CH);
+  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_EVEN_CH);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -263,22 +265,22 @@ float look[4][12];
 static void pop() {
   for (uint8_t i = 0; i < 12; i++) {
     look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
+        hbms.asic[0].s_cell.s_cell_voltages_array[i]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
     look[1][i] = convert_voltage_human_readable(
-        hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
+        hbms.asic[1].s_cell.s_cell_voltages_array[i]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
-    look[2][i] =
-        convert_voltage_human_readable(hbms.asic[0].aux.aux_voltages_array[i]);
+    look[2][i] = convert_voltage_human_readable(
+        hbms.asic[0].cell.cell_voltages_array[i]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
-    look[3][i] =
-        convert_voltage_human_readable(hbms.asic[1].aux.aux_voltages_array[i]);
+    look[3][i] = convert_voltage_human_readable(
+        hbms.asic[1].cell.cell_voltages_array[i]);
   }
 }
 
@@ -296,12 +298,32 @@ void bms_test_run() {
   // keep
   // adbms_read_rdasall_voltage(hbms.asic);
   // adbms_init_config(hbms.asic);
-  adbms_read_fcell_voltages(hbms.asic);
-  // adbms_read_cell_voltages(hbms.asic);
-  adbms_read_aux_voltages(hbms.asic);
+  // adbms_read_fcell_voltages(hbms.asic);
+  //// adbms_read_cell_voltages(hbms.asic);
+  // adbms_read_aux_voltages(hbms.asic);
 
-  // pop_pwm();
-  // adbms_send_pwm_commands(hbms.asic);
+  //// pop_pwm();
+  //// adbms_send_pwm_commands(hbms.asic);
+
+  // pop();
+
+  // adbms_start_cell_voltage_measurement(hbms.asic);
+  // adbms_read_cell_voltages(hbms.asic);
+
+  // HAL_Delay(20);
+  adbms_start_adc_s_voltage_measurement(hbms.asic,
+                                        g_cell_open_wire_check_profile_even);
+  HAL_Delay(150);
+  spi_adc_snap_command();
+  // cell_open_wire_check_even();
+  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_EVEN_CH);
+  spi_adc_unsnap_command();
+
+  // HAL_Delay(20);
+  // adbms_start_adc_s_voltage_measurement(hbms.asic, SINGLE);
+  // HAL_Delay(8);
+  // // cell_open_wire_check_odd();
+  // adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_ODD_CH);
 
   pop();
 }

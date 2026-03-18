@@ -100,20 +100,23 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
   return COMM_OK;
 }
 
-comm_status_t adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
+comm_status_t
+adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx,
+                                      adc_config_t measurement_profile) {
 
   asic_wakeup(asic_ctx->ic_count);
-  spi_adsv_command(g_cell_profile.continuous_measurement, g_cell_profile.DCP_en,
-                   g_cell_profile.ow_mode);
+  spi_adsv_command(measurement_profile.continuous_measurement,
+                   measurement_profile.DCP_en, measurement_profile.ow_mode);
   return COMM_OK;
 }
 
 comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
+                                    cont_measurement_mode_t cont_meas,
                                     open_wire_detect_mode_t ow_mode) {
 
   asic_wakeup(asic_ctx->ic_count);
-  spi_adsv_command(g_cell_open_wire_check_profile.continuous_measurement,
-                   g_cell_open_wire_check_profile.DCP_en, ow_mode);
+  // spi_adsv_command(cont_meas, g_cell_open_wire_check_profile.DCP_en,
+  // ow_mode);
 
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVA, REG_GROUP_A));
   RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVB, REG_GROUP_B));
