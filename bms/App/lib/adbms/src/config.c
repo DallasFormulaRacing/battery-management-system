@@ -1,4 +1,5 @@
 #include "config.h"
+#include "bms_enums.h"
 
 adc_config_t g_cell_profile = {
     .redundant_measurement_mode = RD_OFF,
@@ -54,6 +55,30 @@ adc_config_t g_cell_open_wire_check_profile = {
     .continuous_measurement = SINGLE, // Cont
     .ow_mode = OW_OFF_ALL_CH,         // OW OFF
     .AUX_OW_en = AUX_OW_OFF,          // OW OFF
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_OFF,
+    .ERR_en = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_open_wire_check_profile_even = {
+    .redundant_measurement_mode = RD_OFF, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = SINGLE, // Cont
+    .ow_mode = OW_ON_EVEN_CH,
+    .AUX_OW_en = AUX_OW_OFF, // OW OFF FOR AUX
+    .PUP_en = PUP_DOWN,
+    .DCP_en = DCP_OFF,
+    .RSTF_en = RSTF_OFF,
+    .ERR_en = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_open_wire_check_profile_odd = {
+    .redundant_measurement_mode = RD_OFF, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = SINGLE, // Cont
+    .ow_mode = OW_ON_ODD_CH,
+    .AUX_OW_en = AUX_OW_OFF, // OW OFF FOR AUX
     .PUP_en = PUP_DOWN,
     .DCP_en = DCP_OFF,
     .RSTF_en = RSTF_OFF,

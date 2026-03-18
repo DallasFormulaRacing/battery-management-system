@@ -65,6 +65,8 @@ extern adc_config_t g_cell_profile;
 extern adc_config_t g_cell_filtered_profile;
 extern adc_config_t g_thermistor_profile;
 extern adc_config_t g_thermistor_open_wire_check_profile;
+extern adc_config_t g_cell_open_wire_check_profile_even;
+extern adc_config_t g_cell_open_wire_check_profile_odd;
 extern adc_config_t g_cell_open_wire_check_profile;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
