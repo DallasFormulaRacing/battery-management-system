@@ -1,14 +1,14 @@
 #include "gui_data_handler.h"
 #include "cb.h"
 #include "config.h"
-void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr){
+void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr){
 
     //counter array to keep track of index outside of each segment loop
     uint8_t cell_counter = 0;
-    for (int seg_idx = start_seg; seg_idx < end_seg; seg_idx++){
+    for (int ic = start_ic; ic < end_ic; ic++){
         //grab cell reading from asic array
         for (int cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++){
-        int16_t voltage = asic[seg_idx].filt_cell.filt_cell_voltages_array[cell_idx];
+        int16_t voltage = asic[ic].filt_cell.filt_cell_voltages_array[cell_idx];
 
         //convert 16 bit signed int into 2 bytes, big endian
         //conversion here:
@@ -28,26 +28,27 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, ui
 
 
 #define FOUR_BYTE_OFFSET 4
+#define NUM_THERM_PER_IC 10
 
-void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr){
-    int cell_counter = FOUR_BYTE_OFFSET;
-    for (int i = start_seg; i < end_seg; i++){
-        //grab cell reading from asic array
-        for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++){
-        //uint16_t temp = asic[i];//.thermistor reading, semicolon just for 
-        uint8_t temp = 0;
-        //only take top 8 MSB
-        uint8_t byte_0 = (uint8_t)((temp >> 8) & 0xFF);
-        //uint8_t byte_1 = (uint8_t)(voltage & 0xFF);
+void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr){
+    int therm_counter = FOUR_BYTE_OFFSET;
+    for (int ic = start_ic; ic < end_ic; ic++){
 
-        //writing to data array
-        data_arr[cell_counter] = byte_0;
+        for (int therm_num = 0; therm_num < NUM_THERM_PER_IC; therm_num++){
+            uin16_t temp = asic[ic].aux.aux_voltages_array[therm_num];
+
+            //only take top 8 MSB
+            uint8_t byte_0 = (uint8_t)((temp >> 8) & 0xFF);
+            //uint8_t byte_1 = (uint8_t)(voltage & 0xFF);
+
+        data_arr[therm_counter] = byte_0;
         //data_arr[j+1] = byte_1;
 
-        cell_counter++;
+        therm_counter++;
     }
 
     }
+
 }
 
 

@@ -9,9 +9,9 @@
 
 
 
-void cell_voltage_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr);
+void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr);
 
-void therm_temp_readings(cell_asic_ctx_t *asic, int start_seg, int end_seg, uint8_t *data_arr);
+void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr);
 
 void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr);
 
