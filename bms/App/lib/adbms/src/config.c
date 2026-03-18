@@ -73,6 +73,18 @@ adc_config_t g_cell_open_wire_check_profile_odd = {
     .error_injection_mode = WITHOUT_ERR,
 };
 
+adc_config_t g_cell_force_sync_s_adc = {
+    .redundant_measurement_mode = RD_OFF, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_OFF_ALL_CH,
+    .aux_ow_mode = AUX_OW_OFF, // OW OFF FOR AUX
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
+};
+
 voltage_config_t g_voltage_cfg = {
     .overvoltage_threshold_v = 4.15F,
     .undervoltage_threshold_v = 2.51F,
