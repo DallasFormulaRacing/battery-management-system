@@ -142,6 +142,8 @@ bms_fault_t cell_voltage_in_range_check() {
   return BMS_ERR_NONE;
 }
 
+void adbms_set_watchdog() {}
+
 bms_fault_t cell_open_wire_check_odd() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_odd);
@@ -307,4 +309,6 @@ void bms_test_run() {
   cell_open_wire_check_odd();
   force_sync_s_adc();
   pop();
+  while (1) {
+  };
 }
