@@ -142,13 +142,12 @@ bms_fault_t cell_voltage_in_range_check() {
 }
 
 bms_fault_t cell_open_wire_check_odd() {
-  // TODO: test this & make sure odd/even is right
-  // TODO: add: this function also updates the fault enum array
-  // read S-ADC
-  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
+  adbms_start_adc_s_voltage_measurement(hbms.asic,
+                                        g_cell_open_wire_check_profile_odd);
+  HAL_Delay(16);
+  spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
-  // if less than 1V call openwire check
-  // does not have to use C-ADC at all
+  spi_adc_unsnap_command();
   bool cell_open_wire_flag = false;
 
   // do odd cell taps (even indexs due to array indexing)
@@ -172,13 +171,12 @@ bms_fault_t cell_open_wire_check_odd() {
 }
 
 bms_fault_t cell_open_wire_check_even() {
-  // todo: test this & make sure odd/even is right
-  // todo: add: this function also updates the fault enum array
-  // read S-ADC
-  // adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
+  adbms_start_adc_s_voltage_measurement(hbms.asic,
+                                        g_cell_open_wire_check_profile_even);
+  HAL_Delay(16);
+  spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
-  // if less than 1V call openwire check
-  // does not have to use C-ADC at all
+  spi_adc_unsnap_command();
   bool cell_open_wire_flag = false;
 
   // do even cell taps (odd indexs due to array indexing)
@@ -265,12 +263,12 @@ float look[4][13];
 static void pop() {
   for (uint8_t i = 1; i < 13; i++) {
     look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].s_cell.s_cell_voltages_array[i-1]);
+        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
   }
 
   for (uint8_t i = 1; i < 13; i++) {
     look[1][i] = convert_voltage_human_readable(
-        hbms.asic[1].s_cell.s_cell_voltages_array[i-1]);
+        hbms.asic[1].s_cell.s_cell_voltages_array[i - 1]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
@@ -295,21 +293,6 @@ void pop_pwm() {
 }
 
 void bms_test_run() {
-  // keep
-  // adbms_read_rdasall_voltage(hbms.asic);
-  // adbms_init_config(hbms.asic);
-  // adbms_read_fcell_voltages(hbms.asic);
-  //// adbms_read_cell_voltages(hbms.asic);
-  // adbms_read_aux_voltages(hbms.asic);
-
-  //// pop_pwm();
-  //// adbms_send_pwm_commands(hbms.asic);
-
-  // pop();
-
-  // adbms_start_cell_voltage_measurement(hbms.asic);
-  // adbms_read_cell_voltages(hbms.asic);
-
   // HAL_Delay(20);
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_even);
@@ -327,12 +310,6 @@ void bms_test_run() {
   // // cell_open_wire_check_odd();
   // adbms_read_s_voltages(hbms.asic);
   // spi_adc_unsnap_command();
-
-  // HAL_Delay(20);
-  // adbms_start_adc_s_voltage_measurement(hbms.asic, SINGLE);
-  // HAL_Delay(8);
-  // // cell_open_wire_check_odd();
-  // adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_ODD_CH);
 
   pop();
 }
