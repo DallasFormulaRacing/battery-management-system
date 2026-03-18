@@ -146,7 +146,7 @@ bms_fault_t cell_open_wire_check_odd() {
   // TODO: add: this function also updates the fault enum array
   // read S-ADC
   // adbms_read_rdsall_voltage(hbms.asic, OW_ON_ODD_CH);
-  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_ODD_CH);
+  adbms_read_s_voltages(hbms.asic);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -176,7 +176,7 @@ bms_fault_t cell_open_wire_check_even() {
   // todo: add: this function also updates the fault enum array
   // read S-ADC
   // adbms_read_rdsall_voltage(hbms.asic, OW_ON_EVEN_CH);
-  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_EVEN_CH);
+  adbms_read_s_voltages(hbms.asic);
   // if less than 1V call openwire check
   // does not have to use C-ADC at all
   bool cell_open_wire_flag = false;
@@ -260,17 +260,17 @@ void bms_light() {
 }
 
 // static float TEST_VOLTAGE[12];
-float look[4][12];
+float look[4][13];
 
 static void pop() {
-  for (uint8_t i = 0; i < 12; i++) {
+  for (uint8_t i = 1; i < 13; i++) {
     look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].s_cell.s_cell_voltages_array[i]);
+        hbms.asic[0].s_cell.s_cell_voltages_array[i-1]);
   }
 
-  for (uint8_t i = 0; i < 12; i++) {
+  for (uint8_t i = 1; i < 13; i++) {
     look[1][i] = convert_voltage_human_readable(
-        hbms.asic[1].s_cell.s_cell_voltages_array[i]);
+        hbms.asic[1].s_cell.s_cell_voltages_array[i-1]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
@@ -313,11 +313,20 @@ void bms_test_run() {
   // HAL_Delay(20);
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_even);
-  HAL_Delay(150);
+  HAL_Delay(16);
   spi_adc_snap_command();
   // cell_open_wire_check_even();
-  adbms_read_s_voltages(hbms.asic, SINGLE, OW_ON_EVEN_CH);
+  adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
+
+  // HAL_Delay(20);
+  // adbms_start_adc_s_voltage_measurement(hbms.asic,
+  //                                       g_cell_open_wire_check_profile_odd);
+  // HAL_Delay(16);
+  // spi_adc_snap_command();
+  // // cell_open_wire_check_odd();
+  // adbms_read_s_voltages(hbms.asic);
+  // spi_adc_unsnap_command();
 
   // HAL_Delay(20);
   // adbms_start_adc_s_voltage_measurement(hbms.asic, SINGLE);
