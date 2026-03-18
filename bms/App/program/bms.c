@@ -203,12 +203,12 @@ bms_fault_t cell_open_wire_check_even() {
 
 void hard_fault_disable_openwire_on_profiles() {
   g_cell_profile.ow_mode = OW_OFF_ALL_CH;
-  g_cell_profile.AUX_OW_en = AUX_OW_OFF;
-  g_cell_profile.DCP_en = DCP_OFF;
+  g_cell_profile.aux_ow_mode = AUX_OW_OFF;
+  g_cell_profile.discharge_permit = DCP_OFF;
 
   g_thermistor_profile.ow_mode = OW_OFF_ALL_CH;
-  g_thermistor_profile.AUX_OW_en = AUX_OW_OFF;
-  g_thermistor_profile.DCP_en = DCP_OFF;
+  g_thermistor_profile.aux_ow_mode = AUX_OW_OFF;
+  g_thermistor_profile.discharge_permit = DCP_OFF;
 }
 
 /**
@@ -241,8 +241,8 @@ void bms_test_init() {
   // Needed for filtered cell readings
   spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
                    g_cell_filtered_profile.continuous_measurement,
-                   g_cell_filtered_profile.DCP_en,
-                   g_cell_filtered_profile.RSTF_en,
+                   g_cell_filtered_profile.discharge_permit,
+                   g_cell_filtered_profile.reset_filter,
                    g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
