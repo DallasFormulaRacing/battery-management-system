@@ -166,7 +166,7 @@ bms_fault_t cell_open_wire_check_odd() {
       // look[2][cell_num + 1] = this_cell;
 
       if (this_cell < 1.0F) {
-        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
+        hbms.asic[seg_num].cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
     } // end inner fl
@@ -197,7 +197,7 @@ bms_fault_t cell_open_wire_check_even() {
       // look[3][cell_num] = this_cell;
 
       if (this_cell < 1.0F) {
-        hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
+        hbms.asic[seg_num].cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
     } // end inner fl
