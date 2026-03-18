@@ -57,15 +57,17 @@ bms_fault_t therm_temp_in_range_check() {
       // NOTE: we should define max and min temp constant somewhere
       if (temp > 60.0F) {
         over_temp_flag = true;
-        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
-          hbms.asic->thermistor_fault_status[therm_num] = OVER_FAULT;
+        if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
+            OPEN_WIRE_FAULT) {
+          hbms.asic[seg_num].thermistor_fault_status[therm_num] = OVER_FAULT;
         }
       }
 
       if (temp < -20.0F) {
         under_temp_flag = true;
-        if (hbms.asic->thermistor_fault_status[therm_num] != OPEN_WIRE_FAULT) {
-          hbms.asic->thermistor_fault_status[therm_num] = UNDER_FAULT;
+        if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
+            OPEN_WIRE_FAULT) {
+          hbms.asic[seg_num].thermistor_fault_status[therm_num] = UNDER_FAULT;
         }
       }
     }
@@ -93,7 +95,7 @@ bms_fault_t therm_open_wire_check() {
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
       // if voltage is greater than 2.9 V, there is probably an OW or it's
       // really cold
-      if (hbms.asic->aux.aux_voltages_array[i] >
+      if (hbms.asic[seg_num].aux.aux_voltages_array[i] >
           g_voltage_cfg.openwire_aux_threshold_mv) {
         hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
         open_wire_flag = true;
@@ -121,12 +123,12 @@ bms_fault_t cell_voltage_in_range_check() {
 
       if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
         cell_over_flag = true;
-        hbms.asic->cell_fault_status[cell_num] = OVER_FAULT;
+        hbms.asic[seg_num].cell_fault_status[cell_num] = OVER_FAULT;
       } // endif
 
       if (this_cell < g_voltage_cfg.undervoltage_threshold_v) {
         cell_under_flag = true;
-        hbms.asic->cell_fault_status[cell_num] = UNDER_FAULT;
+        hbms.asic[seg_num].cell_fault_status[cell_num] = UNDER_FAULT;
       } // endif
     } // end inner fl
   }
