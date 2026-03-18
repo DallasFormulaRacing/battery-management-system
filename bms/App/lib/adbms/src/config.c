@@ -41,20 +41,8 @@ adc_config_t g_thermistor_open_wire_check_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
     .continuous_measurement = SINGLE,
-    .ow_mode = OW_ON_ALL_CH,
+    .ow_mode = OW_OFF_ALL_CH,
     .aux_ow_mode = AUX_OW_ON,
-    .pull_up_resistor_ow = PUP_DOWN,
-    .discharge_permit = DCP_OFF,
-    .reset_filter = RSTF_OFF,
-    .error_injection_mode = WITHOUT_ERR,
-};
-
-adc_config_t g_cell_open_wire_check_profile = {
-    .redundant_measurement_mode = RD_ON, // RD
-    .channels = AUX_ALL,
-    .continuous_measurement = SINGLE, // Cont
-    .ow_mode = OW_OFF_ALL_CH,         // OW OFF
-    .aux_ow_mode = AUX_OW_OFF,        // OW OFF
     .pull_up_resistor_ow = PUP_DOWN,
     .discharge_permit = DCP_OFF,
     .reset_filter = RSTF_OFF,

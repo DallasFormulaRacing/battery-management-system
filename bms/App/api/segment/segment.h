@@ -28,10 +28,7 @@ comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t
 adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx,
                                       adc_config_t measurement_profile);
-comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx,
-                                    cont_measurement_mode_t cont_meas,
-                                    open_wire_detect_mode_t ow_mode);
-
+comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx);
 comm_status_t
 adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);

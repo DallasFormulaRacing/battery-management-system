@@ -40,9 +40,8 @@ typedef enum {
 
 typedef enum {
   OW_OFF_ALL_CH = 0X0,
-  OW_ON_EVEN_CH,
-  OW_ON_ODD_CH,
-  OW_ON_ALL_CH
+  OW_ON_EVEN_CH = 0X1,
+  OW_ON_ODD_CH = 0X2,
 } open_wire_detect_mode_t; // OW_CS
 
 typedef enum {
