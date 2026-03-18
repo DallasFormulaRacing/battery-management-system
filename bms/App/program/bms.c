@@ -251,7 +251,7 @@ void bms_test_init() {
   // adbms_start_aux_voltage_measurement(hbms.asic);
   adbms_clear_all_pwm(hbms.asic);
   adbms_start_cell_voltage_measurement(hbms.asic);
-  adbms_start_fcell_voltage_measurement(hbms.asic);
+  // adbms_start_fcell_voltage_measurement(hbms.asic);
   // Needed for filtered cell readings
   // spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
   //                  g_cell_filtered_profile.continuous_measurement,
@@ -308,6 +308,11 @@ void pop_pwm() {
 }
 
 void bms_test_run() {
+  force_sync_s_adc();
+  cell_open_wire_check_odd();
+  cell_open_wire_check_odd();
+  cell_open_wire_check_odd();
+  cell_open_wire_check_odd();
   cell_open_wire_check_odd();
   force_sync_s_adc();
   pop();
