@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+float look[4][13];
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -144,7 +145,7 @@ bms_fault_t cell_voltage_in_range_check() {
 bms_fault_t cell_open_wire_check_odd() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_odd);
-  HAL_Delay(16);
+  HAL_Delay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
@@ -160,6 +161,7 @@ bms_fault_t cell_open_wire_check_odd() {
          cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
+      // look[2][cell_num + 1] = this_cell;
 
       if (this_cell < 1.0F) {
         hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
@@ -190,6 +192,7 @@ bms_fault_t cell_open_wire_check_even() {
          cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
+      // look[3][cell_num] = this_cell;
 
       if (this_cell < 1.0F) {
         hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
@@ -241,11 +244,11 @@ void bms_test_init() {
   adbms_start_cell_voltage_measurement(hbms.asic);
   adbms_start_fcell_voltage_measurement(hbms.asic);
   // Needed for filtered cell readings
-  spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
-                   g_cell_filtered_profile.continuous_measurement,
-                   g_cell_filtered_profile.discharge_permit,
-                   g_cell_filtered_profile.reset_filter,
-                   g_cell_filtered_profile.ow_mode);
+  // spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
+  //                  g_cell_filtered_profile.continuous_measurement,
+  //                  g_cell_filtered_profile.discharge_permit,
+  //                  g_cell_filtered_profile.reset_filter,
+  //                  g_cell_filtered_profile.ow_mode);
   HAL_Delay(8);
 }
 
@@ -262,7 +265,6 @@ void bms_light() {
 }
 
 // static float TEST_VOLTAGE[12];
-float look[4][13];
 
 static void pop() {
   for (uint8_t i = 1; i < 13; i++) {
@@ -275,15 +277,15 @@ static void pop() {
         hbms.asic[1].s_cell.s_cell_voltages_array[i - 1]);
   }
 
-  for (uint8_t i = 0; i < 12; i++) {
-    look[2][i] = convert_voltage_human_readable(
-        hbms.asic[0].cell.cell_voltages_array[i]);
-  }
-
-  for (uint8_t i = 0; i < 12; i++) {
-    look[3][i] = convert_voltage_human_readable(
-        hbms.asic[1].cell.cell_voltages_array[i]);
-  }
+   for (uint8_t i = 1; i < 13; i+=2) {
+     look[2][i] = convert_voltage_human_readable(
+        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
+   }
+  
+   for (uint8_t i = 0; i < 13; i+=2) {
+     look[3][i] = convert_voltage_human_readable(
+        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
+   }
 }
 
 void pop_pwm() {
@@ -297,23 +299,6 @@ void pop_pwm() {
 }
 
 void bms_test_run() {
-  // HAL_Delay(20);
-  adbms_start_adc_s_voltage_measurement(hbms.asic,
-                                        g_cell_open_wire_check_profile_even);
-  HAL_Delay(16);
-  spi_adc_snap_command();
-  // cell_open_wire_check_even();
-  adbms_read_s_voltages(hbms.asic);
-  spi_adc_unsnap_command();
-
-  // HAL_Delay(20);
-  // adbms_start_adc_s_voltage_measurement(hbms.asic,
-  //                                       g_cell_open_wire_check_profile_odd);
-  // HAL_Delay(16);
-  // spi_adc_snap_command();
-  // // cell_open_wire_check_odd();
-  // adbms_read_s_voltages(hbms.asic);
-  // spi_adc_unsnap_command();
-
+  cell_open_wire_check_odd();
   pop();
 }
