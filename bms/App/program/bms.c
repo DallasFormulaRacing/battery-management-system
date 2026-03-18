@@ -150,6 +150,9 @@ bms_fault_t cell_open_wire_check_odd() {
   spi_adc_unsnap_command();
   bool cell_open_wire_flag = false;
 
+  //////////////
+
+  // todo: how to detect? value reading is fine now
   // do odd cell taps (even indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
@@ -158,7 +161,7 @@ bms_fault_t cell_open_wire_check_odd() {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+      if (this_cell < 1.0F) {
         hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
@@ -179,6 +182,7 @@ bms_fault_t cell_open_wire_check_even() {
   spi_adc_unsnap_command();
   bool cell_open_wire_flag = false;
 
+  // todo: how to detect? value reading is fine now
   // do even cell taps (odd indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
 
@@ -187,7 +191,7 @@ bms_fault_t cell_open_wire_check_even() {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].s_cell.s_cell_voltages_array[cell_num]);
 
-      if (1000 * this_cell < (float)g_voltage_cfg.openwire_cell_threshold_mv) {
+      if (this_cell < 1.0F) {
         hbms.asic->cell_fault_status[cell_num] = OPEN_WIRE_FAULT;
         cell_open_wire_flag = true;
       } // endif
