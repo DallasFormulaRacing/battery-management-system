@@ -1,9 +1,13 @@
 #include "bms_comms.h"
+#include "FreeRTOS.h"
+#include "FreeRTOSConfig.h"
+#include "portmacro.h"
+#include "semphr.h"
+
+TaskHandle_t xSPI_Task_Handler = NULL;
+SemaphoreHandle_t xSPI_Semph_Handler;
 
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
-
-static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
-                         uint8_t *rx_data, uint8_t bytes_per_asic_register);
 
 static comm_status_t handle_single_asic(const uint8_t *rx_data,
                                         uint8_t bytes_in_reg,
@@ -67,9 +71,16 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
 
   build_command_buffer(command_bytes, cmd_msg);
 
-  spi_read_all(ic_count, cmd_msg, asic_status_buffers->register_data,
-               bytes_per_asic_register);
+  xSPI_Task_Handler = xTaskGetCurrentTaskHandle();
 
+  // task noti
+
+  uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
+
+  // send on SPI
+  spi_write_read(cmd_msg, asic_status_buffers->register_data, len);
+
+  // parse retrieved data
   return read_all_asics(ic_count, bytes_per_asic_register,
                         asic_status_buffers->register_data,
                         asic_status_buffers);
@@ -152,20 +163,6 @@ static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
   cmd_pec = calc_PEC15(2, cmd);
   cmd[2] = (uint8_t)(cmd_pec >> 8);
   cmd[3] = (uint8_t)(cmd_pec);
-}
-
-/**
- * @brief
- *
- * @param ic_count
- * @param cmd_msg
- * @param rx_data
- * @param bytes_per_asic_register
- */
-static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
-                         uint8_t *rx_data, uint8_t bytes_per_asic_register) {
-  uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
-  spi_write_read(cmd_msg, rx_data, len);
 }
 
 /**

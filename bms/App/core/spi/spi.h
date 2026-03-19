@@ -2,6 +2,7 @@
 #define SPI_H
 
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_spi.h"
 #include "stm32g4xx_hal_tim.h"
 #include "stm32g4xx_it.h"
 #include <stdbool.h>
@@ -41,7 +42,7 @@ void start_timer(void);
 
 void stop_timer(void);
 
-uint32_t get_tim_count(void);
+uint32_t get_tim_count_with_reset(void);
 
 void asic_wakeup(uint8_t total_ic);
 

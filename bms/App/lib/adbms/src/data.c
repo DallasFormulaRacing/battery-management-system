@@ -295,12 +295,14 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
 
-  // data
+  // wake up
   asic_wakeup(asic_ctx->ic_count);
+
+  // spi call
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
 
-  // parse
+  // parse data on arrival
   handle_read_type(type, asic_ctx, group, &status_buffers);
 
   return COMM_OK;

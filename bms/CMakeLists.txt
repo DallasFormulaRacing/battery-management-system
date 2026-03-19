@@ -1,3 +1,4 @@
+# root cmake
 cmake_minimum_required(VERSION 3.22)
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -18,7 +19,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-
+add_subdirectory(Middlewares)
 add_subdirectory(App)
 
 if(BUILD_TESTING)
@@ -78,7 +79,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -mfloat-abi=hard
     -ffunction-sections
     -fdata-sections
-    -O0 -g3            # Development defaults
+    -O0 -g3            
 )
 
 file(GLOB HAL_SOURCES Drivers/STM32G4xx_HAL_Driver/Src/*.c)
@@ -88,8 +89,10 @@ target_sources(${PROJECT_NAME} PRIVATE ${HAL_SOURCES})
 target_link_options(${PROJECT_NAME} PRIVATE
     "-T${CMAKE_SOURCE_DIR}/STM32G474XX_FLASH.ld"
     -Wl,--gc-sections
-    --specs=nosys.specs # Often needed for embedded GCC
+    --specs=nosys.specs 
 )
+
+
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
