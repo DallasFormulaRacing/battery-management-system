@@ -1,6 +1,16 @@
 #include "gui_data_handler.h"
 #include "cb.h"
 #include "config.h"
+
+/*
+ * @brief populates data_arr with cell voltage readings, 2 byte big endian
+ * @param asic: array of asics
+ * @param start_ic: asic to start with (inclusive)
+ * @param end_ic: asic to end with (exclusive)
+ * @param data_arr: buffer to populate cell voltages with
+ * @return none
+
+ */
 void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr){
 
     //counter array to keep track of index outside of each segment loop
@@ -30,6 +40,15 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint
 #define FOUR_BYTE_OFFSET 4
 #define NUM_THERM_PER_IC 10
 
+/*
+ * @brief populates data_arr with cell thermistor readings, most significant byte only
+ * @param asic: array of asics
+ * @param start_ic: asic to start with (inclusive)
+ * @param end_ic: asic to end with (exclusive)
+ * @param data_arr: buffer to populate cell thermistor temperatures with
+ * @return none
+ */
+
 void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_t *data_arr){
     int therm_counter = FOUR_BYTE_OFFSET;
     for (int ic = start_ic; ic < end_ic; ic++){
@@ -51,7 +70,13 @@ void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic, uint8_
 
 }
 
-
+/*
+ * @brief populates data_arr with pack voltage, state of charge, and cell balancing boolean status
+ * @param pack: bms pack struct
+ * @param pcb: bms cell balancing struct
+ * @param data_arr: buffer to populate metadata
+ * @return none
+ */
 void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr){
     uint16_t pack_voltage = pack->packvoltage;
     uint16_t soc = pack->state_of_charge;
