@@ -74,7 +74,7 @@ jobs:
               with:
                   tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
                   generate_release_notes: true
-                  name: Release BMS Firmware Version ${{ steps.gitversion.outputs.majorMinorPatch }}
+                  name: BMS v${{ steps.gitversion.outputs.majorMinorPatch }}
                   body: |
 
                       **Version:** ${{ steps.gitversion.outputs.fullSemVer }}
