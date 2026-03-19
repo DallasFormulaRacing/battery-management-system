@@ -42,3 +42,5 @@ compile_commands.json
 build/
 logs
 /venv/
+
+node_modules
