@@ -38,7 +38,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif () 
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  # Linux-specific stuff
+  # MacOS-specific stuff
   set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
   set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
   set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
