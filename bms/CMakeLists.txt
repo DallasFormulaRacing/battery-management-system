@@ -91,8 +91,6 @@ target_link_options(${PROJECT_NAME} PRIVATE
     --specs=nosys.specs # Often needed for embedded GCC
 )
 
-# 11. Final Dependency Linkage
-# This connects the main executable to your entire logic tree
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         core_layer
@@ -102,3 +100,12 @@ target_link_libraries(${PROJECT_NAME}
         charger
         bms_app
 )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+    COMMENT ">> Running command: OBJCOPY to BIN format"
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_SIZE} --format=berkeley ${PROJECT_NAME}.elf
+    COMMENT ">> Running command: Memory Usage Report")
