@@ -1,54 +1,53 @@
 name: linux
 
 on:
-  push:
-    paths:
-      - "bms/**"
-      - ".github/workflows/linux.yaml"
-  pull_request:
-    paths:
-      - "bms/**"
-      - ".github/workflows/linux.yaml"
+    push:
+        paths:
+            - "bms/**"
+            - ".github/workflows/linux.yaml"
+    pull_request:
+        paths:
+            - "bms/**"
+            - ".github/workflows/linux.yaml"
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
+    build:
+        runs-on: ubuntu-22.04
 
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: checkout repository
+              uses: actions/checkout@v4
 
-      - name: install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi
+            - name: install build dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi
 
-      - name: cache cmake
-        uses: actions/cache@v3
-        with:
-          path: |
-            bms/build
-          key: ${{ runner.os }}-build-${{ hashFiles('bms/CMakeLists.txt') }}
+            - name: cache cmake
+              uses: actions/cache@v3
+              with:
+                  path: |
+                      bms/build
+                  key: ${{ runner.os }}-build-${{ hashFiles('bms/CMakeLists.txt') }}
 
-      - name: configure (cmake)
-        working-directory: ./bms
-        run: |
-          set -e
-          cmake -S . -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
+            - name: configure (cmake)
+              working-directory: ./bms
+              run: |
+                  set -e
+                  cmake -S . -B build \
+                    -G Ninja \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
 
-      - name: build
-        working-directory: ./bms
-        run: |
-          cmake --build build
+            - name: build
+              working-directory: ./bms
+              run: |
+                  cmake --build build
 
-      - name: upload firmware
-        if: ${{ !env.ACT }}
-        uses: actions/upload-artifact@v5
-        with:
-          name: firmware
-          path: bms/build/*.elf
-        
-        
+            - name: upload firmware
+              uses: actions/upload-artifact@v5
+              with:
+                  name: firmware
+                  path: |
+                      bms/build/*.elf
+                      bms/build/*.bin
