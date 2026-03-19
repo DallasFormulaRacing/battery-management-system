@@ -7,51 +7,23 @@ on:
             - semver
 
 jobs:
-    build:
+    release:
         runs-on: ubuntu-22.04
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
 
         steps:
             - name: checkout repository
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
             - name: install build dependencies
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi
-
-            - name: configure (cmake)
-              working-directory: ./bms
-              run: |
-                  cmake -S . -B build \
-                    -G Ninja \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
-
-            - name: build
-              working-directory: ./bms
-              run: cmake --build build
-
-            - name: upload firmware
-              uses: actions/upload-artifact@v4
-              with:
-                  name: firmware
-                  path: bms/build/*.elf
-
-    publish:
-        needs: [build]
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-
-            - name: download firmware
-              uses: actions/download-artifact@v4
-              with:
-                  name: firmware
-                  path: firmware
+                  sudo apt-get install -y cmake ninja-build gcc-arm-none-eabi nodejs
 
             - name: semantic release
               uses: cycjimmy/semantic-release-action@v4
