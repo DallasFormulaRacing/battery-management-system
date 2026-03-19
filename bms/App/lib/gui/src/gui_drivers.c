@@ -22,7 +22,12 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
     }
 }
 
-
+/*
+ * @brief uses can frame id to perform command
+ * @param ext_id: can frame id to branch off of
+ * @param data: buffer with any data given along with the command (unused for now)
+ * @return none
+ */
 void process_can_command(uint32_t ext_id, uint8_t* data){
     //redundant checks for header id
     if(!can_id_is_valid(ext_id)) return;
@@ -65,7 +70,13 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
     }
 }
 
-
+/*
+ * @ Builds and populates buffer for cell voltages of a given ic range, then transmits the frame
+ * @param start_ic: beginning ic (inclusive)
+ * @param end_ic: asic to start with (exclusive)
+ * @param resp_id: can frame id to send to gui
+ * @return none
+ */
 void send_filtered_voltage_frame(int start_ic, int end_ic, can_resp_id_t resp_id){
     cell_asic_ctx_t *asic_array = hbms.asic;
 
@@ -78,7 +89,13 @@ void send_filtered_voltage_frame(int start_ic, int end_ic, can_resp_id_t resp_id
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
-
+/*
+ * @ Builds and populates buffer for thermistor temperatures of a given ic range, then transmits the frame
+ * @param start_ic: beginning ic (inclusive)
+ * @param end_ic: asic to start with (exclusive)
+ * @param resp_id: can frame id to send to gui
+ * @return none
+ */
 void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id){
     cell_asic_ctx_t *asic_array = hbms.asic;
 
@@ -89,6 +106,11 @@ void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id){
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
 }
 
+/*
+ * @ Builds and populates buffer for pack voltage, soc, and cb status for all cells, then transmits the frame
+ * @param resp_id: can frame id to send to gui
+ * @return none
+ */
 void send_metadata_frame(can_resp_id_t resp_id){
     pack_data_t *pack_data = hbms.pack;
     pcb_ctx_t *pcb = hbms.pcb;
