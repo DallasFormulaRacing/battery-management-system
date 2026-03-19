@@ -1,0 +1,30 @@
+name: release version
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Required for GitVersion
+
+            - name: Install GitVersion
+              uses: gittools/actions/gitversion/setup@v1.1.1
+              with:
+                  versionSpec: "5.x"
+
+            - name: Determine Version
+              id: gitversion
+              uses: gittools/actions/gitversion/execute@v1.1.1
+
+            - name: Use Version
+              run: |
+                  echo "Full SemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
+                  echo "Major.Minor.Patch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
