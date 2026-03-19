@@ -182,7 +182,7 @@ bms_fault_t cell_open_wire_check_odd() {
 bms_fault_t cell_open_wire_check_even() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_even);
-  HAL_Delay(16);
+  HAL_Delay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
@@ -278,7 +278,7 @@ void bms_light() {
 static void pop() {
   for (uint8_t i = 1; i < 13; i++) {
     look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
+        hbms.asic[0].cell.cell_voltages_array[i - 1]);
   }
 
   for (uint8_t i = 1; i < 13; i++) {
@@ -308,14 +308,10 @@ void pop_pwm() {
 }
 
 void bms_test_run() {
+  // adbms_read_cell_voltages(hbms.asic);
   force_sync_s_adc();
-  cell_open_wire_check_odd();
-  cell_open_wire_check_odd();
-  cell_open_wire_check_odd();
-  cell_open_wire_check_odd();
-  cell_open_wire_check_odd();
-  force_sync_s_adc();
+  cell_open_wire_check_even();
   pop();
-  while (1) {
-  };
+  for (;;)
+    ;
 }
