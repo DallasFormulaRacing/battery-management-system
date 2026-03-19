@@ -212,7 +212,7 @@ bms_fault_t cell_open_wire_check_even() {
 
 void force_sync_s_adc() {
   adbms_start_adc_s_voltage_measurement(hbms.asic, g_cell_force_sync_s_adc);
-  HAL_Delay(16);
+  HAL_Delay(30);
 }
 
 void hard_fault_disable_openwire_on_profiles() {
@@ -307,10 +307,17 @@ void pop_pwm() {
   }
 }
 
+static bms_fault_t faultflag;
+
 void bms_test_run() {
   // adbms_read_cell_voltages(hbms.asic);
+
+  // force_sync_s_adc();
+  faultflag = cell_open_wire_check_even();
+
+  faultflag = cell_open_wire_check_odd();
   force_sync_s_adc();
-  cell_open_wire_check_even();
+
   pop();
   for (;;)
     ;
