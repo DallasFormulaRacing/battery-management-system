@@ -261,6 +261,12 @@ void bms_test_init() {
   HAL_Delay(8);
 }
 
+void cell_open_wire_test() {
+  cell_open_wire_check_even();
+  cell_open_wire_check_odd();
+  force_sync_s_adc();
+}
+
 void open_shutdown_circuit() {
   // todo
   // just a gpio flip
@@ -273,52 +279,7 @@ void bms_light() {
   // check rules
 }
 
-// static float TEST_VOLTAGE[12];
-
-static void pop() {
-  for (uint8_t i = 1; i < 13; i++) {
-    look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].cell.cell_voltages_array[i - 1]);
-  }
-
-  for (uint8_t i = 1; i < 13; i++) {
-    look[1][i] = convert_voltage_human_readable(
-        hbms.asic[1].s_cell.s_cell_voltages_array[i - 1]);
-  }
-
-  for (uint8_t i = 1; i < 13; i += 2) {
-    look[2][i] = convert_voltage_human_readable(
-        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
-  }
-
-  for (uint8_t i = 0; i < 13; i += 2) {
-    look[3][i] = convert_voltage_human_readable(
-        hbms.asic[0].s_cell.s_cell_voltages_array[i - 1]);
-  }
-}
-
-void pop_pwm() {
-  for (uint8_t cell = 0; cell < 16; cell++) {
-    adbms_set_cell_pwm(hbms.asic, cell, 1, (pwm_duty_cycle_t)(cell + 2));
-  }
-
-  for (uint8_t cell = 0; cell < 16; cell++) {
-    adbms_set_cell_pwm(hbms.asic, cell, 0, (pwm_duty_cycle_t)(cell + 2));
-  }
-}
-
-static bms_fault_t faultflag;
-
 void bms_test_run() {
-  // adbms_read_cell_voltages(hbms.asic);
-
-  // force_sync_s_adc();
-  faultflag = cell_open_wire_check_even();
-
-  faultflag = cell_open_wire_check_odd();
-  force_sync_s_adc();
-
-  pop();
-  for (;;)
-    ;
+  cell_open_wire_test();
+  delay(1);
 }
