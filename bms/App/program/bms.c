@@ -3,6 +3,7 @@
 #include "bms_enums.h"
 #include "bms_types.h"
 #include "charger.h"
+#include "cmsis_os2.h"
 #include "config.h"
 #include "parse.h"
 #include "segment.h"
@@ -112,7 +113,7 @@ bms_fault_t therm_open_wire_check() {
 bms_fault_t cell_voltage_in_range_check() {
   // todo: test this and make sure it updates the fault struct
 
-  adbms_read_filt_cell_voltages(hbms.asic);
+  adbms_read_fcell_voltages(hbms.asic);
   bool cell_over_flag = false;
   bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
@@ -120,7 +121,6 @@ bms_fault_t cell_voltage_in_range_check() {
     for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
-
       if (this_cell > g_voltage_cfg.overvoltage_threshold_v) {
         cell_over_flag = true;
         hbms.asic[seg_num].cell_fault_status[cell_num] = OVER_FAULT;
@@ -149,7 +149,7 @@ void adbms_set_watchdog() {}
 bms_fault_t cell_open_wire_check_odd() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_odd);
-  HAL_Delay(10);
+  osDelay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
@@ -182,7 +182,7 @@ bms_fault_t cell_open_wire_check_odd() {
 bms_fault_t cell_open_wire_check_even() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_even);
-  HAL_Delay(10);
+  osDelay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
@@ -212,7 +212,7 @@ bms_fault_t cell_open_wire_check_even() {
 
 void force_sync_s_adc() {
   adbms_start_adc_s_voltage_measurement(hbms.asic, g_cell_force_sync_s_adc);
-  HAL_Delay(30);
+  osDelay(30);
 }
 
 void hard_fault_disable_openwire_on_profiles() {
@@ -258,7 +258,7 @@ void bms_test_init() {
   //                  g_cell_filtered_profile.discharge_permit,
   //                  g_cell_filtered_profile.reset_filter,
   //                  g_cell_filtered_profile.ow_mode);
-  HAL_Delay(8);
+  osDelay(8);
 }
 
 void cell_open_wire_test() {
@@ -280,6 +280,6 @@ void bms_light() {
 }
 
 void bms_test_run() {
-  cell_open_wire_test();
+  adbms_read_fcell_voltages(hbms.asic);
   delay(1);
 }

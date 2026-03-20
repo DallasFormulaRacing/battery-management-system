@@ -35,7 +35,6 @@ comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx);
 
 comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx);
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx);
-comm_status_t adbms_read_filt_cell_voltages(cell_asic_ctx_t *asic_ctx);
 
 #if SINGLEBOARD
 /*
