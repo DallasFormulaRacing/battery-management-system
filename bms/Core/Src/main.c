@@ -192,7 +192,7 @@ void StartDefaultTask(void *argument) {
   bms_test_init();
   for (;;) {
     bms_test_run();
-    osDelay(50);
+    osDelay(1);
   }
   /* USER CODE END 5 */
 }
