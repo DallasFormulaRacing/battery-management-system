@@ -1,4 +1,6 @@
 #include "data.h"
+#include "bms_enums.h"
+#include "cmsis_os2.h"
 
 // where does 50 come from? -> its just a conservative guesstimate. should be
 // enough. if not, well, good thing it lives in BSS.
@@ -9,6 +11,12 @@ static uint8_t pec_error[NUM_IC_COUNT_CHAIN] __attribute__((section(".sram")));
 
 static uint8_t cmd_count[NUM_IC_COUNT_CHAIN] __attribute__((section(".sram")));
 
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+extern osMutexId_t spi_mutex_id;
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 static uint8_t *get_pec(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group);
 
 static void check_crc_errors(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group,
@@ -17,6 +25,8 @@ static void check_crc_errors(cell_asic_ctx_t *asic_ctx, bms_op_t reg_group,
 typedef void (*read_handlers_t)(cell_asic_ctx_t *asic_ctx,
                                 bms_group_select_t group,
                                 asic_status_buffers_t *status_buffers);
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 static void read_cfg_group(cell_asic_ctx_t *asic_ctx, bms_group_select_t group,
                            asic_status_buffers_t *status_buffers) {
@@ -298,12 +308,18 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
 
+  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
+    return COMM_TIMEOUT;
+  }
+
   // wake up
   asic_wakeup(asic_ctx->ic_count);
 
   // spi call
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
                         reg_data_size);
+
+  osMutexRelease(spi_mutex_id);
 
   // parse data on arrival
   handle_read_type(type, asic_ctx, group, &status_buffers);
@@ -415,9 +431,15 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     break;
   }
 
+  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
+    return COMM_TIMEOUT;
+  }
+
   asic_wakeup(asic_ctx->ic_count);
   bms_write_register_spi(asic_ctx->ic_count, cmd_arg, write_buffer,
                          ADBMS_TX_FRAME_BYTES);
+
+  osMutexRelease(spi_mutex_id);
 
   return COMM_OK;
 }
