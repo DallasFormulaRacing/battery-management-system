@@ -18,12 +18,14 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "bms.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // #include "bms.h"
 // #include "segment.h"
+#include "cmsis_os2.h"
 #include "state.h"
 
 /* USER CODE END Includes */
@@ -63,6 +65,9 @@ const osThreadAttr_t defaultTask_attributes = {
     .priority = (osPriority_t)osPriorityNormal,
     .stack_size = 128 * 4};
 /* USER CODE BEGIN PV */
+osThreadId_t spi_thread_pid;
+osMutexId_t spi_mutex_id;
+extern osMutexAttr_t spi_mutex_attr;
 
 /* USER CODE END PV */
 
@@ -123,13 +128,13 @@ int main(void) {
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  // bms_wake_test();
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  // osKernelInitialize();
+  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
+  spi_mutex_id = osMutexNew(&spi_mutex_attr);
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
@@ -147,8 +152,8 @@ int main(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  // defaultTaskHandle = osThreadNew(StartDefaultTask, NULL,
-  // &defaultTask_attributes);
+  defaultTaskHandle =
+      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -159,22 +164,37 @@ int main(void) {
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
-  // osKernelStart();
+  osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  bms_test_init();
 
   while (1) {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    bms_test_run();
-    // bms_state_measure(&hbms);
   }
   /* USER CODE END 3 */
+}
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument) {
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  bms_test_init();
+  for (;;) {
+    bms_test_run();
+    osDelay(50);
+  }
+  /* USER CODE END 5 */
 }
 
 /**
@@ -536,22 +556,6 @@ static void MX_GPIO_Init(void) {
 //   HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 // }
 /* USER CODE END 4 */
-
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
- * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for (;;) {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
 
 /**
  * @brief  Period elapsed callback in non blocking mode

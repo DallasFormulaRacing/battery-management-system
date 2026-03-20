@@ -4,9 +4,11 @@
 #include "stm32g4xx_hal_spi.h"
 #include <string.h>
 
-// toggle if DMA on or off
-osThreadId_t spi_thread_pid;
-#define SPI_THREAD_READY_FLAG 0x0911
+extern osThreadId_t spi_thread_pid;
+extern osMutexId_t spi_mutex_id;
+
+const osMutexAttr_t spi_mutex_attr = {
+    "spi1-mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
 inline void delay(uint32_t ms) { HAL_Delay(ms); }
 
@@ -45,16 +47,25 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 void spi_write(uint16_t size, uint8_t *tx_data) {
   asic_cs_low();
   if (HAL_OK == HAL_SPI_Transmit_DMA(&hspi1, tx_data, size)) {
-    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+
+    uint32_t flags = osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny,
+                                       SPI_DMA_FLAG_WAIT);
+
+    if (flags == (uint32_t)osErrorTimeout) {
+      HAL_SPI_Abort(&hspi1);
+    }
   }
-  /* SPI1 , data, size, timeout */
   asic_cs_hi();
 }
 
 void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
   asic_cs_low();
   if (HAL_OK == HAL_SPI_TransmitReceive_DMA(&hspi1, tx_data, rx_data, size)) {
-    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+    uint32_t flags = osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny,
+                                       SPI_DMA_FLAG_WAIT);
+
+    if (flags == (uint32_t)osErrorTimeout)
+      HAL_SPI_Abort(&hspi1);
   }
   asic_cs_hi();
 }
@@ -62,7 +73,11 @@ void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
 void spi_read(uint16_t size, uint8_t *rx_data) {
   asic_cs_low();
   if (HAL_OK == HAL_SPI_Receive_DMA(&hspi1, rx_data, size)) {
-    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+    uint32_t flags = osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny,
+                                       SPI_DMA_FLAG_WAIT);
+
+    if (flags == (uint32_t)osErrorTimeout)
+      HAL_SPI_Abort(&hspi1);
   }
   asic_cs_hi();
 }
