@@ -1,20 +1,31 @@
 #include "spi.h"
 #include "cmsis_os2.h"
+#include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_spi.h"
 #include <string.h>
 
 // toggle if DMA on or off
-extern osThreadId_t spi_thread_pid;
+osThreadId_t spi_thread_pid;
+#define SPI_THREAD_READY_FLAG 0x0911
 
 inline void delay(uint32_t ms) { HAL_Delay(ms); }
 
 inline void asic_cs_low() {
+  while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+    ;
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
 }
 
-inline void asic_cs_hi() { HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET); }
+inline void asic_cs_hi() {
+  while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+    ;
+  HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET);
+}
 
-inline void notify_SPI_task_on_DMA(SPI_HandleTypeDef *hspi) { (void)hspi; }
+void notify_SPI_task_on_DMA(SPI_HandleTypeDef *hspi) {
+  if (SPI1 == hspi->Instance && spi_thread_pid != NULL)
+    osThreadFlagsSet(spi_thread_pid, SPI_THREAD_READY_FLAG);
+}
 
 // we got data
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
@@ -33,23 +44,26 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 
 void spi_write(uint16_t size, uint8_t *tx_data) {
   asic_cs_low();
-  HAL_SPI_Transmit_DMA(&hspi1, tx_data, size);
-  // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  if (HAL_OK == HAL_SPI_Transmit_DMA(&hspi1, tx_data, size)) {
+    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+  }
   /* SPI1 , data, size, timeout */
   asic_cs_hi();
 }
 
 void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
   asic_cs_low();
-  HAL_SPI_TransmitReceive_DMA(&hspi1, tx_data, rx_data, size);
-  // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  if (HAL_OK == HAL_SPI_TransmitReceive_DMA(&hspi1, tx_data, rx_data, size)) {
+    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+  }
   asic_cs_hi();
 }
 
 void spi_read(uint16_t size, uint8_t *rx_data) {
   asic_cs_low();
-  HAL_SPI_Receive_DMA(&hspi1, rx_data, size);
-  // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  if (HAL_OK == HAL_SPI_Receive_DMA(&hspi1, rx_data, size)) {
+    osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny, osWaitForever);
+  }
   asic_cs_hi();
 }
 
@@ -81,8 +95,8 @@ uint32_t get_tim_count_with_reset() {
 void asic_wakeup(uint8_t total_ic) {
   for (uint8_t ic = 0; ic < total_ic; ic++) {
     asic_cs_low();
-    delay(WAKEUP_DELAY);
+    osDelay(WAKEUP_DELAY);
     asic_cs_hi();
-    delay(WAKEUP_DELAY);
+    osDelay(WAKEUP_DELAY);
   }
 }
