@@ -13,15 +13,15 @@ const osMutexAttr_t spi_mutex_attr = {
 inline void delay(uint32_t ms) { osDelay(ms); }
 
 inline void asic_cs_low() {
-  while ((hspi1.Instance->SR & SPI_FLAG_BSY))
-    ;
+  // while ((hspi1.Instance->SR & SPI_FLAG_BSY))
+  //   ;
   __DSB();
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
 }
 
 inline void asic_cs_hi() {
-  while ((hspi1.Instance->SR & SPI_FLAG_BSY))
-    ;
+  // while ((hspi1.Instance->SR & SPI_FLAG_BSY))
+  //   ;
   __DSB();
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET);
 }
