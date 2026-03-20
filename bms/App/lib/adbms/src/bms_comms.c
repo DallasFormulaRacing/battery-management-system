@@ -71,10 +71,6 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
 
   build_command_buffer(command_bytes, cmd_msg);
 
-  xSPI_Task_Handler = xTaskGetCurrentTaskHandle();
-
-  // task noti
-
   uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
 
   // send on SPI
@@ -275,20 +271,3 @@ void spi_adax2_command(aux_select_t ch) {
 void spi_adc_snap_command(void) { bms_send_command((command_t){0x00, 0x2D}); }
 
 void spi_adc_unsnap_command(void) { bms_send_command((command_t){0x00, 0x2F}); }
-
-void spi_poll_command_raw(const command_t cmd_bytes, const uint8_t ic_count,
-                          uint8_t *poll_bytes) {
-  uint8_t dummy = 0xFF;
-
-  asic_cs_low();
-
-  command_msg_t cmd;
-  build_command_buffer(cmd_bytes, cmd);
-  spi_write(4, cmd);
-
-  for (uint8_t i = 0; i < (2U * ic_count); i++) {
-    HAL_SPI_TransmitReceive(&hspi1, &dummy, &poll_bytes[i], 1, SPI_TIME_OUT);
-  }
-
-  asic_cs_hi();
-}
