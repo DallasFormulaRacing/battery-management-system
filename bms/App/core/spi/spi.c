@@ -10,17 +10,19 @@ extern osMutexId_t spi_mutex_id;
 const osMutexAttr_t spi_mutex_attr = {
     "spi1-mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
-inline void delay(uint32_t ms) { HAL_Delay(ms); }
+inline void delay(uint32_t ms) { osDelay(ms); }
 
 inline void asic_cs_low() {
-  while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+  while ((hspi1.Instance->SR & SPI_FLAG_BSY))
     ;
+  __DSB();
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_RESET);
 }
 
 inline void asic_cs_hi() {
-  while (__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_BSY))
+  while ((hspi1.Instance->SR & SPI_FLAG_BSY))
     ;
+  __DSB();
   HAL_GPIO_WritePin(GPIO_PORT, CS_PIN, GPIO_PIN_SET);
 }
 
@@ -31,16 +33,19 @@ void notify_SPI_task_on_DMA(SPI_HandleTypeDef *hspi) {
 
 // we got data
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+  asic_cs_hi();
   notify_SPI_task_on_DMA(hspi);
 }
 
 // we sent and got data
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
+  asic_cs_hi();
   notify_SPI_task_on_DMA(hspi);
 }
 
 // we sent data
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+  asic_cs_hi();
   notify_SPI_task_on_DMA(hspi);
 }
 
@@ -55,7 +60,7 @@ void spi_write(uint16_t size, uint8_t *tx_data) {
       HAL_SPI_Abort(&hspi1);
     }
   }
-  asic_cs_hi();
+  // asic_cs_hi();
 }
 
 void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
@@ -67,7 +72,7 @@ void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
     if (flags == (uint32_t)osErrorTimeout)
       HAL_SPI_Abort(&hspi1);
   }
-  asic_cs_hi();
+  // asic_cs_hi();
 }
 
 void spi_read(uint16_t size, uint8_t *rx_data) {
@@ -79,7 +84,7 @@ void spi_read(uint16_t size, uint8_t *rx_data) {
     if (flags == (uint32_t)osErrorTimeout)
       HAL_SPI_Abort(&hspi1);
   }
-  asic_cs_hi();
+  // asic_cs_hi();
 }
 
 void print_over_uart(const char *str) {

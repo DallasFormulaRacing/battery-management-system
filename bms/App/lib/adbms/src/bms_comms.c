@@ -1,4 +1,5 @@
 #include "bms_comms.h"
+#include "spi.h"
 
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
 
@@ -66,9 +67,10 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
 
   uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
 
+  // asic_cs_low();
   // send on SPI
   spi_write_read(cmd_msg, asic_status_buffers->register_data, len);
-
+  // asic_cs_hi();
   // parse retrieved data
   return read_all_asics(ic_count, bytes_per_asic_register,
                         asic_status_buffers->register_data,
@@ -125,9 +127,9 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
     frame[idx++] = (uint8_t)(data_pec >> 8);
     frame[idx++] = (uint8_t)data_pec;
   } // end for
-
+  // asic_cs_hi();
   spi_write((uint8_t)total_frame_len, frame);
-
+  // asic_cs_hi();
   return COMM_OK;
 }
 

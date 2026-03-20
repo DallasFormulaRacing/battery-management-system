@@ -292,6 +292,11 @@ pwm_reg_group_select_t switch_group_pwm(bms_group_select_t group) {
  */
 comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                             const command_t cmd_arg, bms_group_select_t group) {
+
+  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
+    return COMM_TIMEOUT;
+  }
+
   uint16_t read_buffer_size;
   uint8_t reg_data_size;
 
@@ -299,6 +304,7 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
       asic_ctx, group, type, &read_buffer_size, &reg_data_size);
 
   if (status != COMM_OK) {
+    osMutexRelease(spi_mutex_id);
     return COMM_INVALID_COMMAND;
   }
 
@@ -307,10 +313,6 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   status_buffers.register_data = read_buffer;
   status_buffers.pec_error_flags = pec_error;
   status_buffers.command_counter = cmd_count;
-
-  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
-    return COMM_TIMEOUT;
-  }
 
   // wake up
   asic_wakeup(asic_ctx->ic_count);
@@ -407,9 +409,14 @@ static comm_status_t get_read_buffer_sizes(cell_asic_ctx_t *asic_ctx,
 comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                              const command_t cmd_arg,
                              bms_group_select_t group) {
+
+  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
+    return COMM_TIMEOUT;
+  }
   switch (type) {
   case BMS_REG_CONFIG:
     if (config_a_b(asic_ctx, switch_group_cfg(group)) != COMM_OK) {
+      osMutexRelease(spi_mutex_id);
       return COMM_ERROR;
     };
     break;
@@ -419,6 +426,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     break;
   case BMS_REG_PWM:
     if (pwm_a_b(asic_ctx, switch_group_pwm(group)) != COMM_OK) {
+      osMutexRelease(spi_mutex_id);
       return COMM_ERROR;
     }
     break;
@@ -427,12 +435,9 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
     write_to_all_ics(asic_ctx, ASIC_MAILBOX_CLR_FLAG);
     break;
   default:
+    osMutexRelease(spi_mutex_id);
     return COMM_INVALID_COMMAND;
     break;
-  }
-
-  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
-    return COMM_TIMEOUT;
   }
 
   asic_wakeup(asic_ctx->ic_count);
