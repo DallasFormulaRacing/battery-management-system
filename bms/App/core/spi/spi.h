@@ -16,7 +16,7 @@
 #define I2C_TIME_OUT HAL_MAX_DELAY
 
 #define SPI_THREAD_READY_FLAG 0x0911
-#define SPI_DMA_FLAG_WAIT 50
+#define SPI_DMA_FLAG_WAIT 500
 
 extern ADC_HandleTypeDef hadc1;
 extern I2C_HandleTypeDef hi2c1;

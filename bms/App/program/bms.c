@@ -283,5 +283,7 @@ void bms_test_run() {
   spi_adc_snap_command();
   adbms_read_fcell_voltages(hbms.asic);
   spi_adc_unsnap_command();
+
+  cell_open_wire_test();
   delay(1);
 }
