@@ -1,11 +1,4 @@
 #include "bms_comms.h"
-#include "FreeRTOS.h"
-#include "FreeRTOSConfig.h"
-#include "portmacro.h"
-#include "semphr.h"
-
-TaskHandle_t xSPI_Task_Handler = NULL;
-SemaphoreHandle_t xSPI_Semph_Handler;
 
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
 

@@ -55,8 +55,9 @@ ENTRY(Reset_Handler)
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
+FLASH (rx)      : ORIGIN = 0x08000000, LENGTH = 512K
+RAM   (xrw)     : ORIGIN = 0x20000000, LENGTH = 112K
+SRAM  (xrw)     : ORIGIN = 0x2001C000, LENGTH = 16K
 }
 
 /* Highest address of the user mode stack */
@@ -235,6 +236,14 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .sram (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.sram)
+    *(.sram*)
+    . = ALIGN(4);
+  } >SRAM
 
 
 
