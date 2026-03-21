@@ -19,6 +19,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) == HAL_OK) {
             process_can_command(rx_header.Identifier, rx_data); //rx_data never used since only cmd id matters
+    }else{
+        //send rxfifo received error
     }
 }
 
@@ -30,8 +32,13 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
  */
 void process_can_command(uint32_t ext_id, uint8_t* data){
     //redundant checks for header id
-    if(!can_id_is_valid(ext_id)) return;
-    if (can_id_get_target(ext_id) != BMS_DEVICE_ID) return;
+    if(!can_id_is_valid(ext_id)){
+        //send invalid can id frame
+        return;
+    } 
+    if (can_id_get_target(ext_id) != BMS_DEVICE_ID){
+        //send invalid target frame
+    }
 
     switch(can_id_get_cmd(ext_id)){
         case CMD_ID_FIRST_24_CELLS:
@@ -66,6 +73,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
         case CMD_ID_IMD_DATA:
             break;
         default:
+            //send invalid command id
             return;
     }
 }
