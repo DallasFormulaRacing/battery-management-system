@@ -1,10 +1,4 @@
-# program/CMakeLists.txt
+add_subdirectory(program)
+add_subdirectory(daemons)
+add_subdirectory(threads)
 
-# Create the final firmware executable
-add_library(services STATIC 
-    bms.c 
-    state.c
-)
-
-target_include_directories(services PUBLIC .)
-target_link_libraries(services PRIVATE thermal cb adbms charger segment)

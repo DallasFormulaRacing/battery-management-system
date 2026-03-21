@@ -66,8 +66,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     Drivers/CMSIS/Include
     Drivers/CMSIS/Device/ST/STM32G4xx/Include
     Drivers/STM32G4xx_HAL_Driver/Inc
-    App/program        # FIX: Allows #include "bms.h"
-    App/math/cb        # FIX: Allows #include "cb.h" (if needed in main)
+    App/services/program      
+    App/math/cb        
 )
 add_link_options(--specs=nosys.specs)
 
@@ -101,7 +101,9 @@ target_link_libraries(${PROJECT_NAME}
         adbms  
         segment
         charger
-        services
+        program    
+        daemons    
+        threads
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
