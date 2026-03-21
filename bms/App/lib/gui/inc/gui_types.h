@@ -49,9 +49,7 @@ typedef enum{
 typedef enum{
   ERROR_ID_INVALID_CMD = 0xF001,
   ERROR_ID_INVALID_TARGET = 0xF002,
-  ERROR_ID_BAD_DLC = 0xF003,
-  ERROR_ID_INVALID_ID = 0xF004,
-  ERROR_ID_INVALID_TARGET_ID = 0xF005
+  ERROR_ID_INVALID_ID = 0xF003,
 }can_error_id_t;
 
 static inline can_ext_id_t can_id_build(can_priority_t priority,

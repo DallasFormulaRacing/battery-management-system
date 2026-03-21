@@ -1,4 +1,6 @@
 #include "gui_drivers.h"
+#include "gui_types.h"
+#include "stm32g4xx_hal_fdcan.h"
 
 static void send_filtered_voltage_frame(int start_ic, int end_ic, can_resp_id_t resp_id);
 static void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id);
@@ -33,11 +35,12 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t rx_fifo0_it
 void process_can_command(uint32_t ext_id, uint8_t* data){
     //redundant checks for header id
     if(!can_id_is_valid(ext_id)){
-        //send invalid can id frame
+        send_can_error(ERROR_ID_INVALID_ID);
         return;
     } 
     if (can_id_get_target(ext_id) != BMS_DEVICE_ID){
-        //send invalid target frame
+        send_can_error(ERROR_ID_INVALID_TARGET);
+        return;
     }
 
     switch(can_id_get_cmd(ext_id)){
@@ -73,7 +76,7 @@ void process_can_command(uint32_t ext_id, uint8_t* data){
         case CMD_ID_IMD_DATA:
             break;
         default:
-            //send invalid command id
+            send_can_error(ERROR_ID_INVALID_CMD);
             return;
     }
 }
@@ -128,4 +131,15 @@ void send_metadata_frame(can_resp_id_t resp_id){
     can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)resp_id, BMS_DEVICE_ID);
     fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
 
+}
+
+/*
+ * @ Sends can frame to gui for certain can errors
+ * @param resp_id: can frame id to send to gui
+ * @return none
+ */
+void send_can_error(can_error_id_t error_id){
+    uint8_t tx_frame = 0;
+    can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, (uint16_t)error_id, BMS_DEVICE_ID);
+    fdcan_send(tx_header, &tx_frame, FDCAN_DLC_BYTES_0);
 }
