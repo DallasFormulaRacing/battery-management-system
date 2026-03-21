@@ -320,7 +320,7 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   // why did + 4 work
   // spi call
   bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
-                        reg_data_size + 4);
+                        reg_data_size + COMMAND_HEADER_SIZE);
 
   // parse data on arrival
   handle_read_type(type, asic_ctx, group, &status_buffers);
