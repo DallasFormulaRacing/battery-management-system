@@ -101,7 +101,7 @@ target_link_libraries(${PROJECT_NAME}
         adbms  
         segment
         charger
-        bms_app
+        services
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

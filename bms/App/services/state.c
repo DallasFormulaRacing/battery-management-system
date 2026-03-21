@@ -1,5 +1,4 @@
 #include "state.h"
-#include "bms.h"
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 
