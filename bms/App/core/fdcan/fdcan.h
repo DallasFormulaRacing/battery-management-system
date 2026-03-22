@@ -6,22 +6,6 @@
 #include "stm32g4xx_hal_fdcan.h" 
 #include "main.h"   // provides: extern FDCAN_HandleTypeDef hfdcan2
 
-/* =========================================================
-   Application RX handler registration
-   ========================================================= */
-typedef void (*fdcan_rx_handler_t)(const FDCAN_RxHeaderTypeDef *hdr,
-                                  const uint8_t *data,
-                                  void *ctx);
-
-/**
- * @brief Register an application-level RX handler for FIFO0 frames.
- * Called by api (bms_can_init()) exactly once.
- */
-void fdcan_register_rx_handler(fdcan_rx_handler_t handler, void *ctx);
-
-/* =========================================================
-   Transport primitive
-   ========================================================= */
 /**
  * @brief Send an extended-ID CAN FD data frame (FDCAN2).
  *
