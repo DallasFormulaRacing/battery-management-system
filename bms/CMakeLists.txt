@@ -104,6 +104,8 @@ target_link_libraries(${PROJECT_NAME}
         program    
         daemons    
         threads
+        services
+
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
