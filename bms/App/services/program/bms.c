@@ -43,10 +43,9 @@ bms_handler_t hbms = {
  * Otherwise returns no error.
  */
 bms_fault_t therm_temp_in_range_check() {
-  // NOTE: Read might need to be outside
-  // adbms_read_rdasall_voltage(hbms.asic);
+  adbms_start_aux_voltage_measurement(hbms.asic);
+  delay(5);
   adbms_read_aux_voltages(hbms.asic);
-  // adbms_read_s_voltages(hbms.asic);
   bool over_temp_flag = false;
   bool under_temp_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
@@ -88,10 +87,10 @@ bms_fault_t therm_temp_in_range_check() {
 }
 
 bms_fault_t therm_open_wire_check() {
-  // adbms_read_rdasall_voltage(hbms.asic);
-
+  adbms_start_aux_voltage_measurement(hbms.asic);
+  delay(5);
   adbms_read_aux_voltages(hbms.asic);
-  // adbms_read_s_voltages(hbms.asic);
+
   bool open_wire_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
@@ -147,13 +146,17 @@ bms_fault_t cell_voltage_in_range_check() {
 
 void adbms_set_watchdog() {}
 
-bms_fault_t cell_open_wire_check_odd() {
+static inline void get_odd_openwire_voltages() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_odd);
   osDelay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
+}
+
+bms_fault_t cell_open_wire_check_odd() {
+  get_odd_openwire_voltages();
   bool cell_open_wire_flag = false;
 
   //////////////
@@ -180,13 +183,17 @@ bms_fault_t cell_open_wire_check_odd() {
   return BMS_ERR_NONE;
 }
 
-bms_fault_t cell_open_wire_check_even() {
+static inline void get_even_openwire_voltages() {
   adbms_start_adc_s_voltage_measurement(hbms.asic,
                                         g_cell_open_wire_check_profile_even);
   osDelay(10);
   spi_adc_snap_command();
   adbms_read_s_voltages(hbms.asic);
   spi_adc_unsnap_command();
+}
+
+bms_fault_t cell_open_wire_check_even() {
+  get_even_openwire_voltages();
   bool cell_open_wire_flag = false;
 
   // todo: how to detect? value reading is fine now
@@ -238,24 +245,24 @@ void measure_during_fault() {
 
 static void pop() {
   for (uint8_t i = 0; i < 12; i++) {
-    look[0][i] = convert_voltage_human_readable(
-        hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
+    look[0][i] =
+        convert_voltage_human_readable(hbms.asic[0].aux.aux_voltages_array[i]);
   }
 
   for (uint8_t i = 0; i < 12; i++) {
-    look[1][i] = convert_voltage_human_readable(
-        hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
+    look[1][i] =
+        convert_voltage_human_readable(hbms.asic[1].aux.aux_voltages_array[i]);
   }
 
-  for (uint8_t i = 0; i < 12; i++) {
-    look[2][i] = convert_voltage_human_readable(
-        hbms.asic[0].cell.cell_voltages_array[i]);
-  }
+  // for (uint8_t i = 0; i < 12; i++) {
+  //   look[2][i] = convert_voltage_human_readable(
+  //       hbms.asic[0].cell.cell_voltages_array[i]);
+  // }
 
-  for (uint8_t i = 0; i < 12; i++) {
-    look[3][i] = convert_voltage_human_readable(
-        hbms.asic[1].cell.cell_voltages_array[i]);
-  }
+  // for (uint8_t i = 0; i < 12; i++) {
+  //   look[3][i] = convert_voltage_human_readable(
+  //       hbms.asic[1].cell.cell_voltages_array[i]);
+  // }
 }
 
 /* ----------------------------------------------------- */
@@ -271,16 +278,10 @@ void bms_test_init() {
   }
 
   adbms_init_config(hbms.asic);
-  // adbms_start_aux_voltage_measurement(hbms.asic);
+  adbms_start_aux_voltage_measurement(hbms.asic);
   adbms_clear_all_pwm(hbms.asic);
   adbms_start_cell_voltage_measurement(hbms.asic);
-  // adbms_start_fcell_voltage_measurement(hbms.asic);
-  // Needed for filtered cell readings
-  // spi_adcv_command(g_cell_filtered_profile.redundant_measurement_mode,
-  //                  g_cell_filtered_profile.continuous_measurement,
-  //                  g_cell_filtered_profile.discharge_permit,
-  //                  g_cell_filtered_profile.reset_filter,
-  //                  g_cell_filtered_profile.ow_mode);
+
   osDelay(8);
 }
 
@@ -303,15 +304,12 @@ void bms_light() {
 }
 
 void bms_test_run() {
-  asic_wakeup(NUM_IC_COUNT_CHAIN);
-  spi_adc_snap_command();
-  adbms_read_fcell_voltages(hbms.asic);
-  spi_adc_unsnap_command();
+  // asic_wakeup(NUM_IC_COUNT_CHAIN);
+  // spi_adc_snap_command();
+  // adbms_read_fcell_voltages(hbms.asic);
+  // spi_adc_unsnap_command();
 
-  asic_wakeup(NUM_IC_COUNT_CHAIN);
-  spi_adc_snap_command();
-  adbms_read_cell_voltages(hbms.asic);
-  spi_adc_unsnap_command();
+  adbms_read_aux_voltages(hbms.asic);
   pop();
   delay(1);
 }

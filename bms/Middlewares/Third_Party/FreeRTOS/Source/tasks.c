@@ -41,7 +41,6 @@ task.h is included from an application file. */
 #include "task.h"
 #include "timers.h"
 
-
 /* Lint e9021, e961 and e750 are suppressed as a MISRA exception justified
 because the MPU ports require MPU_WRAPPERS_INCLUDED_FROM_API_FILE to be defined
 for the header files above, but not in this file, in order to generate the
@@ -2725,7 +2724,7 @@ context switch if preemption is turned off. */
 /* Tasks of equal priority to the currently running task will share
 processing time (time slice) if preemption is on, and the application
 writer has not explicitly turned time slicing off. */
-#if ((configUSE_PREEMPTION == 1) && (configUSE_TIME_SLICING == 0))
+#if ((configUSE_PREEMPTION == 1) && (configUSE_TIME_SLICING == 1))
     {
       if (listCURRENT_LIST_LENGTH(&(
               pxReadyTasksLists[pxCurrentTCB->uxPriority])) > (UBaseType_t)1) {
