@@ -1,7 +1,7 @@
 #Gitversion.yml
 mode: Mainline
-major-version-bump-message: '\+semver:\s?(breaking|major|release|final)'
-minor-version-bump-message: '\+semver:\s?(feature|feat|minor)'
-patch-version-bump-message: '\+semver:\s?(fix|patch|hotfix)'
-no-bump-message: '\+semver:\s?(none|skip|clean|docs|chore)'
+major-version-bump-message: "major:"
+minor-version-bump-message: "feat:|feature:"
+patch-version-bump-message: "fix:|hotfix:"
+no-bump-message: "none|skip|clean|docs|chore"
 tag-prefix: "[vV]?"
