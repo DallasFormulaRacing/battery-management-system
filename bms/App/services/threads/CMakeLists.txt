@@ -5,4 +5,4 @@ add_library(threads STATIC
 )
 
 target_include_directories(threads PUBLIC .)
-target_link_libraries(threads PRIVATE )
+target_link_libraries(threads PRIVATE program freertos thermal cb adbms charger segment)
