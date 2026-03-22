@@ -21,7 +21,6 @@
 #include "bms.h"
 #include "cmsis_os.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 // #include "bms.h"
@@ -60,11 +59,7 @@ DMA_HandleTypeDef hdma_spi1_tx;
 TIM_HandleTypeDef htim3;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-    .name = "defaultTask",
-    .priority = (osPriority_t)osPriorityNormal,
-    .stack_size = 128 * 4};
+
 /* USER CODE BEGIN PV */
 osThreadId_t spi_thread_pid;
 osMutexId_t spi_mutex_id;
@@ -81,7 +76,6 @@ static void MX_I2C1_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
-void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -153,11 +147,11 @@ int main(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle =
-      osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadId_t bms_safety_taskHandler =
+      osThreadNew(bms_safety_task, NULL, &bms_safety_task_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -180,23 +174,7 @@ int main(void) {
   /* USER CODE END 3 */
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
-/**
- * @brief  Function implementing the defaultTask thread.
- * @param  argument: Not used
- * @retval None
- */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument) {
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  bms_test_init();
-  for (;;) {
-    bms_test_run();
-    osDelay(1);
-  }
-  /* USER CODE END 5 */
-}
+/* USER CODE BEGIN Header_bms_safety_task */
 
 /**
  * @brief System Clock Configuration
