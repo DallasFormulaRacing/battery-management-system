@@ -4,6 +4,7 @@ add_subdirectory(eeprom)
 add_subdirectory(interface)
 add_subdirectory(packvolt)
 add_subdirectory(segment)
+add_subdirectory(imd)
 
 add_library(api_layer INTERFACE)
 
@@ -14,4 +15,5 @@ target_link_libraries(api_layer INTERFACE
     interface 
     packvolt 
     segment
+    imd
 )
