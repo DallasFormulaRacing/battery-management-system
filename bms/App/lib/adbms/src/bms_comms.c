@@ -1,9 +1,7 @@
 #include "bms_comms.h"
+#include "spi.h"
 
 static void build_command_buffer(const command_t command_bytes, uint8_t *cmd);
-
-static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
-                         uint8_t *rx_data, uint8_t bytes_per_asic_register);
 
 static comm_status_t handle_single_asic(const uint8_t *rx_data,
                                         uint8_t bytes_in_reg,
@@ -67,9 +65,12 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
 
   build_command_buffer(command_bytes, cmd_msg);
 
-  spi_read_all(ic_count, cmd_msg, asic_status_buffers->register_data,
-               bytes_per_asic_register);
+  uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
 
+  // send on SPI
+  spi_write_read(cmd_msg, asic_status_buffers->register_data, len);
+
+  // parse retrieved data
   return read_all_asics(ic_count, bytes_per_asic_register,
                         asic_status_buffers->register_data,
                         asic_status_buffers);
@@ -125,9 +126,7 @@ comm_status_t bms_write_register_spi(uint8_t ic_count,
     frame[idx++] = (uint8_t)(data_pec >> 8);
     frame[idx++] = (uint8_t)data_pec;
   } // end for
-
   spi_write((uint8_t)total_frame_len, frame);
-
   return COMM_OK;
 }
 
@@ -152,20 +151,6 @@ static void build_command_buffer(const command_t command_bytes, uint8_t *cmd) {
   cmd_pec = calc_PEC15(2, cmd);
   cmd[2] = (uint8_t)(cmd_pec >> 8);
   cmd[3] = (uint8_t)(cmd_pec);
-}
-
-/**
- * @brief
- *
- * @param ic_count
- * @param cmd_msg
- * @param rx_data
- * @param bytes_per_asic_register
- */
-static void spi_read_all(uint8_t ic_count, command_msg_t cmd_msg,
-                         uint8_t *rx_data, uint8_t bytes_per_asic_register) {
-  uint8_t len = (uint8_t)(bytes_per_asic_register * ic_count);
-  spi_write_read(cmd_msg, rx_data, len);
 }
 
 /**
@@ -278,20 +263,3 @@ void spi_adax2_command(aux_select_t ch) {
 void spi_adc_snap_command(void) { bms_send_command((command_t){0x00, 0x2D}); }
 
 void spi_adc_unsnap_command(void) { bms_send_command((command_t){0x00, 0x2F}); }
-
-void spi_poll_command_raw(const command_t cmd_bytes, const uint8_t ic_count,
-                          uint8_t *poll_bytes) {
-  uint8_t dummy = 0xFF;
-
-  asic_cs_low();
-
-  command_msg_t cmd;
-  build_command_buffer(cmd_bytes, cmd);
-  spi_write(4, cmd);
-
-  for (uint8_t i = 0; i < (2U * ic_count); i++) {
-    HAL_SPI_TransmitReceive(&hspi1, &dummy, &poll_bytes[i], 1, SPI_TIME_OUT);
-  }
-
-  asic_cs_hi();
-}

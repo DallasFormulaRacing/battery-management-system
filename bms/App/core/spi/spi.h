@@ -2,6 +2,7 @@
 #define SPI_H
 
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_spi.h"
 #include "stm32g4xx_hal_tim.h"
 #include "stm32g4xx_it.h"
 #include <stdbool.h>
@@ -13,6 +14,9 @@
 #define SPI_TIME_OUT HAL_MAX_DELAY
 #define UART_TIME_OUT HAL_MAX_DELAY
 #define I2C_TIME_OUT HAL_MAX_DELAY
+
+#define SPI_THREAD_READY_FLAG 0x0911
+#define SPI_DMA_FLAG_WAIT 5
 
 extern ADC_HandleTypeDef hadc1;
 extern I2C_HandleTypeDef hi2c1;
@@ -41,7 +45,7 @@ void start_timer(void);
 
 void stop_timer(void);
 
-uint32_t get_tim_count(void);
+uint32_t get_tim_count_with_reset(void);
 
 void asic_wakeup(uint8_t total_ic);
 

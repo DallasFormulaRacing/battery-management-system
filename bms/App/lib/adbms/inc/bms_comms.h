@@ -40,7 +40,4 @@ void spi_adc_snap_command(void);
 
 void spi_adc_unsnap_command(void);
 
-void spi_poll_command_raw(const command_t cmd_bytes, uint8_t ic_count,
-                          uint8_t *poll_bytes);
-
 #endif

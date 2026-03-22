@@ -8,6 +8,7 @@
 // This has to be at compile time.
 #define NUM_IC_COUNT_CHAIN 2
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
+#define COMMAND_HEADER_SIZE 4
 // #define READ_SIZE (ADBMS_RX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
 #define NUM_CELLS_PER_SEGMENT 12
 #define NUM_THERM_PER_SEGMENT 10
@@ -24,11 +25,11 @@ typedef struct {
   aux_select_t channels;
   cont_measurement_mode_t continuous_measurement;
   open_wire_detect_mode_t ow_mode;
-  aux_open_wire_detect_mode_t AUX_OW_en;
-  pull_down_current_mode_t PUP_en;
-  discharge_permission_t DCP_en;
-  reset_filter_mode_t RSTF_en;
-  inject_err_spi_read_t ERR_en;
+  aux_open_wire_detect_mode_t aux_ow_mode;
+  pull_down_current_mode_t pull_up_resistor_ow;
+  discharge_permission_t discharge_permit;
+  reset_filter_mode_t reset_filter;
+  inject_err_spi_read_t error_injection_mode;
 } adc_config_t;
 
 typedef struct {
@@ -65,7 +66,10 @@ extern adc_config_t g_cell_profile;
 extern adc_config_t g_cell_filtered_profile;
 extern adc_config_t g_thermistor_profile;
 extern adc_config_t g_thermistor_open_wire_check_profile;
+extern adc_config_t g_cell_open_wire_check_profile_even;
+extern adc_config_t g_cell_open_wire_check_profile_odd;
 extern adc_config_t g_cell_open_wire_check_profile;
+extern adc_config_t g_cell_force_sync_s_adc;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
 
@@ -74,8 +78,8 @@ extern measurement_config_t g_meas_cfg;
 /*redundant_enable_t RD_en = RD_OFF;
     cont_measurement_mode_t CONT_en = SINGLE;
     open_wire_detect_mode_t OW_CS_en = OW_OFF_ALL_CH;
-    aux_open_wire_detect_mode_t AUX_OW_en = AUX_OW_OFF;
-    pull_down_current_mode_t PUP_en = PUP_DOWN;
-    discharge_permission_t DCP_en = DCP_OFF;
-    reset_filter_mode_t RSTF_en = RSTF_OFF;
-    inject_err_spi_read_t ERR_en; = WITHOUT_ERR;*/
+    aux_open_wire_detect_mode_t aux_ow_mode = AUX_OW_OFF;
+    pull_down_current_mode_t pull_up_resistor_ow = PUP_DOWN;
+    discharge_permission_t discharge_permit = DCP_OFF;
+    reset_filter_mode_t reset_filter = RSTF_OFF;
+    inject_err_spi_read_t error_injection_mode; = WITHOUT_ERR;*/

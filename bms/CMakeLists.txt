@@ -1,3 +1,4 @@
+# root cmake
 cmake_minimum_required(VERSION 3.22)
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -18,7 +19,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-
+add_subdirectory(Middlewares)
 add_subdirectory(App)
 
 if(BUILD_TESTING)
@@ -37,7 +38,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif () 
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  # Linux-specific stuff
+  # MacOS-specific stuff
   set(CMAKE_SYSROOT /Applications/ArmGNUToolchain/14.3.rel1/arm-none-eabi)
   set(CMAKE_C_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
   set(CMAKE_CXX_FLAGS_INIT "--sysroot=${CMAKE_SYSROOT}")
@@ -65,8 +66,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     Drivers/CMSIS/Include
     Drivers/CMSIS/Device/ST/STM32G4xx/Include
     Drivers/STM32G4xx_HAL_Driver/Inc
-    App/program        # FIX: Allows #include "bms.h"
-    App/math/cb        # FIX: Allows #include "cb.h" (if needed in main)
+    App/services/program      
+    App/math/cb        
 )
 add_link_options(--specs=nosys.specs)
 
@@ -78,7 +79,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     -mfloat-abi=hard
     -ffunction-sections
     -fdata-sections
-    -O0 -g3            # Development defaults
+    -O0 -g3            
 )
 
 file(GLOB HAL_SOURCES Drivers/STM32G4xx_HAL_Driver/Src/*.c)
@@ -88,11 +89,11 @@ target_sources(${PROJECT_NAME} PRIVATE ${HAL_SOURCES})
 target_link_options(${PROJECT_NAME} PRIVATE
     "-T${CMAKE_SOURCE_DIR}/STM32G474XX_FLASH.ld"
     -Wl,--gc-sections
-    --specs=nosys.specs # Often needed for embedded GCC
+    --specs=nosys.specs 
 )
 
-# 11. Final Dependency Linkage
-# This connects the main executable to your entire logic tree
+
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         core_layer
@@ -100,5 +101,16 @@ target_link_libraries(${PROJECT_NAME}
         adbms  
         segment
         charger
-        bms_app
+        program    
+        daemons    
+        threads
 )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+    COMMENT ">> Running command: OBJCOPY to BIN format"
+)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_SIZE} --format=berkeley ${PROJECT_NAME}.elf
+    COMMENT ">> Running command: Memory Usage Report")

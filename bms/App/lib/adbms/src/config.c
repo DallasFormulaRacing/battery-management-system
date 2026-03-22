@@ -1,63 +1,88 @@
 #include "config.h"
+#include "bms_enums.h"
 
 adc_config_t g_cell_profile = {
-    .redundant_measurement_mode = RD_OFF,
-    .channels = AUX_ALL,
-    .continuous_measurement = SINGLE,
-    .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
-};
-
-adc_config_t g_cell_filtered_profile = {
-    .redundant_measurement_mode = RD_OFF,
+    .redundant_measurement_mode = RD_ON,
     .channels = AUX_ALL,
     .continuous_measurement = CONTINUOUS,
     .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_ON,
-    .ERR_en = WITHOUT_ERR,
+    .aux_ow_mode = AUX_OW_OFF,
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
 };
+
+// adc_config_t g_cell_filtered_profile = {
+//     .redundant_measurement_mode = RD_OFF,
+//     .channels = AUX_ALL,
+//     .continuous_measurement = CONTINUOUS,
+//     .ow_mode = OW_OFF_ALL_CH,
+//     .aux_ow_mode = AUX_OW_ON,
+//     .pull_up_resistor_ow = PUP_DOWN,
+//     .discharge_permit = DCP_OFF,
+//     .reset_filter = RSTF_ON,
+//     .error_injection_mode = WITHOUT_ERR,
+// };
 
 adc_config_t g_thermistor_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
     .continuous_measurement = SINGLE,
     .ow_mode = OW_OFF_ALL_CH,
-    .AUX_OW_en = AUX_OW_OFF,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
+    .aux_ow_mode = AUX_OW_OFF,
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
 };
 
 adc_config_t g_thermistor_open_wire_check_profile = {
     .redundant_measurement_mode = RD_OFF,
     .channels = AUX_ALL,
     .continuous_measurement = SINGLE,
-    .ow_mode = OW_ON_ALL_CH,
-    .AUX_OW_en = AUX_OW_ON,
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
+    .ow_mode = OW_OFF_ALL_CH,
+    .aux_ow_mode = AUX_OW_ON,
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
 };
 
-adc_config_t g_cell_open_wire_check_profile = {
-    .redundant_measurement_mode = RD_ON, // RD
+adc_config_t g_cell_open_wire_check_profile_even = {
+    .redundant_measurement_mode = RD_OFF, // RD
     .channels = AUX_ALL,
-    .continuous_measurement = SINGLE, // Cont
-    .ow_mode = OW_OFF_ALL_CH,         // OW OFF
-    .AUX_OW_en = AUX_OW_OFF,          // OW OFF
-    .PUP_en = PUP_DOWN,
-    .DCP_en = DCP_OFF,
-    .RSTF_en = RSTF_OFF,
-    .ERR_en = WITHOUT_ERR,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_ON_EVEN_CH,
+    .aux_ow_mode = AUX_OW_OFF, // OW OFF FOR AUX
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_open_wire_check_profile_odd = {
+    .redundant_measurement_mode = RD_OFF, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_ON_ODD_CH,
+    .aux_ow_mode = AUX_OW_OFF, // OW OFF FOR AUX
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
+};
+
+adc_config_t g_cell_force_sync_s_adc = {
+    .redundant_measurement_mode = RD_OFF, // RD
+    .channels = AUX_ALL,
+    .continuous_measurement = CONTINUOUS, // Cont
+    .ow_mode = OW_OFF_ALL_CH,
+    .aux_ow_mode = AUX_OW_OFF, // OW OFF FOR AUX
+    .pull_up_resistor_ow = PUP_DOWN,
+    .discharge_permit = DCP_OFF,
+    .reset_filter = RSTF_OFF,
+    .error_injection_mode = WITHOUT_ERR,
 };
 
 voltage_config_t g_voltage_cfg = {
