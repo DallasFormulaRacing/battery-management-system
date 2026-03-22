@@ -1,6 +1,7 @@
 #Gitversion.yml
+next-version: 1.0.0
 mode: Mainline
-major-version-bump-message: "major:"
+major-version-bump-message: '(^major:|^major\(.*\):)'
 minor-version-bump-message: "feat:|feature:"
 patch-version-bump-message: "fix:|hotfix:"
 no-bump-message: "none|skip|clean|docs|chore"
