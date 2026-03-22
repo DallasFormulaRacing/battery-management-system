@@ -95,7 +95,7 @@ void process_can_command(uint32_t ext_id, uint8_t *data) {
  * @param resp_id: can frame id to send to gui
  * @return none
  */
-void send_filtered_voltage_frame(int start_ic, int end_ic,
+void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                  can_resp_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
@@ -117,7 +117,7 @@ void send_filtered_voltage_frame(int start_ic, int end_ic,
  * @param resp_id: can frame id to send to gui
  * @return none
  */
-void send_therm_temp_frame(int start_ic, int end_ic, can_resp_id_t resp_id) {
+void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic, can_resp_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
@@ -169,7 +169,7 @@ void send_can_error(can_error_id_t error_id) {
  * @return none
 
  */
-void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic,
+void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_ic,
                            uint8_t *data_arr) {
 
   // counter array to keep track of index outside of each segment loop
@@ -207,9 +207,9 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic,
  * @return none
  */
 
-void therm_temp_readings(cell_asic_ctx_t *asic, int start_ic, int end_ic,
+void therm_temp_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_ic,
                          uint8_t *data_arr) {
-  int therm_counter = FOUR_BYTE_OFFSET;
+  uint8_t therm_counter = FOUR_BYTE_OFFSET;
   for (int ic = start_ic; ic < end_ic; ic++) {
 
     for (int therm_num = 0; therm_num < NUM_THERM_PER_IC; therm_num++) {
@@ -261,7 +261,7 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr) {
   bool *cell_balancing_status = pcb->cell_balancing_status;
 
   for (int i = 0; i < NUM_CELL_USING; i++) {
-      int byte_index = (i / 8) + 6; // 6 is the offset from the previous
+      uint8_t byte_index = (i / 8) + 6; // 6 is the offset from the previous
   metadata int bit_index  = 7 - (i % 8);   //pack left to right
 
       if (cell_balancing_status[i]) {
