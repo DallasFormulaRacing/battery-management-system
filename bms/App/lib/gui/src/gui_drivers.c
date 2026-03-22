@@ -194,8 +194,6 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_
   // if(cell_counter != 24) error_handler();
 }
 
-#define FOUR_BYTE_OFFSET 4
-#define NUM_THERM_PER_IC 10
 
 /*
  * @brief populates data_arr with cell thermistor readings, most significant
@@ -209,10 +207,10 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_
 
 void therm_temp_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_ic,
                          uint8_t *data_arr) {
-  uint8_t therm_counter = FOUR_BYTE_OFFSET;
+  uint8_t therm_counter = THERM_CAN_OFFSET;
   for (int ic = start_ic; ic < end_ic; ic++) {
 
-    for (int therm_num = 0; therm_num < NUM_THERM_PER_IC; therm_num++) {
+    for (int therm_num = 0; therm_num < ADBMS_NUM_THERMISTORS_PER_IC; therm_num++) {
       uint16_t temp = asic[ic].aux.aux_voltages_array[therm_num];
 
       // only take top 8 MSB

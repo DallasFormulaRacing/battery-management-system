@@ -9,6 +9,10 @@
 // Number of cell channels per BMS IC
 #define ADBMS_NUM_CELLS_PER_IC 16
 
+// Number of thermistors per BMS IC
+#define ADBMS_NUM_THERMISTORS_PER_IC 10
+
+
 // Number of auxiliary (GPIO/voltage/temp) channels
 #define ADBMS_NUM_AUX_CHANNELS 12
 

@@ -6,6 +6,8 @@
 
 typedef uint32_t can_ext_id_t;
 
+#define THERM_CAN_OFFSET 4 // Start index of can frame so that 60 thermistors can be sent in one frame
+
 enum { CAN_EXT_ID_MASK = 0x1FFFFFFFU };
 
 typedef enum {
