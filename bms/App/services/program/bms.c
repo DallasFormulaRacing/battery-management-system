@@ -7,12 +7,13 @@
 #include "config.h"
 #include "parse.h"
 #include "segment.h"
+#include "spi.h"
 #include "stm32g4xx_hal.h"
 #include "thermistor.h"
 #include <stdbool.h>
 #include <stdint.h>
 
-float look[4][13];
+volatile float look[4][13];
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -235,6 +236,28 @@ void measure_during_fault() {
   // measure temps (top level task)
 }
 
+static void pop() {
+  for (uint8_t i = 0; i < 12; i++) {
+    look[0][i] = convert_voltage_human_readable(
+        hbms.asic[0].filt_cell.filt_cell_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 12; i++) {
+    look[1][i] = convert_voltage_human_readable(
+        hbms.asic[1].filt_cell.filt_cell_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 12; i++) {
+    look[2][i] = convert_voltage_human_readable(
+        hbms.asic[0].cell.cell_voltages_array[i]);
+  }
+
+  for (uint8_t i = 0; i < 12; i++) {
+    look[3][i] = convert_voltage_human_readable(
+        hbms.asic[1].cell.cell_voltages_array[i]);
+  }
+}
+
 /* ----------------------------------------------------- */
 /* testing functions ------------------------------------ */
 
@@ -280,10 +303,15 @@ void bms_light() {
 }
 
 void bms_test_run() {
+  asic_wakeup(NUM_IC_COUNT_CHAIN);
   spi_adc_snap_command();
   adbms_read_fcell_voltages(hbms.asic);
   spi_adc_unsnap_command();
 
-  cell_open_wire_test();
+  asic_wakeup(NUM_IC_COUNT_CHAIN);
+  spi_adc_snap_command();
+  adbms_read_cell_voltages(hbms.asic);
+  spi_adc_unsnap_command();
+  pop();
   delay(1);
 }
