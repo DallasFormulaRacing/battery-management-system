@@ -34,6 +34,7 @@ bms_handler_t hbms = {
             .fault_flags = 0,
         },
     .asic = asic,
+    
 };
 
 /*
