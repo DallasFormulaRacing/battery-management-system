@@ -1,10 +1,8 @@
 #include "gui_drivers.h"
-#include "gui_types.h"
-#include "stm32g4xx_hal_fdcan.h"
 
-static void send_filtered_voltage_frame(int start_ic, int end_ic,
+static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                         can_resp_id_t resp_id);
-static void send_therm_temp_frame(int start_ic, int end_ic,
+static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_resp_id_t resp_id);
 static void send_metadata_frame(can_resp_id_t resp_id);
 
@@ -117,7 +115,8 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
  * @param resp_id: can frame id to send to gui
  * @return none
  */
-void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic, can_resp_id_t resp_id) {
+static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
+                                  can_resp_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
@@ -169,17 +168,17 @@ void send_can_error(can_error_id_t error_id) {
  * @return none
 
  */
-void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_ic,
-                           uint8_t *data_arr) {
+void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic,
+                           uint8_t end_ic, uint8_t *data_arr) {
 
   // counter array to keep track of index outside of each segment loop
   uint8_t cell_counter = 0;
-  for (int ic = start_ic; ic < end_ic; ic++) {
+  for (uint8_t ic = start_ic; ic < end_ic; ic++) {
     // grab cell reading from asic array
-    for (int cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
       int16_t voltage = asic[ic].filt_cell.filt_cell_voltages_array[cell_idx];
 
-      // convert 16 bit signed int into 2 bytes, big endian
+      // convert 16 bit signed uint8_t into 2 bytes, big endian
       // conversion here:
       uint8_t byte_0 = (uint8_t)((voltage >> 8) & 0xFF);
       uint8_t byte_1 = (uint8_t)(voltage & 0xFF);
@@ -194,7 +193,6 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_
   // if(cell_counter != 24) error_handler();
 }
 
-
 /*
  * @brief populates data_arr with cell thermistor readings, most significant
  * byte only
@@ -205,12 +203,13 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_
  * @return none
  */
 
-void therm_temp_readings(cell_asic_ctx_t *asic, uint8_t start_ic, uint8_t end_ic,
-                         uint8_t *data_arr) {
+void therm_temp_readings(cell_asic_ctx_t *asic, uint8_t start_ic,
+                         uint8_t end_ic, uint8_t *data_arr) {
   uint8_t therm_counter = THERM_CAN_OFFSET;
-  for (int ic = start_ic; ic < end_ic; ic++) {
+  for (uint8_t ic = start_ic; ic < end_ic; ic++) {
 
-    for (int therm_num = 0; therm_num < ADBMS_NUM_THERMISTORS_PER_IC; therm_num++) {
+    for (uint8_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
+         therm_num++) {
       uint16_t temp = asic[ic].aux.aux_voltages_array[therm_num];
 
       // only take top 8 MSB
@@ -258,9 +257,9 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr) {
   /*
   bool *cell_balancing_status = pcb->cell_balancing_status;
 
-  for (int i = 0; i < NUM_CELL_USING; i++) {
+  for (uint8_t i = 0; i < NUM_CELL_USING; i++) {
       uint8_t byte_index = (i / 8) + 6; // 6 is the offset from the previous
-  metadata int bit_index  = 7 - (i % 8);   //pack left to right
+  metadata uint8_t bit_index  = 7 - (i % 8);   //pack left to right
 
       if (cell_balancing_status[i]) {
           data_arr[byte_index] |= (1U << bit_index);

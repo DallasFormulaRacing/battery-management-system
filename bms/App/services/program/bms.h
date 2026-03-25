@@ -35,16 +35,6 @@ typedef enum {
   BMS_ERR_AUX_OPENWIRE,
   BMS_ERR_THERM_OVER_TEMP,
   BMS_ERR_THERM_UNDER_TEMP,
-  // BMS_ERR_VA_OV,
-  // BMS_ERR_VA_UV,
-  // BMS_ERR_VD_OV,
-  // BMS_ERR_VD_UV,
-  // BMS_ERR_VDE,
-  // BMS_ERR_THSD,
-  // BMS_ERR_OSC_MISMATCH,
-  // BMS_ERR_FUSE_ED,
-  // BMS_ERR_FUSE_MED,
-  // BMS_ERR_TMODCHK,
 } bms_fault_t;
 
 typedef struct {
@@ -56,10 +46,17 @@ typedef struct {
 } bms_sm_ctx_t;
 
 typedef struct {
+  uint16_t packvoltage;
+  uint16_t state_of_charge;
+  uint16_t instantaneous_current;
+} pack_data_t;
+
+typedef struct {
   bms_cfg_t *config;
   bms_sm_ctx_t state;
   cell_asic_ctx_t *asic;
   pcb_ctx_t *pcb;
+  pack_data_t *pack;
 } bms_handler_t;
 
 extern bms_handler_t hbms;
