@@ -18,14 +18,15 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-// #include "bms.h"
-// #include "segment.h"
 #include "cmsis_os2.h"
+#include "fdcan.h"
+#include "gui_can_job.h"
+#include "safety_monitor.h"
 #include "state.h"
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -69,7 +70,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE BEGIN PV */
 osThreadId_t spi_thread_pid;
 osMutexId_t spi_mutex_id;
-extern osMutexAttr_t spi_mutex_attr;
+osMessageQueueId_t canfd_rx_queueHandle;
 
 /* USER CODE END PV */
 
@@ -153,6 +154,7 @@ int main(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+  canfd_rx_queueHandle = osMessageQueueNew(16, sizeof(can_msg_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -163,7 +165,8 @@ int main(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
-      osThreadNew(bms_safety_task, NULL, &bms_safety_task_attributes);
+      osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
+                  &bms_safety_task_attributes);
 
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);

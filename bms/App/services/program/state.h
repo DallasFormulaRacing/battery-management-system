@@ -10,6 +10,9 @@
 #include "segment.h"
 #include "spi.h"
 #include "stm32g4xx_hal.h"
+#include "cmsis_os2.h"
+
+extern osMutexAttr_t spi_mutex_attr;
 
 void bms_sm_init(bms_handler_t *hbms);
 void bms_sm_run(bms_handler_t *hbms);
