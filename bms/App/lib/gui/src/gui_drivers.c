@@ -7,27 +7,26 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
 static void send_metadata_frame(can_resp_id_t resp_id);
 
 /*
- * HAL callback invoked when a new message arrives in RX FIFO0
- * (assuming notifications are enabled).
+ * NON-RTOS IMPL
  */
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
-                               uint32_t rx_fifo0_its) {
-  if ((rx_fifo0_its & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) == 0U) {
-    return;
-  }
+// void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
+//                                uint32_t rx_fifo0_its) {
+//   if ((rx_fifo0_its & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) == 0U) {
+//     return;
+//   }
 
-  FDCAN_RxHeaderTypeDef rx_header;
-  uint8_t rx_data[64];
+//   FDCAN_RxHeaderTypeDef rx_header;
+//   uint8_t rx_data[64];
 
-  if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) ==
-      HAL_OK) {
-    process_can_command(
-        rx_header.Identifier,
-        rx_data); // rx_data never used since only cmd id matters
-  } else {
-    // send rxfifo received error
-  }
-}
+//   if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) ==
+//       HAL_OK) {
+//     process_can_command(
+//         rx_header.Identifier,
+//         rx_data); // rx_data never used since only cmd id matters
+//   } else {
+//     // send rxfifo received error
+//   }
+// }
 
 /*
  * @brief uses can frame id to perform command
