@@ -2,6 +2,7 @@
 
 add_library(threads STATIC 
     safety_monitor.c
+    gui_can_job.c
 )
 
 target_include_directories(threads PUBLIC .)
