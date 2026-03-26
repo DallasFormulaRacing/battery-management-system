@@ -7,6 +7,9 @@ const osThreadAttr_t bms_safety_task_attributes = {
     .priority = (osPriority_t)osPriorityNormal,
     .stack_size = 128 * 4};
 
+const timing_parameters_t bms_safety_task_time =
+    (timing_parameters_t){.frequency = 500};
+
 void bms_safety_task(void *argument) {
   bms_test_init();
   const uint32_t task_freq = ((timing_parameters_t *)argument)->frequency;

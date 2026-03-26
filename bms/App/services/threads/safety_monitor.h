@@ -8,13 +8,11 @@
 
 void bms_safety_task(void *argument);
 
-extern const osThreadAttr_t bms_safety_task_attributes;
-
 typedef struct {
   uint32_t frequency;
 } timing_parameters_t;
 
-timing_parameters_t bms_safety_task_time =
-    (timing_parameters_t){.frequency = 500};
+extern const osThreadAttr_t bms_safety_task_attributes;
+extern const timing_parameters_t bms_safety_task_time;
 
 #endif
