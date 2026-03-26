@@ -1,9 +1,14 @@
-#include "can_job.h"
+#include "gui_can_job.h"
 #include "cmsis_os2.h"
 #include "gui_drivers.h"
 
 // make sure this exists irl
 extern osMessageQueueId_t canfd_rx_queueHandle;
+
+const osThreadAttr_t gui_can_job_runner_attributes = {
+    .name = "gui_can_job_runner",
+    .priority = (osPriority_t)osPriorityHigh,
+    .stack_size = 128 * 4};
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
@@ -19,7 +24,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
   }
 }
 
-void can_job_runner(void *argument) {
+void gui_can_job_runner(void *argument) {
   can_msg_t msg;
   can_hardware_init();
 
