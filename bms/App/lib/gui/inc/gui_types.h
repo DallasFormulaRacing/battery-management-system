@@ -6,7 +6,8 @@
 
 typedef uint32_t can_ext_id_t;
 
-#define THERM_CAN_OFFSET 4 // Start index of can frame so that 60 thermistors can be sent in one frame
+#define THERM_CAN_OFFSET                                                       \
+  4 // Start index of can frame so that 60 thermistors can be sent in one frame
 
 enum { CAN_EXT_ID_MASK = 0x1FFFFFFFU };
 
@@ -17,10 +18,7 @@ typedef enum {
   CAN_PRIORITY_P3 = 0x3,
 } can_priority_t;
 
-typedef enum { 
-  BMS_DEVICE_ID = 0x1F, 
-  GUI_DEVICE_ID = 0x1E 
-} can_device_id_t;
+typedef enum { BMS_DEVICE_ID = 0x1F, GUI_DEVICE_ID = 0x1E } can_device_id_t;
 
 typedef enum {
   CMD_ID_FIRST_24_CELLS = 0x00A0,
@@ -35,7 +33,7 @@ typedef enum {
   CMD_ID_IMD_DATA = 0x00D0,
 } can_command_id_t;
 
-typedef enum{
+typedef enum {
   CMD_ID_FIRST_24_CELLS_RESP = 0x01A0,
   CMD_ID_SECOND_24_CELLS_RESP = 0x01A1,
   CMD_ID_THIRD_24_CELLS_RESP = 0x01A2,
@@ -46,13 +44,13 @@ typedef enum{
   CMD_ID_LAST_60_TEMPS_RESP = 0x01B1,
   CMD_ID_PACK_METADATA_RESP = 0x01C0,
   CMD_ID_IMD_DATA_RESP = 0x00D0,
-}can_resp_id_t;
+} can_resp_id_t;
 
-typedef enum{
+typedef enum {
   ERROR_ID_INVALID_CMD = 0xF001,
   ERROR_ID_INVALID_TARGET = 0xF002,
   ERROR_ID_INVALID_ID = 0xF003,
-}can_error_id_t;
+} can_error_id_t;
 
 static inline can_ext_id_t can_id_build(can_priority_t priority,
                                         can_device_id_t target,
@@ -67,23 +65,23 @@ static inline can_ext_id_t can_id_build(can_priority_t priority,
           CAN_EXT_ID_MASK);
 }
 
-inline can_priority_t can_id_get_priority(can_ext_id_t id) {
+static inline can_priority_t can_id_get_priority(can_ext_id_t id) {
   return (can_priority_t)((id >> 26) & 0x07U);
 }
 
-inline can_device_id_t can_id_get_target(can_ext_id_t id) {
+static inline can_device_id_t can_id_get_target(can_ext_id_t id) {
   return (can_device_id_t)((id >> 21) & 0x1FU);
 }
 
-inline can_command_id_t can_id_get_cmd(can_ext_id_t id) {
+static inline can_command_id_t can_id_get_cmd(can_ext_id_t id) {
   return (can_command_id_t)((id >> 5) & 0xFFFFU);
 }
 
-inline can_device_id_t can_id_get_source(can_ext_id_t id) {
+static inline can_device_id_t can_id_get_source(can_ext_id_t id) {
   return (can_device_id_t)(id & 0x1FU);
 }
 
-inline bool can_id_is_valid(can_ext_id_t id) {
+static inline bool can_id_is_valid(can_ext_id_t id) {
   return (id & ~CAN_EXT_ID_MASK) == 0U;
 }
 

@@ -66,9 +66,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     Drivers/CMSIS/Include
     Drivers/CMSIS/Device/ST/STM32G4xx/Include
     Drivers/STM32G4xx_HAL_Driver/Inc
-    App/services/program  
-    App/services/threads    
-    App/math/cb        
+    App/services/program     
 )
 add_link_options(--specs=nosys.specs)
 
@@ -105,6 +103,7 @@ target_link_libraries(${PROJECT_NAME}
         program    
         daemons    
         threads
+        gui
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
