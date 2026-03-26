@@ -17,6 +17,12 @@ extern FDCAN_HandleTypeDef hfdcan2;
 HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data,
                              uint32_t dlc_code);
 
+typedef struct {
+  uint32_t id;
+  uint8_t data[64];
+  uint32_t len;
+} can_msg_t;
+
 /**
  * @brief Configure FDCAN filter(s) to accept the messages you want (hardcoded
  * for now). This is called inside can_hardware_init().

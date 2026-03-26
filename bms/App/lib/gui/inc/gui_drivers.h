@@ -3,6 +3,7 @@
 
 #include "bms.h"
 #include "bms_types.h"
+#include "cmsis_os2.h"
 #include "config.h"
 #include "fdcan.h"
 #include "gui_types.h"
