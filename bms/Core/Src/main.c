@@ -157,13 +157,17 @@ int main(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle =
-      osThreadNew(bms_safety_task, NULL, &defaultTask_attributes);
+  // defaultTaskHandle = osThreadNew(bms_safety_task, NULL,
+  // &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadId_t bms_safety_taskHandler =
+  osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
       osThreadNew(bms_safety_task, NULL, &bms_safety_task_attributes);
+
+  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
