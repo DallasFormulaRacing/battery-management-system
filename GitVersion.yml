@@ -1,5 +1,4 @@
 #Gitversion.yml
-next-version: 1.0.0
 mode: Mainline
 major-version-bump-message: '(^major:|^major\(.*\):)'
 minor-version-bump-message: "feat:|feature:"
