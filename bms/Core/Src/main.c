@@ -71,7 +71,8 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t spi_thread_pid;
 osMutexId_t spi_mutex_id;
 osMutexId_t bms_mutex_id;
-osMessageQueueId_t gui_can_rx_dispatch_queueHandle;
+osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
+osMessageQueueId_t can2_rx_dispatch_queueHandle;
 
 /* USER CODE END PV */
 
@@ -156,7 +157,7 @@ int main(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
-  gui_can_rx_dispatch_queueHandle =
+  fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can_msg_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
