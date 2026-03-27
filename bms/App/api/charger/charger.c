@@ -56,9 +56,11 @@ void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  discharge_timeout_flag = 1;
-}
+// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+
+//   discharge_timeout_flag = 1;
+// }
 
 // ! MAKE SURE THE DAISY CHAIN COMM PACKET ORDER IS RESPECTED HERE!
 // ! THE FIRST PACKET NEEDS TO GO LAST, IS THIS HANDLED IN write_to_all_ics????
+// Yes its handled in write to all ICs - Will 3/26

@@ -414,7 +414,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
                              const command_t cmd_arg,
                              bms_group_select_t group) {
 
-  if (osMutexAcquire(spi_mutex_id, osWaitForever) != osOK) {
+  if (osMutexAcquire(spi_mutex_id, 1000) != osOK) {
     return COMM_TIMEOUT;
   }
   switch (type) {

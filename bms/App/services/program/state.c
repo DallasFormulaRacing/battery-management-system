@@ -4,6 +4,8 @@
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
+const osMutexAttr_t bms_mutex_attr = {
+    "bms_mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
@@ -111,7 +113,7 @@ void bms_state_measure(bms_handler_t *hbms) {
   // adbms_read_aux_open_wire(hbms->asic);
 
   bms_fault_t status = BMS_ERR_NONE;
-  osMutexAcquire(bms_mutex_id, osWaitForever);
+  osMutexAcquire(bms_mutex_id, 1000);
   status = cell_voltage_in_range_check();
   if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
