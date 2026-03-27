@@ -1,6 +1,9 @@
 #include "state.h"
+#include "bms.h"
+#include "cmsis_os2.h"
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
+extern osMutexId_t bms_mutex_id;
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
@@ -108,6 +111,7 @@ void bms_state_measure(bms_handler_t *hbms) {
   // adbms_read_aux_open_wire(hbms->asic);
 
   bms_fault_t status = BMS_ERR_NONE;
+  osMutexAcquire(bms_mutex_id, osWaitForever);
   status = cell_voltage_in_range_check();
   if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
@@ -116,22 +120,28 @@ void bms_state_measure(bms_handler_t *hbms) {
   status = therm_temp_in_range_check();
   if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
   }
 
   status = cell_open_wire_check_odd();
   if (BMS_ERR_CELL_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
   }
 
   status = cell_open_wire_check_even();
   if (BMS_ERR_CELL_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
   }
 
   status = therm_open_wire_check();
   if (BMS_ERR_AUX_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
   }
+
+  osMutexRelease(bms_mutex_id);
 
   bms_sm_transition(hbms, BMS_STATE_TRANSMIT_DATA);
 }
@@ -174,7 +184,10 @@ void bms_state_fault(bms_handler_t *hbms) {
   */
   // todo: add logging the previous state here before we lose the context
   // keep monitoring so the we can see wtf is happening
-  measure_during_fault();
+  open_shutdown_circuit();
+  hard_fault_disable_openwire_on_profiles();
+  for (;;)
+    measure_during_fault();
 }
 
 void bms_state_sleep(bms_handler_t *hbms) {
