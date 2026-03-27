@@ -2,8 +2,6 @@
 #include "bms_enums.h"
 #include "cmsis_os2.h"
 
-// where does 50 come from? -> its just a conservative guesstimate. should be
-// enough. if not, well, good thing it lives in BSS.
 static volatile uint8_t read_buffer[NUM_IC_COUNT_CHAIN * 50]
     __attribute__((section(".sram")));
 
@@ -422,6 +420,7 @@ comm_status_t bms_write_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
   switch (type) {
   case BMS_REG_CONFIG:
     if (config_a_b(asic_ctx, switch_group_cfg(group)) != COMM_OK) {
+      // release this mutex in case of comm error return
       osMutexRelease(spi_mutex_id);
       return COMM_ERROR;
     };
