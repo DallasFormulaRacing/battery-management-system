@@ -25,7 +25,7 @@ typedef struct {
 
 /**
  * @brief Configure FDCAN filter(s) to accept the messages you want (hardcoded
- * for now). This is called inside can_hardware_init().
+ * for now). This is called inside fdcan_hardware_init().
  */
 void fdcan_configure_filter(void);
 
@@ -33,6 +33,6 @@ void fdcan_configure_filter(void);
  * @brief Start FDCAN2, configure filters, and enable RX FIFO0 notifications.
  * Called once from main.c before program/bms init runs.
  */
-void can_hardware_init(void);
+void fdcan_hardware_init(void);
 
 #endif
