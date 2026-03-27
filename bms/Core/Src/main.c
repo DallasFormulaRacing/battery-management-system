@@ -142,6 +142,7 @@ int main(void) {
 
   /* USER CODE BEGIN RTOS_MUTEX */
   spi_mutex_id = osMutexNew(&spi_mutex_attr);
+  bms_mutex_id = osMutexNew(&bms_mutex_attr);
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
