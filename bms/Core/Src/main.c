@@ -159,6 +159,7 @@ int main(void) {
   /* add queues, ... */
   fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can_msg_t), NULL);
+  can2_rx_dispatch_queueHandle = osMessageQueueNew(16, sizeof(can_msg_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
