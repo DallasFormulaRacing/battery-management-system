@@ -122,25 +122,21 @@ void bms_state_measure(bms_handler_t *hbms) {
   status = therm_temp_in_range_check();
   if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
   }
 
   status = cell_open_wire_check_odd();
   if (BMS_ERR_CELL_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
   }
 
   status = cell_open_wire_check_even();
   if (BMS_ERR_CELL_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
   }
 
   status = therm_open_wire_check();
   if (BMS_ERR_AUX_OPENWIRE == status) {
     bms_sm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
   }
 
   osMutexRelease(bms_mutex_id);
