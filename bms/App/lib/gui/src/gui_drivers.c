@@ -1,10 +1,10 @@
 #include "gui_drivers.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
-                                        can_resp_id_t resp_id);
+                                        can_command_id_t resp_id);
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
-                                  can_resp_id_t resp_id);
-static void send_metadata_frame(can_resp_id_t resp_id);
+                                  can_command_id_t resp_id);
+static void send_metadata_frame(can_command_id_t resp_id);
 
 /*
  * NON-RTOS IMPL
@@ -48,33 +48,33 @@ void process_can_command(uint32_t ext_id, uint8_t *data) {
 
   switch (can_id_get_cmd(ext_id)) {
   case CMD_ID_FIRST_24_CELLS:
-    send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS_RESP);
+    send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS);
     break;
   case CMD_ID_SECOND_24_CELLS:
-    send_filtered_voltage_frame(2, 4, CMD_ID_SECOND_24_CELLS_RESP);
+    send_filtered_voltage_frame(2, 4, CMD_ID_SECOND_24_CELLS);
     break;
   case CMD_ID_THIRD_24_CELLS:
-    send_filtered_voltage_frame(4, 6, CMD_ID_THIRD_24_CELLS_RESP);
+    send_filtered_voltage_frame(4, 6, CMD_ID_THIRD_24_CELLS);
     break;
   case CMD_ID_FOURTH_24_CELLS:
-    send_filtered_voltage_frame(6, 8, CMD_ID_FOURTH_24_CELLS_RESP);
+    send_filtered_voltage_frame(6, 8, CMD_ID_FOURTH_24_CELLS);
     break;
   case CMD_ID_FIFTH_24_CELLS:
-    send_filtered_voltage_frame(8, 10, CMD_ID_FIFTH_24_CELLS_RESP);
+    send_filtered_voltage_frame(8, 10, CMD_ID_FIFTH_24_CELLS);
     break;
   case CMD_ID_SIXTH_24_CELLS:
-    send_filtered_voltage_frame(10, 12, CMD_ID_SIXTH_24_CELLS_RESP);
+    send_filtered_voltage_frame(10, 12, CMD_ID_SIXTH_24_CELLS);
     break;
   case CMD_ID_FIRST_60_TEMPS:
     // technically means seg [0,6)
-    send_therm_temp_frame(0, 6, CMD_ID_FIRST_60_TEMPS_RESP);
+    send_therm_temp_frame(0, 6, CMD_ID_FIRST_60_TEMPS);
     break;
   case CMD_ID_LAST_60_TEMPS:
     // technically means seg [6,12)
-    send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS_RESP);
+    send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS);
     break;
   case CMD_ID_PACK_METADATA:
-    send_metadata_frame(CMD_ID_PACK_METADATA_RESP);
+    send_metadata_frame(CMD_ID_PACK_METADATA);
     break;
   case CMD_ID_IMD_DATA:
     break;
@@ -93,14 +93,14 @@ void process_can_command(uint32_t ext_id, uint8_t *data) {
  * @return none
  */
 void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
-                                 can_resp_id_t resp_id) {
+                                 can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
   // build data function call with first 24 cell configured in parameters
   uint8_t tx_frame[48];
   cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
 
-  // send can frame with first_24_cells_resp as command id
+  // send can frame with first_24_cells as command id
   can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
                                         (uint16_t)resp_id, BMS_DEVICE_ID);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
@@ -115,7 +115,7 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
  * @return none
  */
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
-                                  can_resp_id_t resp_id) {
+                                  can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
@@ -132,7 +132,7 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
  * @param resp_id: can frame id to send to gui
  * @return none
  */
-void send_metadata_frame(can_resp_id_t resp_id) {
+void send_metadata_frame(can_command_id_t resp_id) {
   pack_data_t *pack_data = hbms.pack;
   pcb_ctx_t *pcb = hbms.pcb;
   uint8_t tx_frame[24] = {0};
