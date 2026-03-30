@@ -1,6 +1,8 @@
 #ifndef IMD_H
 #define IMD_H
 
+#include <stdint.h>
+
 // Index struct for commands
 typedef enum {
   IMD_CAN_ID_REQUEST = 0x22,
@@ -72,5 +74,10 @@ typedef struct {
   uint8_t can_id;
   IMD_Data_t data;
 } IMD_Packet_t;
+
+void repack_to_fdcan(IMD_Packet_t *packet);
+void send_imd_cmd(IMD_Packet_t *packet);
+// void send_to_gui(can_msg_t *can_frame);
+// Callback to receive message?
 
 #endif
