@@ -1,6 +1,7 @@
 add_subdirectory(adbms)
 add_subdirectory(amc)
 add_subdirectory(cab)
+add_subdirectory(imd)
 add_subdirectory(elcon)
 add_subdirectory(gui)
 add_subdirectory(nvm)
