@@ -1,7 +1,6 @@
 add_subdirectory(charger)
 add_subdirectory(current)
 add_subdirectory(eeprom)
-add_subdirectory(imd)
 add_subdirectory(interface)
 add_subdirectory(packvolt)
 add_subdirectory(segment)
@@ -12,7 +11,6 @@ target_link_libraries(api_layer INTERFACE
     charger 
     current 
     eeprom 
-	imd
     interface 
     packvolt 
     segment

@@ -1,5 +1,5 @@
-#ifndef IMD_H
-#define IMD_H
+#ifndef IMD_TYPES
+#define IMD_TYPES
 
 #include <stdint.h>
 
@@ -12,6 +12,20 @@ typedef enum {
   IMD_CAN_ID_VOLTAGE = 0x39,
   IMD_CAN_ID_IT_SYSTEM = 0x3A
 } IMD_CanId_t;
+
+typedef enum {
+  IMD_RESET_ALARM = 0x33,
+  IMD_TRIGGER_TEST = 0x57,
+  IMD_FACTORY_RESET = 0x6F,
+  IMD_STATUS = 0x71
+} IMD_CanIndex_t;
+
+typedef enum {
+  THRESHOLD = 0x2F,
+  ACTIVATION = 0x31,
+  POWER_ON = 0x3B,
+
+} IMD_CanIndexSet_t;
 
 // Bitfield for status'
 typedef struct {
@@ -75,8 +89,6 @@ typedef struct {
   IMD_Data_t data;
 } IMD_Packet_t;
 
-void repack_to_fdcan(IMD_Packet_t *packet);
-void send_imd_cmd(IMD_Packet_t *packet);
 // void send_to_gui(can_msg_t *can_frame);
 // Callback to receive message?
 
