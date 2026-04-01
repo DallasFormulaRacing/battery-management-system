@@ -9,9 +9,14 @@
 === improved cell voltage accuracy (1.8mV on ADBMS vs 12.5mV on Orion)
 === communicate BMS data via CAN to driver display
 === J1772 Charging integration
+
 == hardware requirements
+
 == software requirements
-=== isolation requirements
+
+== isolation requirements
+
+
 == selection of hardware components
 === TI vs AD vs 16 cell vs 18 cell
 == selection of microcontroller and relevant internal peripherals
@@ -21,13 +26,20 @@
 
 
 = hardware design
-==
+== powering the cell monitor chip
+== open wire circuit
+== RC filter
+== stackable philosophy
 
 = software design
 == minimum viable product and safety features
 ==== rules (ov,uv,ow,temp,temp ow)
 
+== fast temperature conversion algorithm
+
+
 == charging and cell balancing
+=== handling cell measurements during cell balancing and charging
 ==== maximum cell discharge current
 ==== pwm control
 ==== interfacing with the charger
@@ -58,7 +70,7 @@
 == cell simulator board
 == use of software debugger
 
-==== shortcomings
+= shortcomings, successes and failures
 
 
 
