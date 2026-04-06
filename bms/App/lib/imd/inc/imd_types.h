@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define IMD_MAX_FRAME_LEN 8
+
 // Index struct for commands
 typedef enum {
   IMD_CAN_ID_REQUEST = 0x22,
@@ -17,7 +19,10 @@ typedef enum {
   IMD_RESET_ALARM = 0x33,
   IMD_TRIGGER_TEST = 0x57,
   IMD_FACTORY_RESET = 0x6F,
-  IMD_STATUS = 0x71
+  IMD_STATUS = 0x71,
+  IMD_THRESHOLD = 0x2F,
+  IMD_ACTIVATION = 0x31,
+  IMD_ACTIVE_PROFILE = 0x39
 } IMD_CanIndex_t;
 
 typedef enum {
@@ -71,25 +76,17 @@ typedef struct {
 
 // Request and response struct organization
 typedef struct {
-  uint8_t index;   // Index
-  uint8_t data[7]; // Bytes 1-7
+  uint8_t index; // Index
+  uint8_t *data; // Bytes 1-7
 } IMD_Msg_RequestResponse_t;
 
 // Union for message, all are 8 bytes but packed differently
 typedef union {
-  uint8_t raw[8];
+  uint8_t *raw;
   IMD_Msg_General_t general;
   IMD_Msg_Isolation_t isolation;
   IMD_Msg_Voltage_t voltage;
   IMD_Msg_RequestResponse_t req_res;
 } IMD_Data_t;
-
-typedef struct {
-  uint8_t can_id;
-  IMD_Data_t data;
-} IMD_Packet_t;
-
-// void send_to_gui(can_msg_t *can_frame);
-// Callback to receive message?
 
 #endif

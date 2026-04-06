@@ -5,10 +5,48 @@
 #include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_fdcan.h"
 
-void create_imd_packet(IMD_CanId_t cmd, IMD_Packet_t *packet,
-                       FDCAN_TxHeaderTypeDef *header) {
+static void configure_imd_header(FDCAN_TxHeaderTypeDef *header,
+                                 uint8_t can_id) {
   configure_tx_header(header);
   header->IdType = FDCAN_STANDARD_ID;
-  header->Identifier = cmd;
-  packet->can_id = cmd;
+  header->Identifier = can_id;
+}
+
+static HAL_StatusTypeDef send_imd_buffer(uint8_t can_id, uint8_t *buf,
+                                         uint8_t len) {
+  FDCAN_TxHeaderTypeDef header;
+
+  configure_imd_header(&header, can_id);
+  header.DataLength = len;
+  return can2_send(&header, buf);
+}
+
+HAL_StatusTypeDef imd_send_request(uint8_t can_id, uint8_t index,
+                                   const uint8_t *payload, uint8_t len) {
+
+  uint8_t tx_buf[IMD_MAX_FRAME_LEN] = {0};
+
+  // First byte = command index
+  tx_buf[0] = index;
+
+  // Copy payload if present
+  if (payload != NULL && len > 0) {
+    memcpy(&tx_buf[1], payload, len);
+  }
+
+  return send_imd_buffer(can_id, tx_buf, len + 1);
+}
+
+void configure_imd_param(void) {
+  uint8_t data[2] = {0, 0};
+
+  imd_send_request(IMD_CAN_ID_REQUEST, IMD_THRESHOLD, data, 2);
+  // Self-holding alarm, must be reset via command
+  data[0] = 0xFD;
+  imd_send_request(IMD_CAN_ID_REQUEST, IMD_ACTIVATION, data, 2);
+}
+
+void reset_imd_alarm() {
+  uint8_t data[1] = {0x01};
+  imd_send_request(IMD_CAN_ID_REQUEST, IMD_RESET_ALARM, data, 1);
 }

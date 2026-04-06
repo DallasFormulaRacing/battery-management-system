@@ -5,7 +5,6 @@
 // Configured for CAN2.0, specifically IMD transmission
 void configure_tx_header(FDCAN_TxHeaderTypeDef *header) {
   header->TxFrameType = FDCAN_DATA_FRAME;
-  header->DataLength = FDCAN_DLC_BYTES_8;
   header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
   header->BitRateSwitch = FDCAN_BRS_OFF;
   header->FDFormat = FDCAN_CLASSIC_CAN;
