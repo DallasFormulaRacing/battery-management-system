@@ -89,4 +89,11 @@ typedef union {
   IMD_Msg_RequestResponse_t req_res;
 } IMD_Data_t;
 
+typedef struct {
+  IMD_CanId_t can_id;
+  IMD_CanIndex_t index;
+  uint8_t data[IMD_MAX_FRAME_LEN - 1]; // index occupies byte 0
+  uint8_t len;                         // payload byte count, excluding index
+} IMD_Packet_t;
+
 #endif
