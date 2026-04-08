@@ -12,6 +12,7 @@
 | 6           | Charger               | 1        | [ELCON TC HK-L](https://www.hawkeyeinnovationsllc.com/uploads/1/1/5/5/115506993/4th_gen_6.6kw_tc_charger.pdf)​ |                    |
 | 7           | CAN Transcievers      | ?        | [TJA1462](https://www.nxp.com/docs/en/data-sheet/TJA1462.pdf)                                                  |                    |
 | 8           | IMD                   | 1        | [ISO-175 Datasheet](https://www.bender.de/fileadmin/content/Products/a/e/iso175_CAN_D00415_N_XXEN.pdf), [ISO-175 CAN Datasheet](https://www.bender.de/fileadmin/content/Products/d/e/iso175_D00415_D_XXEN.pdf) |                                               |                    
+| 9           | EEPROM                | 1        | [M24512E-F](https://www.st.com/resource/en/datasheet/m24512e-f.pdf) |                                               |                    
 
 ### Thermistor Datasheets
 
