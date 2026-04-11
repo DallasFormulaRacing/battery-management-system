@@ -27,7 +27,8 @@ void reset_imd_alarm(void);
 /* -----------------------------------------------------------------------
  * Message Handling
  * --------------------------------------------------------------------- */
-void parse_imd_msg(uint8_t can_id, uint8_t *data);
+void parse_imd_msg(uint8_t can_id, uint8_t *data); 
+IMD_Packet_t imd_get_data(void); // Called by api to get current data
 void handle_info_general(IMD_Data_t msg);
  
 #endif /* IMD_DRIVERS_H */

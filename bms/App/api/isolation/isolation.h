@@ -23,4 +23,6 @@ void imd_reset_fault(void);   // calls reset_imd_alarm internally
 void handle_general(IMD_Data_t data);
 void handle_voltage(IMD_Data_t data);
 
+void handle_error(uint8_t id);
+
 #endif
