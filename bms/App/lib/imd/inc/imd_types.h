@@ -81,10 +81,9 @@ typedef struct {
   uint8_t reserved_0xFF;
 } IMD_Msg_Voltage_t;
 
-// Request and response struct organization
 typedef struct {
-  uint8_t index; // Index
-  uint8_t *data; // Bytes 1-7
+  uint8_t index;
+  uint8_t data[7];
 } IMD_Msg_RequestResponse_t;
 
 // Union for message, all are 8 bytes but packed differently
@@ -95,5 +94,10 @@ typedef union {
   IMD_Msg_Voltage_t voltage;
   IMD_Msg_RequestResponse_t req_res;
 } IMD_Data_t;
+
+typedef struct {
+  IMD_Data_t data;
+  IMD_CanId_t can_id;
+} IMD_Packet_t;
 
 #endif
