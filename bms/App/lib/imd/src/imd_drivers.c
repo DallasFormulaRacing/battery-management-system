@@ -37,16 +37,34 @@ HAL_StatusTypeDef imd_send_request(uint8_t can_id, uint8_t index,
   return send_imd_buffer(can_id, tx_buf, len + 1);
 }
 
-void configure_imd_param(void) {
+void configure_imd_params(void) {
   uint8_t data[2] = {0, 0};
 
   imd_send_request(IMD_CAN_ID_REQUEST, IMD_THRESHOLD, data, 2);
   // Self-holding alarm, must be reset via command
   data[0] = 0xFD;
   imd_send_request(IMD_CAN_ID_REQUEST, IMD_ACTIVATION, data, 2);
+
+  // Voltage mode to DC
+  data[0] = 0xFE;
+  imd_send_request(IMD_CAN_ID_REQUEST, IMD_VOLTAGE_MODE, data, 2);
+
+  // ... 
+}
+
+// By default, IMD_Info_General is sent every 100 ms
+void configure_imd_cyclic() {
+  // IMD_Info_IsolationDetail, 100 ms
+  uint8_t data[2] = {0x01, 0xFA};
+  imd_send_request(IMD_CAN_ID_REQUEST, 0x79, data, 2);
 }
 
 void reset_imd_alarm() {
   uint8_t data[1] = {0x01};
   imd_send_request(IMD_CAN_ID_REQUEST, IMD_RESET_ALARM, data, 1);
+}
+
+void get_imd_msg(uint8_t can_id, uint8_t *data){
+  IMD_Data_t msg;
+  memcpy(msg.raw, data, 8);
 }
