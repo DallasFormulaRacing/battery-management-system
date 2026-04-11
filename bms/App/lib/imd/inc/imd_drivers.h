@@ -1,5 +1,6 @@
-#ifndef IMD_DRIVER
-#define IMD_DRIVER
+
+#ifndef IMD_DRIVERS_H
+#define IMD_DRIVERS_H
 
 #include "can.h"
 #include "imd_types.h"
@@ -7,13 +8,26 @@
 #include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
-
+#include <stdint.h>
+ 
+/* -----------------------------------------------------------------------
+ * Configuration
+ * --------------------------------------------------------------------- */
 HAL_StatusTypeDef imd_send_request(uint8_t can_id, uint8_t index,
                                    const uint8_t *payload, uint8_t len);
-static void configure_imd_header(FDCAN_TxHeaderTypeDef *header, uint8_t can_id);
-static HAL_StatusTypeDef send_imd_buffer(uint8_t can_id, uint8_t *buf,
-                                         uint8_t len);
-void configure_imd_param();
-void reset_imd_alarm();
-
-#endif
+ 
+void configure_imd_params(void);
+void configure_imd_cyclic(void);
+ 
+/* -----------------------------------------------------------------------
+ * Control
+ * --------------------------------------------------------------------- */
+void reset_imd_alarm(void);
+ 
+/* -----------------------------------------------------------------------
+ * Message Handling
+ * --------------------------------------------------------------------- */
+void parse_imd_msg(uint8_t can_id, uint8_t *data);
+void handle_info_general(IMD_Data_t msg);
+ 
+#endif /* IMD_DRIVERS_H */

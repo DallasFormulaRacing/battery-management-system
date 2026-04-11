@@ -5,7 +5,7 @@
 
 #define IMD_MAX_FRAME_LEN 8
 
-// Index struct for commands
+// Index enum for commands, make up the CAN header
 typedef enum {
   IMD_CAN_ID_REQUEST = 0x22,
   IMD_CAN_ID_RESPONSE = 0x23,
@@ -15,6 +15,7 @@ typedef enum {
   IMD_CAN_ID_IT_SYSTEM = 0x3A
 } IMD_CanId_t;
 
+// Index enum for commands, parsed by the IMD to determine specific function
 typedef enum {
   IMD_RESET_ALARM = 0x33,
   IMD_TRIGGER_TEST = 0x57,
@@ -22,7 +23,8 @@ typedef enum {
   IMD_STATUS = 0x71,
   IMD_THRESHOLD = 0x2F,
   IMD_ACTIVATION = 0x31,
-  IMD_ACTIVE_PROFILE = 0x39
+  IMD_ACTIVE_PROFILE = 0x39,
+  IMD_VOLTAGE_MODE = 0x65
 } IMD_CanIndex_t;
 
 typedef enum {
@@ -48,12 +50,17 @@ typedef struct {
   uint16_t reserved : 5;
 } IMD_Status_Flags_t;
 
+typedef union {
+  uint16_t raw;
+  IMD_Status_Flags_t flags;
+} IMD_Status;
+
 // Message structs
 typedef struct {
   uint16_t r_iso_corrected;
   uint8_t r_iso_status;
   uint8_t counter;
-  IMD_Status_Flags_t status;
+  IMD_Status status;
   uint8_t activity;
   uint8_t reserved_0xFF;
 } IMD_Msg_General_t;
@@ -82,18 +89,11 @@ typedef struct {
 
 // Union for message, all are 8 bytes but packed differently
 typedef union {
-  uint8_t *raw;
+  uint8_t raw[8];
   IMD_Msg_General_t general;
   IMD_Msg_Isolation_t isolation;
   IMD_Msg_Voltage_t voltage;
   IMD_Msg_RequestResponse_t req_res;
 } IMD_Data_t;
-
-typedef struct {
-  IMD_CanId_t can_id;
-  IMD_CanIndex_t index;
-  uint8_t data[IMD_MAX_FRAME_LEN - 1]; // index occupies byte 0
-  uint8_t len;                         // payload byte count, excluding index
-} IMD_Packet_t;
 
 #endif
