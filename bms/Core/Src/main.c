@@ -21,6 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "can.h"
+#include "can2_job.h"
 #include "cmsis_os2.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
@@ -73,6 +76,7 @@ osMutexId_t spi_mutex_id;
 osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
+osMessageQueueId_t can2_rx_processing_queueHandle;
 
 /* USER CODE END PV */
 
@@ -160,6 +164,8 @@ int main(void) {
   fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can_msg_t), NULL);
   can2_rx_dispatch_queueHandle = osMessageQueueNew(16, sizeof(can_msg_t), NULL);
+  can2_rx_processing_queueHandle =
+      osMessageQueueNew(16, sizeof(can2_msg_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -175,6 +181,9 @@ int main(void) {
 
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+
+  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
 
   /* USER CODE END RTOS_THREADS */
 

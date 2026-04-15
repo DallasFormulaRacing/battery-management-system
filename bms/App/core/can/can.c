@@ -43,7 +43,7 @@ void can2_configure_filter() {
   HAL_FDCAN_ConfigFilter(&hfdcan1, &filter_extended);
 }
 
-void can2_hardware_init(FDCAN_TxHeaderTypeDef *header) {
+void can2_hardware_init() {
   hfdcan1.Init.ExtFiltersNbr = 1;
   hfdcan1.Init.StdFiltersNbr = 1;
   can2_configure_filter();
