@@ -5,8 +5,7 @@ void elcon_send_command(elcon_command_t *command_profile) {
   //
 }
 
-static inline void elcon_pack_can(uint8_t *msg,
-                                  elcon_command_t *command_profile) {
+static inline void elcon_pack_can(uint8_t *msg) {
   //
 }
 
