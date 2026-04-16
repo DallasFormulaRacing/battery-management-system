@@ -1,4 +1,6 @@
 #include "gui_drivers.h"
+#include "cb.h"
+#include "config.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                         can_command_id_t resp_id);
@@ -20,7 +22,7 @@ static void send_metadata_frame(can_command_id_t resp_id);
 
 //   if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) ==
 //       HAL_OK) {
-//     process_can_command(
+//     gui_process_can_command(
 //         rx_header.Identifier,
 //         rx_data); // rx_data never used since only cmd id matters
 //   } else {
@@ -35,7 +37,7 @@ static void send_metadata_frame(can_command_id_t resp_id);
  * now)
  * @return none
  */
-void process_can_command(uint32_t ext_id, uint8_t *data) {
+void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);
@@ -154,9 +156,6 @@ void send_can_error(can_error_id_t error_id) {
                                         (uint16_t)error_id, BMS_DEVICE_ID);
   fdcan_send(tx_header, &tx_frame, FDCAN_DLC_BYTES_0);
 }
-
-#include "cb.h"
-#include "config.h"
 
 /*
  * @brief populates data_arr with cell voltage readings, 2 byte big endian
