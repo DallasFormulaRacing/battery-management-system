@@ -9,7 +9,7 @@ static IMD_Packet_t packet;
 
 static void configure_imd_header(FDCAN_TxHeaderTypeDef *header,
                                  uint8_t can_id) {
-  configure_tx_header(header);
+  configure_can2_tx_header(header);
   header->IdType = FDCAN_STANDARD_ID;
   header->Identifier = can_id;
 }
