@@ -20,13 +20,13 @@ HAL_StatusTypeDef can2_send(FDCAN_TxHeaderTypeDef *header, uint8_t *data) {
 void can2_configure_filter() {
   FDCAN_FilterTypeDef filter_standard;
   filter_standard.FilterIndex = 0;
-  filter_standard.FilterConfig = FDCAN_FILTER_TO_RXFIFO1; // Maybe rxfifo0
+  filter_standard.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; // Maybe rxfifo0
   filter_standard.FilterType = FDCAN_FILTER_MASK;
   filter_standard.IdType = FDCAN_STANDARD_ID; // IMD needs standard
 
   FDCAN_FilterTypeDef filter_extended;
   filter_extended.FilterIndex = 0;
-  filter_extended.FilterConfig = FDCAN_FILTER_TO_RXFIFO1; // Maybe rxfifo0
+  filter_extended.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; // Maybe rxfifo0
   filter_extended.FilterType = FDCAN_FILTER_MASK;
   filter_extended.IdType = FDCAN_EXTENDED_ID; // ELCON needs extended
 
