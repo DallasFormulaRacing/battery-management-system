@@ -2,11 +2,14 @@
 #include "cmsis_os2.h"
 #include "gui_drivers.h"
 #include "gui_types.h"
+#include "imd_drivers.h"
 #include "stm32g474xx.h"
+#include <string.h>
 
 // make sure this exists irl
 extern osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 extern osMessageQueueId_t can2_rx_dispatch_queueHandle;
+extern osMessageQueueId_t can2_rx_processing_queueHandle;
 
 const osThreadAttr_t gui_can_job_runner_attributes = {
     .name = "gui_can_job_runner",
@@ -30,12 +33,12 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
       msg.id = rxHeader.Identifier;
       if (hfdcan->Instance == FDCAN1) {
         osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
+        osMessageQueuePut(can2_rx_processing_queueHandle, &msg, 0, 0);
       }
 
       if (hfdcan->Instance == FDCAN2) {
         osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
       }
-
       /*If msg comes from something else, send it to its own message queue*/
     }
   }
