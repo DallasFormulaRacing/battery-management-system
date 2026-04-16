@@ -21,7 +21,7 @@ typedef struct {
   uint32_t id;
   uint8_t data[64];
   uint32_t len;
-} can_msg_t;
+} fdcan_msg_t;
 
 /**
  * @brief Configure FDCAN filter(s) to accept the messages you want (hardcoded
