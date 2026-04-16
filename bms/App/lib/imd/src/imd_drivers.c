@@ -5,6 +5,8 @@
 #include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_fdcan.h"
 
+//
+
 static IMD_Packet_t packet;
 
 static void configure_imd_header(FDCAN_TxHeaderTypeDef *header,
