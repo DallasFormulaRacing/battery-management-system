@@ -26,19 +26,18 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
   if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
     FDCAN_RxHeaderTypeDef rxHeader;
-    fdcan_msg_t msg;
+    can_msg_t msg;
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, msg.data) ==
         HAL_OK) {
       msg.id = rxHeader.Identifier;
-      // this can2
       if (hfdcan->Instance == FDCAN1) {
-        osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
+        osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
+        // osMessageQueuePut(can2_rx_processing_queueHandle, &msg, 0, 0);
       }
 
-      // this is fdcan
       if (hfdcan->Instance == FDCAN2) {
-        osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
+        osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
       }
       /*If msg comes from something else, send it to its own message queue*/
     }
@@ -46,7 +45,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 }
 
 void gui_can_job_runner(void *argument) {
-  fdcan_msg_t msg;
+  can_msg_t msg;
   fdcan_hardware_init();
 
   for (;;) {
