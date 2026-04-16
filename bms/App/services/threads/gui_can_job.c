@@ -26,7 +26,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
   if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
     FDCAN_RxHeaderTypeDef rxHeader;
-    can_msg_t msg;
+    fdcan_msg_t msg;
 
     if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, msg.data) ==
         HAL_OK) {
@@ -46,7 +46,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 }
 
 void gui_can_job_runner(void *argument) {
-  can_msg_t msg;
+  fdcan_msg_t msg;
   fdcan_hardware_init();
 
   for (;;) {
