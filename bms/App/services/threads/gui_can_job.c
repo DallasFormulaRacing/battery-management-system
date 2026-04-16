@@ -33,7 +33,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
       msg.id = rxHeader.Identifier;
       if (hfdcan->Instance == FDCAN1) {
         osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
-        osMessageQueuePut(can2_rx_processing_queueHandle, &msg, 0, 0);
+        // osMessageQueuePut(can2_rx_processing_queueHandle, &msg, 0, 0);
       }
 
       if (hfdcan->Instance == FDCAN2) {
@@ -51,7 +51,7 @@ void gui_can_job_runner(void *argument) {
   for (;;) {
     if (osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
                           osWaitForever) == osOK) {
-      process_can_command(msg.id, msg.data);
+      gui_process_can_command(msg.id, msg.data);
     }
   }
 }
