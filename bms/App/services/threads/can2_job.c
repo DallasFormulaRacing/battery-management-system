@@ -54,6 +54,14 @@ void can2_job_runner(void *argument) {
       if (msg.id == IMD_CAN_ID_REQUEST) {
         parse_imd_msg(msg.id, msg.data);
       }
+
+      if (/*msg.id == ELCON_CHARGER_CAN_ID_REQUEST*/ 1) {
+        // parse_charger_msg(msg.id, msg.data);
+      }
+
+      if (/*msg.id == CAB_CAN_ID_REQUEST*/ 1) {
+        // parse_current_sensor_msg(msg.id, msg.data);
+      }
     }
   }
 }

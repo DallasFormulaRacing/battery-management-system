@@ -3,7 +3,7 @@
 #include "stm32g4xx_hal_fdcan.h"
 
 // Configured for CAN2.0, specifically IMD transmission
-void configure_tx_header(FDCAN_TxHeaderTypeDef *header) {
+void configure_can2_tx_header(FDCAN_TxHeaderTypeDef *header) {
   header->TxFrameType = FDCAN_DATA_FRAME;
   header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
   header->BitRateSwitch = FDCAN_BRS_OFF;
