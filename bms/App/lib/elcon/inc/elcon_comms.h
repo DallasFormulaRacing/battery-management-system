@@ -4,7 +4,7 @@
 #include "can.h"
 #include "elcon_types.h"
 
-#define ELCON_CMD_CAN_ID 0x1806E5F4
+#define ELCON_CHARGING_REQUEST_CAN_ID 0x1806E5F4
 #define ELCON_HEARTBEAT_CAN_ID 0x18FF50E5
 
 void elcon_send_command(elcon_command_t *command_profile);
