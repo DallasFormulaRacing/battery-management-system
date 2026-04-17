@@ -1,16 +1,22 @@
 #include "elcon_comms.h"
+#include "can.h"
 #include "elcon_types.h"
+#include "stm32g4xx_hal_fdcan.h"
 
 #define U16_TOP_HALF_8B(x) (uint8_t)(x >> 8)
 #define U16_BOT_HALF_8B(x) (uint8_t)(x & 0x00FF)
 
 void elcon_send_command(elcon_command_t *command_profile) {
   //
+  FDCAN_TxHeaderTypeDef header;
+  configure_can2_tx_header(&header);
+  header.IdType = FDCAN_STANDARD_ID;
+  header.Identifier = ELCON_CHARGING_REQUEST_CAN_ID;
+  can2_send(&header, elcon_pack_can(command_profile).data);
 }
 
 can2_msg_t elcon_pack_can(elcon_command_t *command_profile) {
   can2_msg_t charge_request;
-  charge_request.id = ELCON_CHARGING_REQUEST_CAN_ID;
   uint16_t max_volt_cmd = command_profile->max_voltage;
   uint16_t max_curr_cmd = command_profile->max_current;
 
