@@ -9,6 +9,7 @@ typedef struct {
   uint8_t input_voltage : 1;
   uint8_t starting_state : 1;
   uint8_t comm_state : 1;
+  uint8_t charger_OKAY : 1;
 } elcon_status_t;
 
 typedef struct {
