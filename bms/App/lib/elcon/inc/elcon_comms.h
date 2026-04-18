@@ -11,6 +11,6 @@ void elcon_send_command(elcon_command_t *command_profile);
 
 can2_msg_t elcon_pack_can(elcon_command_t *command_profile);
 
-static inline void elcon_unpack_status_byte(uint8_t stb, elcon_status_t *stat);
+elcon_status_t elcon_handle_heartbeat(const can2_msg_t *msg);
 
 #endif

@@ -1,6 +1,7 @@
 #include "can2_job.h"
 #include "can.h"
 #include "cmsis_os2.h"
+#include "elcon_comms.h"
 #include "imd_drivers.h"
 #include "imd_types.h"
 #include "stm32g474xx.h"
@@ -26,13 +27,13 @@ void can2_job_runner(void *argument) {
         parse_imd_msg(msg.id, msg.data);
       }
 
-      if (/*msg.id == ELCON_CHARGER_CAN_ID_REQUEST*/ 1) {
-        // parse_charger_msg(msg.id, msg.data);
+      if (msg.id == ELCON_HEARTBEAT_CAN_ID) {
+        elcon_handle_heartbeat(&msg);
       }
 
-      if (/*msg.id == CAB_CAN_ID_REQUEST*/ 1) {
-        // parse_current_sensor_msg(msg.id, msg.data);
-      }
+      // if (msg.id == CAB_CAN_ID_REQUEST 1) {
+      //   parse_current_sensor_msg(msg.id, msg.data);
+      // }
     }
   }
 }
