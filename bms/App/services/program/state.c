@@ -39,7 +39,7 @@ void bms_sm_run(bms_handler_t *hbms) {
 void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
   hbms->state.previous_state = hbms->state.current_state;
   hbms->state.current_state = new_state;
-  hbms->state.state_entry_tick = HAL_GetTick();
+  hbms->state.state_entry_tick = osKernelGetTickCount();
 
   if (BMS_STATE_FAULT == new_state)
     open_shutdown_circuit();
