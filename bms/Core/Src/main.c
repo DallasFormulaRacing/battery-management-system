@@ -164,8 +164,6 @@ int main(void) {
   fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(fdcan_msg_t), NULL);
   can2_rx_dispatch_queueHandle =
-      osMessageQueueNew(16, sizeof(fdcan_msg_t), NULL);
-  can2_rx_processing_queueHandle =
       osMessageQueueNew(16, sizeof(can2_msg_t), NULL);
   /* USER CODE END RTOS_QUEUES */
 
