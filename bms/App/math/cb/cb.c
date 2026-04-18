@@ -94,17 +94,26 @@ pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
  * @param pcb
  */
 void find_cell_deltas(pcb_ctx_t *pcb) {
-  // First pass: find minimum cell
+  // first pass: find minimum and maximum cell
   voltage_readings_t min_voltage = INT16_MAX;
-  battery_cell_t base;
+  voltage_readings_t max_voltage = INT16_MIN;
+  battery_cell_t min_cell;
+  battery_cell_t max_cell;
+
   for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_USING; cell_idx++) {
-    if (pcb->batteries[cell_idx].cell_voltage < min_voltage) {
-      min_voltage = pcb->batteries[cell_idx].cell_voltage;
-      base = pcb->batteries[cell_idx];
+    voltage_readings_t curr_cell = pcb->batteries[cell_idx].cell_voltage;
+    if (curr_cell < min_voltage) {
+      min_voltage = curr_cell;
+      min_cell = pcb->batteries[cell_idx];
+    }
+    if (curr_cell > max_voltage) {
+      max_voltage = curr_cell;
+      max_cell = pcb->batteries[cell_idx];
     }
   }
 
-  pcb->lowest_cell = base;
+  pcb->lowest_cell = min_cell;
+  pcb->highest_cell = max_cell;
 }
 
 /**
