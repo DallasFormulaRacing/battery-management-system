@@ -45,8 +45,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
     if (hfdcan->Instance == FDCAN1) {
       can2_msg_t msg;
       msg.id = rxHeader.Identifier;
-      memcpy(msg.data, rx_payload, 8);
-      msg.len = 8;
+      const uint8_t copy_len = (nbytes > 8U) ? 8U : nbytes;
+      memcpy(msg.data, rx_payload, copy_len);
+      msg.len = copy_len;
       msg.rx_tick = rx_tick;
       (void)osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
     }
