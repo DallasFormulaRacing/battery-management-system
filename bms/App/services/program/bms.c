@@ -34,7 +34,7 @@ bms_handler_t hbms = {
             .fault_flags = 0,
         },
     .asic = asic,
-    
+
 };
 
 /*
@@ -293,12 +293,6 @@ void cell_open_wire_test() {
 }
 
 void open_shutdown_circuit() {
-  // todo
-  // just a gpio flip
-  // check rules
-}
-
-void bms_light() {
   // todo
   // just a gpio flip
   // check rules
