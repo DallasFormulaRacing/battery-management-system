@@ -1,4 +1,5 @@
 #include "gui_can_job.h"
+#include "can.h"
 #include "cmsis_os2.h"
 #include "gui_drivers.h"
 #include "gui_types.h"
@@ -25,22 +26,39 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
   if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
     FDCAN_RxHeaderTypeDef rxHeader;
-    fdcan_msg_t msg;
+    uint8_t rx_payload[64];
+    static const uint8_t dlc_bytes[] = {0, 1,  2,  3,  4,  5,  6,  7,
+                                        8, 12, 16, 20, 24, 32, 48, 64};
 
-    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, msg.data) ==
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rx_payload) !=
         HAL_OK) {
-      msg.id = rxHeader.Identifier;
-      msg.rx_tick = osKernelGetTickCount();
-      // this can2
-      if (hfdcan->Instance == FDCAN1) {
-        osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
-      }
+      return;
+    }
 
-      // this is fdcan
-      if (hfdcan->Instance == FDCAN2) {
-        osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
-      }
-      /*If msg comes from something else, send it to its own message queue*/
+    uint32_t dlc = rxHeader.DataLength;
+    if (dlc > 15U) {
+      dlc = 15U;
+    }
+    const uint8_t nbytes = dlc_bytes[dlc];
+    const uint32_t rx_tick = osKernelGetTickCount();
+
+    if (hfdcan->Instance == FDCAN1) {
+      can2_msg_t msg;
+      msg.id = rxHeader.Identifier;
+      memcpy(msg.data, rx_payload, 8);
+      msg.len = 8;
+      msg.rx_tick = rx_tick;
+      (void)osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
+    }
+
+    else if (hfdcan->Instance == FDCAN2) {
+      fdcan_msg_t msg;
+      msg.id = rxHeader.Identifier;
+      const uint8_t copy_len = (nbytes > 64U) ? 64U : nbytes;
+      memcpy(msg.data, rx_payload, copy_len);
+      msg.len = copy_len;
+      msg.rx_tick = rx_tick;
+      (void)osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
     }
   }
 }
