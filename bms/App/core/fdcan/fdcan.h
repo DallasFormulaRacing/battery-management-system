@@ -21,6 +21,7 @@ typedef struct {
   uint32_t id;
   uint8_t data[64];
   uint32_t len;
+  uint32_t rx_tick;
 } fdcan_msg_t;
 
 /**

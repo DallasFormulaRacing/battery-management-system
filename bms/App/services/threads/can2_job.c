@@ -7,7 +7,7 @@
 #include <string.h>
 
 // make sure this exists irl
-extern osMessageQueueId_t can2_rx_processing_queueHandle;
+extern osMessageQueueId_t can2_rx_dispatch_queueHandle;
 
 const osThreadAttr_t can2_job_runner_attributes = {
     .name = "can2_job_runner",
@@ -19,7 +19,7 @@ void can2_job_runner(void *argument) {
   can2_hardware_init();
 
   for (;;) {
-    if (osMessageQueueGet(can2_rx_processing_queueHandle, &msg, NULL,
+    if (osMessageQueueGet(can2_rx_dispatch_queueHandle, &msg, NULL,
                           osWaitForever) == osOK) {
       // if message is from IMD
       if (msg.id == IMD_CAN_ID_REQUEST) {

@@ -13,6 +13,7 @@ typedef struct {
   uint32_t id;
   uint8_t data[8];
   uint32_t len;
+  uint32_t rx_tick;
 } can2_msg_t;
 
 void process_can2_message(can2_msg_t msg);
