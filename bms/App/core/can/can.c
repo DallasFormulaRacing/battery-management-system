@@ -17,35 +17,13 @@ HAL_StatusTypeDef can2_send(FDCAN_TxHeaderTypeDef *header, uint8_t *data) {
   return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, header, data);
 }
 
-void can2_configure_filter() {
-  FDCAN_FilterTypeDef filter_standard;
-  filter_standard.FilterIndex = 0;
-  filter_standard.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; // Maybe rxfifo0
-  filter_standard.FilterType = FDCAN_FILTER_MASK;
-  filter_standard.IdType = FDCAN_STANDARD_ID; // IMD needs standard
-
-  FDCAN_FilterTypeDef filter_extended;
-  filter_extended.FilterIndex = 0;
-  filter_extended.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; // Maybe rxfifo0
-  filter_extended.FilterType = FDCAN_FILTER_MASK;
-  filter_extended.IdType = FDCAN_EXTENDED_ID; // ELCON needs extended
-
-  const uint32_t target_mask = (0x1FU << 21); /* only care about target bits */
-  const uint32_t bms_target = (0x1FU << 21);  /* BMS_DEVICE_ID == 0x1F */
-
-  filter_standard.FilterID1 = 0x1f;
-  filter_standard.FilterID2 = 0x7FF;
-
-  filter_extended.FilterID1 = bms_target;
-  filter_extended.FilterID2 = target_mask;
-
-  HAL_FDCAN_ConfigFilter(&hfdcan1, &filter_standard);
-  HAL_FDCAN_ConfigFilter(&hfdcan1, &filter_extended);
+void can2_configure_filter(void) {
+  (void)HAL_FDCAN_ConfigGlobalFilter(&hfdcan1, FDCAN_ACCEPT_IN_RX_FIFO0,
+                                     FDCAN_ACCEPT_IN_RX_FIFO0,
+                                     FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
 }
 
-void can2_hardware_init() {
-  hfdcan1.Init.ExtFiltersNbr = 1;
-  hfdcan1.Init.StdFiltersNbr = 1;
+void can2_hardware_init(void) {
   can2_configure_filter();
 
   if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
