@@ -17,6 +17,6 @@ typedef struct {
   uint16_t max_current;
   uint8_t enable;
   elcon_status_t heartbeat_msg;
-} elcon_command_t;
+} elcon_internal_t;
 
 #endif
