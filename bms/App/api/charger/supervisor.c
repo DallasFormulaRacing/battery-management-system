@@ -3,7 +3,9 @@
 
 // static function headers (they are in the c file on purpose)
 static void report_internal_state();
-static bool is_charging_permitted();
+static bool is_pack_full();
+static bool is_elcon_ready();
+static bool is_charging_command_stale();
 
 /**
  * @brief checks if the elcon charger status can message is fresh and not
@@ -17,6 +19,10 @@ static bool is_elcon_ready() {
   report_internal_state();
   // if internal state good and can msg not stale, return true
   return false;
+}
+
+static bool is_pack_full() {
+  // if highest cell is >= ov error AND no cells violating delta
 }
 
 /**
@@ -34,12 +40,10 @@ static void update_charge_command() {}
  * @return true if charging is permitted
  * @return false otherwise
  */
-static bool is_charging_permitted() {
+bool is_charging_permitted() {
   // return is
   return false;
 }
-
-static bool is_pack_full();
 
 /**
  * @brief periodic charging supervisor task
@@ -48,8 +52,3 @@ static bool is_pack_full();
  * reports state
  */
 void charger_supervisor(void) {}
-
-/**
- * @brief publishes the supervisor's internal state on can
- */
-//  static void report_internal_state() {}
