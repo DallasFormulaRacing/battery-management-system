@@ -1,6 +1,20 @@
 #include "supervisor.h"
 #include <stdbool.h>
 
+/*
+
+1. The BMS sends operating information(Message 1) to charger at fixed interval
+of 1s. After receiving the message, the charger will work under the Voltage and
+Current in Message. If the Message is not received within 5s, it will enter into
+communication error state and stop charging.
+
+
+2. The charger send broadcast message (Message 2) at intervals of 1s. The
+display meter can show the status of the charger according to up-to-date
+information.
+
+*/
+
 // static function headers (they are in the c file on purpose)
 static void report_internal_state();
 static bool is_pack_full();
