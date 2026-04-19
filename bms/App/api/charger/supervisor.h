@@ -2,8 +2,11 @@
 #define CHARGING_SUPERVISOR_H
 
 #include "elcon_comms.h"
+#include <stdbool.h>
 
 void charger_supervisor(void);
+
+bool is_charging_permitted();
 
 typedef enum {
   CHARGING_STATE_IDLE,
