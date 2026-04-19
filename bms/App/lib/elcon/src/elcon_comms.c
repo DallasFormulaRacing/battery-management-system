@@ -19,6 +19,13 @@ void elcon_send_command(elcon_internal_t *command_profile) {
 
 can2_msg_t elcon_pack_can(elcon_internal_t *command_profile) {
   can2_msg_t charge_request = {0};
+
+  // hardcoded safety clamps
+  command_profile->max_voltage =
+      (command_profile->max_voltage > 600) ? 600 : command_profile->max_voltage;
+  command_profile->max_current =
+      (command_profile->max_current > 10) ? 10 : command_profile->max_current;
+
   uint16_t max_volt_cmd = command_profile->max_voltage * 10;
   uint16_t max_curr_cmd = command_profile->max_current * 10;
 
