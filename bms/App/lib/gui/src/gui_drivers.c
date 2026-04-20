@@ -1,12 +1,19 @@
 #include "gui_drivers.h"
-#include "cb.h"
-#include "config.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                         can_command_id_t resp_id);
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id);
 static void send_metadata_frame(can_command_id_t resp_id);
+
+
+/*
+The following code is solely for the gui demo
+The hbms master variable that is automatically populated from the ASICs are now manually configured
+*/
+
+#define NUM_ICS 12 // need to define macro since config.h not included
+static cell_asic_ctx_t asic_ctx0[NUM_ICS];
 
 /*
  * NON-RTOS IMPL
@@ -22,7 +29,7 @@ static void send_metadata_frame(can_command_id_t resp_id);
 
 //   if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, rx_data) ==
 //       HAL_OK) {
-//     gui_process_can_command(
+//     process_can_command(
 //         rx_header.Identifier,
 //         rx_data); // rx_data never used since only cmd id matters
 //   } else {
@@ -47,6 +54,13 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
     send_can_error(ERROR_ID_INVALID_TARGET);
     return;
   }
+
+  //each cell value per asic has the value cell_idx + asic_idx
+  for (int i = 0; i < NUM_ICS; i++) {
+    for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++) {
+        asic_ctx0[i].filt_cell.filt_cell_voltages_array[j] = j + i;
+    }
+}
 
   switch (can_id_get_cmd(ext_id)) {
   case CMD_ID_FIRST_24_CELLS:
@@ -76,7 +90,7 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
     send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS);
     break;
   case CMD_ID_PACK_METADATA:
-    send_metadata_frame(CMD_ID_PACK_METADATA);
+    // send_metadata_frame(CMD_ID_PACK_METADATA);
     break;
   case CMD_ID_IMD_DATA:
     break;
@@ -96,7 +110,7 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
  */
 void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                  can_command_id_t resp_id) {
-  cell_asic_ctx_t *asic_array = hbms.asic;
+  cell_asic_ctx_t *asic_array = asic_ctx0;
 
   // build data function call with first 24 cell configured in parameters
   uint8_t tx_frame[48];
@@ -118,7 +132,7 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
  */
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id) {
-  cell_asic_ctx_t *asic_array = hbms.asic;
+  cell_asic_ctx_t *asic_array = asic_ctx0;
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
   therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);
@@ -134,6 +148,8 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
  * @param resp_id: can frame id to send to gui
  * @return none
  */
+
+ /*
 void send_metadata_frame(can_command_id_t resp_id) {
   pack_data_t *pack_data = hbms.pack;
   pcb_ctx_t *pcb = hbms.pcb;
@@ -144,6 +160,8 @@ void send_metadata_frame(can_command_id_t resp_id) {
                                         (uint16_t)resp_id, BMS_DEVICE_ID);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
 }
+*/
+
 
 /*
  * @ Sends can frame to gui for certain can errors
@@ -156,6 +174,9 @@ void send_can_error(can_error_id_t error_id) {
                                         (uint16_t)error_id, BMS_DEVICE_ID);
   fdcan_send(tx_header, &tx_frame, FDCAN_DLC_BYTES_0);
 }
+
+#include "cb.h"
+#include "config.h"
 
 /*
  * @brief populates data_arr with cell voltage readings, 2 byte big endian
