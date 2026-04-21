@@ -17,6 +17,8 @@ void elcon_send_command(elcon_internal_t *command_profile) {
   can2_send(&header, elcon_pack_can(command_profile).data);
 }
 
+void elcon_hard_stop() { elcon_send_command(&hard_stop); }
+
 can2_msg_t elcon_pack_can(elcon_internal_t *command_profile) {
   can2_msg_t charge_request = {0};
 
