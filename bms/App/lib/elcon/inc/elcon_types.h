@@ -19,4 +19,7 @@ typedef struct {
   elcon_status_t heartbeat_msg;
 } elcon_internal_t;
 
+elcon_internal_t hard_stop =
+    (elcon_internal_t){.enable = 0, .max_current = 0, .max_voltage = 0};
+
 #endif
