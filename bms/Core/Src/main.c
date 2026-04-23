@@ -27,8 +27,10 @@
 #include "cmsis_os2.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
+#include "gui_types.h"
 #include "safety_monitor.h"
 #include "state.h"
+#include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -199,6 +201,9 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  // push button to send sample fdcan frame here
+
 
   while (1) {
     /* USER CODE END WHILE */
@@ -643,9 +648,14 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
-// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-//   HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
-// }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (GPIO_Pin == B1_Pin){
+    uint32_t id = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_TEST_FRAME, BMS_DEVICE_ID);
+    fdcan_send(id, NULL, FDCAN_DLC_BYTES_0);
+  }
+  }
+
 /* USER CODE END 4 */
 
 /**

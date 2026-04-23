@@ -21,6 +21,7 @@ typedef enum {
 typedef enum { BMS_DEVICE_ID = 0x1F, GUI_DEVICE_ID = 0x1E } can_device_id_t;
 
 typedef enum {
+  CMD_ID_TEST_FRAME = 0x00AA,
   CMD_ID_FIRST_24_CELLS = 0x00A0,
   CMD_ID_SECOND_24_CELLS = 0x00A1,
   CMD_ID_THIRD_24_CELLS = 0x00A2,
