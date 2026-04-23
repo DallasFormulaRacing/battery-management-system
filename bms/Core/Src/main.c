@@ -76,7 +76,6 @@ osMutexId_t spi_mutex_id;
 osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
-osMessageQueueId_t can2_rx_processing_queueHandle;
 
 /* USER CODE END PV */
 

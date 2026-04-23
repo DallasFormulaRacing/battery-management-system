@@ -5,14 +5,15 @@
 
 #define IMD_MAX_FRAME_LEN 8
 
-// Index enum for commands, make up the CAN header
+#define ID_CAN_SOURCE 0xEFF4
+
+// Index enum for messages, make up the CAN header
 typedef enum {
-  IMD_CAN_ID_REQUEST = 0x22,
-  IMD_CAN_ID_RESPONSE = 0x23,
-  IMD_CAN_ID_GENERAL = 0x37,
-  IMD_CAN_ID_ISO_DETAIL = 0x38,
-  IMD_CAN_ID_VOLTAGE = 0x39,
-  IMD_CAN_ID_IT_SYSTEM = 0x3A
+  IMD_CAN_ID_REQUEST = 0x18EAFF1C,
+  IMD_CAN_INFO_GENERAL = 0xFF01,
+  IMD_CAN_INFO_ISOLATION = 0xFF02,
+  IMD_CAN_INFO_VOLTAGE = 0xFF03,
+  IMD_CAN_INFO_IT = 0xFF04
 } IMD_CanId_t;
 
 // Index enum for commands, parsed by the IMD to determine specific function
@@ -28,11 +29,15 @@ typedef enum {
 } IMD_CanIndex_t;
 
 typedef enum {
-  THRESHOLD = 0x2F,
-  ACTIVATION = 0x31,
-  POWER_ON = 0x3B,
-
-} IMD_CanIndexSet_t;
+  THRESHOLD_ERROR = 0x47,
+  THRESHOLD_TIMEOUT = 0x49,
+  THRESHOLD_WARNING = 0x4B,
+  VOLTAGE_MODE = 0x65,
+  ALARM_THRESHOLD = 0x2F,
+  ALARM_MODE = 0x31,
+  ACTIVE_PROFILE = 0x39,
+  POWER_PROFILE = 0x3B
+} IMD_SetId_t;
 
 // Bitfield for status'
 typedef struct {
@@ -99,5 +104,32 @@ typedef struct {
   IMD_Data_t data;
   IMD_CanId_t can_id;
 } IMD_Packet_t;
+
+typedef enum : uint8_t {
+  standard_fast = 0x01,
+  standard = 0x02,
+  high_cap_fast = 0x03,
+  high_cap = 0x04,
+  disturbed = 0x05,
+  service = 0x06
+
+} IMD_Active_Prof;
+
+typedef struct {
+  uint8_t threshold_error[2];       // Value in kOhm
+  uint8_t threshold_timeout[2];     // Value in s
+  uint8_t threshold_warning[2];     // Value in kOhm
+  uint8_t voltage_mode[1];          // 0xFD = AC, 0xFE = DC
+  uint8_t unbal_alarm_threshold[1]; // 15-45 as a %
+  uint8_t self_holding_alarm[1]; // 0xFC = False, 0xFD = true (reset by command)
+  uint8_t active_profile[1];
+  uint8_t power_on_profile[1];
+} IMD_Config_Profile;
+
+typedef struct {
+  uint8_t cmd;
+  uint8_t *value;
+  uint8_t len;
+} imd_param_t;
 
 #endif
