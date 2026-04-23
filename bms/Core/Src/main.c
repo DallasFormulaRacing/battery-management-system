@@ -31,7 +31,9 @@
 #include "gui_types.h"
 #include "safety_monitor.h"
 #include "state.h"
+#include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_fdcan.h"
+#include "stm32g4xx_hal_gpio.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -631,6 +633,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == B1_Pin){
     uint32_t id = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_TEST_FRAME, BMS_DEVICE_ID);
     fdcan_send(id, NULL, FDCAN_DLC_BYTES_0);
+
+    HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
+    HAL_Delay(1000);
+    HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_RESET);
   }
   }
 
