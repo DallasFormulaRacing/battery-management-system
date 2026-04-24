@@ -1,7 +1,14 @@
 #include "amc_drivers.h"
-#include "adc.h"
-#include <stdint.h>
 
-uint16_t get_hv_voltage() {
-  return (uint16_t)adc_convert_voltage(adc_one_shot()) * RESISTOR_DIV_RATIO;
+float get_hv_voltage(bool *is_fault) {
+  int16_t raw_diff = adc_one_shot_diff();
+  float v_diff = adc_convert_to_diff_voltage(raw_diff);
+
+  if (v_diff < FAILSAFE_THRESHOLD) {
+    *is_fault = true;
+    return 0.0F;
+  }
+
+  *is_fault = false;
+  return v_diff * RESISTOR_DIV_RATIO;
 }

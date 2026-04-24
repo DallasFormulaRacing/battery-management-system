@@ -12,15 +12,8 @@
 
 extern ADC_HandleTypeDef hadc1;
 
-#include "adc.h"
-
-void adc_poll_no_DMA();
-void adc_start_no_DMA();
-void adc_stop_no_DMA();
-
-uint16_t adc_one_shot();
-
-uint16_t adc_get_no_DMA();
+float adc_convert_to_diff_voltage(int16_t raw);
+int16_t adc_one_shot_diff();
 float adc_convert_voltage(uint16_t raw);
 
 #endif
