@@ -105,7 +105,7 @@ typedef struct {
   IMD_CanId_t can_id;
 } IMD_Packet_t;
 
-typedef enum : uint8_t {
+typedef enum {
   standard_fast = 0x01,
   standard = 0x02,
   high_cap_fast = 0x03,
