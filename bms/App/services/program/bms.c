@@ -45,7 +45,7 @@ bms_handler_t hbms = {
  */
 bms_fault_t therm_temp_in_range_check() {
   adbms_start_aux_voltage_measurement(hbms.asic);
-  delay(5);
+  // delay(5);
   adbms_read_aux_voltages(hbms.asic);
   bool over_temp_flag = false;
   bool under_temp_flag = false;
@@ -89,7 +89,7 @@ bms_fault_t therm_temp_in_range_check() {
 
 bms_fault_t therm_open_wire_check() {
   adbms_start_aux_voltage_measurement(hbms.asic);
-  delay(5);
+  // delay(5);
   adbms_read_aux_voltages(hbms.asic);
 
   bool open_wire_flag = false;
@@ -312,5 +312,5 @@ void bms_test_run() {
 
   adbms_read_aux_voltages(hbms.asic);
   pop();
-  delay(1);
+  // delay(1);
 }

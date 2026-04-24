@@ -73,8 +73,8 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 128 * 4
 };
 /* USER CODE BEGIN PV */
-osThreadId_t spi_thread_pid;
-osMutexId_t spi_mutex_id;
+// osThreadId_t spi_thread_pid;
+// osMutexId_t spi_mutex_id;
 osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
@@ -145,8 +145,8 @@ int main(void)
   osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
-  spi_mutex_id = osMutexNew(&spi_mutex_attr);
-  bms_mutex_id = osMutexNew(&bms_mutex_attr);
+  // spi_mutex_id = osMutexNew(&spi_mutex_attr);
+  // bms_mutex_id = osMutexNew(&bms_mutex_attr);
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
 
@@ -174,9 +174,9 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
-      osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
-                  &bms_safety_task_attributes);
+  // osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
+  //     osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
+  //                 &bms_safety_task_attributes);
 
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
