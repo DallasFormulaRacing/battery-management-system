@@ -3,7 +3,7 @@ add_subdirectory(current)
 add_subdirectory(eeprom)
 add_subdirectory(interface)
 add_subdirectory(isolation)
-add_subdirectory(packvolt)
+add_subdirectory(precharge)
 add_subdirectory(segment)
 
 add_library(api_layer INTERFACE)
@@ -14,6 +14,6 @@ target_link_libraries(api_layer INTERFACE
     eeprom 
     interface 
     isolation
-    packvolt 
+    precharge 
     segment
 )

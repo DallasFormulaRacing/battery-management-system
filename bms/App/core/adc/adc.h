@@ -22,6 +22,6 @@ void adc_stop_no_DMA();
 uint16_t adc_one_shot();
 
 uint16_t adc_get_no_DMA();
-float adc_convert_voltage(const uint16_t raw);
+float adc_convert_voltage(uint16_t raw);
 
 #endif

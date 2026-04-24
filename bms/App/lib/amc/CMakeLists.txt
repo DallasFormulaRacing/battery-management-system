@@ -5,3 +5,4 @@ file(GLOB SRC_FILES "src/*.c")
 target_sources(amc PRIVATE ${SRC_FILES})
 
 target_include_directories(amc PUBLIC inc)
+target_link_libraries(amc PUBLIC adc)
