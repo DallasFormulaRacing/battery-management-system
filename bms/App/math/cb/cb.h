@@ -11,7 +11,7 @@ typedef struct {
   int16_t delta;
 } battery_cell_t;
 
-typedef enum { AGGRESSIVE, NORMAL } cell_balancing_level_t;
+typedef enum { AGGRESSIVE, NORMAL, CAUTIOUS } cell_balancing_level_t;
 
 typedef struct {
   voltage_readings_t maximum_cell_delta_allowed;
