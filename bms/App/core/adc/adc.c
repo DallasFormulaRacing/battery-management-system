@@ -23,6 +23,6 @@ uint16_t adc_get_no_DMA() {
 }
 
 float adc_convert_voltage(const uint16_t raw) {
-  float scalar = ADC_REF_V * raw;
+  float scalar = ADC_REF_V * (float)raw;
   return scalar / ADC_RESOLUTION;
 }
