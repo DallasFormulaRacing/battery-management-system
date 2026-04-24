@@ -6,7 +6,6 @@
 #include "stm32g4xx_hal_adc_ex.h"
 #include <stdint.h>
 
-#define RESISTOR_DIV_RATIO 1001
 #define ADC_BITS_DP 12
 #define ADC_RESOLUTION (1 << (ADC_BITS_DP - 1))
 #define ADC_REF_V 3.3F
