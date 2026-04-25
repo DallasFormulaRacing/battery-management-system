@@ -15,15 +15,20 @@ void run_precharge_task() {
   open_ir_pos_relay();
   osDelay(50);
 
-  // start precharging capacitor
+  // detect if precharge capacitor
+  while (1) {
+    osDelay(50);
+    if (get_hv_prchrg_cap_voltage() > PRECHARGE_DETECT_LINK_CAP_MAX_V)
+      break;
+  }
 
   while (1) {
-    osDelay(1);
+    osDelay(100);
     if (get_hv_bus_voltage() - get_hv_prchrg_cap_voltage() <
-        PRECHARGE_THRESHOLD_DIFF_V)
+        PRECHARGE_THRESHOLD_DELTA_V)
       break;
   }
 
   close_ir_pos_relay();
-  osDelay(50);
+  osDelay(5);
 }
