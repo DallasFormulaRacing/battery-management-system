@@ -11,9 +11,10 @@
 #define ADC_REF_V 3.3F
 
 extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc2;
 
 float adc_convert_to_diff_voltage(int16_t raw);
-int16_t adc_one_shot_diff();
+int16_t adc_one_shot_diff(ADC_HandleTypeDef *hadcx);
 float adc_convert_voltage(uint16_t raw);
 
 #endif
