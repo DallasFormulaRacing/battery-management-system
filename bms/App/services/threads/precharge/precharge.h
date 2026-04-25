@@ -6,7 +6,7 @@
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_gpio.h"
 
-#define PRECHAGE_CIRCUIT_GPIO_GROUP GPIOC
+#define PRECHARGE_CIRCUIT_GPIO_GROUP GPIOC
 #define IR_POS_GPIO GPIO_PIN_1
 #define PRECHARGE_RELAY_GPIO GPIO_PIN_2
 #define PRECHARGE_THRESHOLD_DIFF_V 10U
