@@ -6,8 +6,12 @@
 #include <stdint.h>
 
 #define RESISTOR_DIV_RATIO 1001
-#define FAILSAFE_THRESHOLD -2.5F
+#define FAILSAFE_THRESHOLD -2.57F
 
-float get_hv_voltage(bool *is_fault);
+#define HV_BUS_ADC_HANDLE hadc1
+#define PRECHARGE_CAP_ADC_HANDLE hadc2
+
+float get_hv_bus_voltage();
+float get_hv_prchrg_cap_voltage();
 
 #endif
