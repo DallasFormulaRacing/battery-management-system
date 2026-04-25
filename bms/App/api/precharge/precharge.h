@@ -2,9 +2,15 @@
 #define PRECHARGE_CIRCUIT_H
 
 #include "amc_drivers.h"
+#include "cmsis_os2.h"
+#include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_gpio.h"
 
-#define IR_POS_GPIO PC1
-#define PRECHARGE_RELAY_GPIO PC2
-#define PRECHARGE_THRESHOLD_V 550U
+#define PRECHAGE_CIRCUIT_GPIO_GROUP GPIOC
+#define IR_POS_GPIO GPIO_PIN_1
+#define PRECHARGE_RELAY_GPIO GPIO_PIN_2
+#define PRECHARGE_THRESHOLD_DIFF_V 10U
+
+void run_precharge_task();
 
 #endif
