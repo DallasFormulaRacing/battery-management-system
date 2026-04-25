@@ -1,4 +1,5 @@
 #include "precharge.h"
+#include "amc_drivers.h"
 #include "cmsis_os2.h"
 
 static void close_precharge_relay(void) {
@@ -25,6 +26,17 @@ void run_precharge_task() {
   open_ir_pos_relay();
   osDelay(50);
 
-  // start prechargign capacitor
+  // start precharging capacitor
   close_precharge_relay();
+
+  while (1) {
+    osDelay(1);
+    if (get_hv_bus_voltage() - get_hv_prchrg_cap_voltage() <
+        PRECHARGE_THRESHOLD_DIFF_V)
+      break;
+  }
+
+  close_ir_pos_relay();
+  osDelay(50);
+  open_precharge_relay();
 }
