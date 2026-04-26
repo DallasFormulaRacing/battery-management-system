@@ -11,6 +11,7 @@ void can2_configure_filter();
 
 typedef struct {
   uint32_t id;
+  uint32_t id_type;
   uint8_t data[8];
   uint32_t len;
   uint32_t rx_tick;
