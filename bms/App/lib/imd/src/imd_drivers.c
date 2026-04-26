@@ -66,7 +66,7 @@ void reset_imd_alarm() {
   imd_send_request(IMD_CAN_ID_REQUEST, IMD_RESET_ALARM, data, 1);
 }
 
-void parse_imd_msg(uint32_t can_id, uint8_t *data) {
+void parse_imd_msg(uint32_t can_id, const uint8_t *data) {
   memcpy(packet.data.raw, data, 8);
   packet.can_id = can_id;
 }
