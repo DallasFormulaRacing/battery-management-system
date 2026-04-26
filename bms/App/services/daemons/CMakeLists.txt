@@ -2,7 +2,8 @@
 
 add_library(daemons STATIC 
     logd.c 
+    diagd.c
 )
 
 target_include_directories(daemons PUBLIC .)
-target_link_libraries(daemons PRIVATE )
+target_link_libraries(daemons PRIVATE freertos)
