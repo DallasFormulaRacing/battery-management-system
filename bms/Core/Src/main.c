@@ -638,11 +638,37 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == B1_Pin){
     uint32_t id = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_TEST_FRAME, BMS_DEVICE_ID);
     fdcan_send(id, NULL, FDCAN_DLC_BYTES_0);
-
   }
-  }
+}
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
+                               uint32_t RxFifo0ITs) {
+  if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+    FDCAN_RxHeaderTypeDef rxHeader;
+    fdcan_msg_t msg;
+    HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
+
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, msg.data) ==
+        HAL_OK) {
+      msg.id = rxHeader.Identifier;
+      // this can2
+      if (hfdcan->Instance == FDCAN1) {
+        //osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
+        HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+      }
+
+      // this is fdcan
+      if (hfdcan->Instance == FDCAN2) {
+        //osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
+        HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+
+      }
+      /*If msg comes from something else, send it to its own message queue*/
+    }
+  }
+}
+
+void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
   if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
     FDCAN_RxHeaderTypeDef rxHeader;

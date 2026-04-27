@@ -33,33 +33,56 @@ void fdcan_configure_filter(void) {
    * equals BMS device ID (0x1F), regardless of source/cmd/priority.
    */
 
-  FDCAN_FilterTypeDef filter_config;
-  memset(&filter_config, 0, sizeof(filter_config));
+  // FDCAN_FilterTypeDef filter_config;
+  // memset(&filter_config, 0, sizeof(filter_config));
 
-  filter_config.IdType = FDCAN_EXTENDED_ID;
-  filter_config.FilterIndex = 0;
-  filter_config.FilterType = FDCAN_FILTER_MASK;
-  filter_config.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+  // filter_config.IdType = FDCAN_EXTENDED_ID;
+  // filter_config.FilterIndex = 0;
+  // filter_config.FilterType = FDCAN_FILTER_MASK;
+  // filter_config.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 
-  const uint32_t target_mask = (0x1FU << 21); /* only care about target bits */
-  const uint32_t bms_target = (0x1FU << 21);  /* BMS_DEVICE_ID == 0x1F */
+  // const uint32_t target_mask = (0x1FU << 21); /* only care about target bits */
+  // const uint32_t bms_target = (0x1FU << 21);  /* BMS_DEVICE_ID == 0x1F */
 
-  filter_config.FilterID1 = bms_target;
-  filter_config.FilterID2 = target_mask;
+  // filter_config.FilterID1 = bms_target;
+  // filter_config.FilterID2 = target_mask;
 
-  HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+  // HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+
+  FDCAN_FilterTypeDef sFilter = {0};
+
+  sFilter.IdType = FDCAN_EXTENDED_ID;
+  sFilter.FilterIndex = 0;
+  sFilter.FilterType = FDCAN_FILTER_MASK;
+  sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+  sFilter.FilterID1 = 0x00000000;
+  sFilter.FilterID2 = 0x00000000;   // mask 0 = match all
+
+  HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilter);
+
+  HAL_FDCAN_ConfigGlobalFilter(
+      &hfdcan1,
+      FDCAN_ACCEPT_IN_RX_FIFO0,
+      FDCAN_ACCEPT_IN_RX_FIFO0,
+      FDCAN_REJECT_REMOTE,
+      FDCAN_REJECT_REMOTE
+  );
 }
 
 // Called once from main.c before program/bms init runs.
 // configures filter, starts FDCAN, and enables RX FIFO0 notification
 void fdcan_hardware_init(void) {
-  // fdcan_configure_filter();
+  fdcan_configure_filter();
 
   if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
+        // HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
+
     /* handle error */
   }
 
   if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
+        // HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
+
     /* handle error */
   }
 
