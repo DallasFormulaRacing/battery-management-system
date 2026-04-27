@@ -34,15 +34,12 @@ static uint32_t can2_len_to_dlc(uint32_t len) {
 static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
   FDCAN_TxHeaderTypeDef header = {
       .IdType = msg->id_type,
-      .Identifier = (msg->id_type == FDCAN_STANDARD_ID)
-                        ? (uint32_t)(msg->id & 0x7FFU)
-                        : (uint32_t)(msg->id & 0x1FFFFFFFU),
+      .Identifier = FDCAN_EXTENDED_ID,
       .TxFrameType = FDCAN_DATA_FRAME,
       .DataLength = can2_len_to_dlc(msg->len),
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
       .BitRateSwitch = FDCAN_BRS_ON,
       .FDFormat = FDCAN_FD_CAN,
-
       .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
       .MessageMarker = 0U,
   };
