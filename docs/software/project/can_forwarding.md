@@ -6,8 +6,8 @@
 
 ## Frame Mapping
 
-- `IdType`: stay same
-- `Identifier`: stay same
+- `IdType`: All must be extended for CAN2B
+- `Identifier`: Need to change to adapt to overarching DFR VCAN standard
 - `DLC`: stay same
 - `Payload bytes`: stay same
 
