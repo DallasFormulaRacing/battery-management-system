@@ -5,3 +5,4 @@ file(GLOB SRC_FILES "src/*.c")
 target_sources(elcon PRIVATE ${SRC_FILES})
 
 target_include_directories(elcon PUBLIC inc)
+target_link_libraries(elcon PUBLIC can) 

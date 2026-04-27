@@ -1,9 +1,17 @@
 # services/threads/CMakeLists.txt
 
 add_library(threads STATIC 
-    safety_monitor.c
-    gui_can_job.c
+    safety/safety_monitor.c
+    vcan/gui_can_job.c
+    tcan/can2_job.c
+    precharge/precharge.c
 )
 
-target_include_directories(threads PUBLIC .)
-target_link_libraries(threads PRIVATE program fdcan gui freertos thermal cb adbms charger segment)
+target_include_directories(threads PUBLIC 
+    .
+    vcan
+    tcan
+    safety
+    precharge
+)
+target_link_libraries(threads PRIVATE program fdcan can imd gui freertos elcon thermal cb adbms charger segment amc)

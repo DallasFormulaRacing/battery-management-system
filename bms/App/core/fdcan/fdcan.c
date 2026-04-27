@@ -1,5 +1,4 @@
 #include "fdcan.h"
-
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 

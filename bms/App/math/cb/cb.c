@@ -26,6 +26,10 @@
  ******************************************************************************
  */
 
+static pwm_duty_cycle_t normal_delta_map(float delta_v);
+
+static pwm_duty_cycle_t aggressive_delta_map(float delta_v);
+
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
   uint8_t segment_idx = 0;
   uint8_t battery_idx = 0;
@@ -51,9 +55,29 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
 pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
                                              voltage_readings_t delta) {
   float delta_v = convert_voltage_human_readable(delta);
+
+  // if within OK margin of error, dont balance at all
   if (delta_v <=
-      convert_voltage_human_readable(pcb->maximum_cell_delta_allowed))
+      convert_voltage_human_readable(pcb->config.maximum_cell_delta_allowed))
     return PWM_0_0_PERCENT_DUTY_CYCLE;
+
+  // else map
+  switch (pcb->config.lvl) {
+  case AGGRESSIVE:
+    return aggressive_delta_map(delta_v);
+  case NORMAL:
+    return normal_delta_map(delta_v);
+  }
+
+  return PWM_0_0_PERCENT_DUTY_CYCLE;
+}
+
+static pwm_duty_cycle_t aggressive_delta_map(float delta_v) {
+  return PWM_100_0_PERCENT_DUTY_CYCLE;
+}
+
+static pwm_duty_cycle_t normal_delta_map(float delta_v) {
+  //
   if (delta_v >= 0.100F /*is above X = 100 mV */)
     return PWM_100_0_PERCENT_DUTY_CYCLE;
   if (delta_v < 0.100F && delta_v >= 0.0924F)
@@ -84,6 +108,7 @@ pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
     return PWM_13_2_PERCENT_DUTY_CYCLE;
   if (delta_v < 0.0132F && delta_v >= 0.0066F)
     return PWM_6_6_PERCENT_DUTY_CYCLE;
+
   return PWM_0_0_PERCENT_DUTY_CYCLE;
 }
 
@@ -94,17 +119,27 @@ pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
  * @param pcb
  */
 void find_cell_deltas(pcb_ctx_t *pcb) {
-  // First pass: find minimum cell
+  // first pass: find minimum and maximum cell
+  // second pass happens at
   voltage_readings_t min_voltage = INT16_MAX;
-  battery_cell_t base;
+  voltage_readings_t max_voltage = INT16_MIN;
+  battery_cell_t min_cell;
+  battery_cell_t max_cell;
+
   for (uint8_t cell_idx = 0; cell_idx < NUM_CELL_USING; cell_idx++) {
-    if (pcb->batteries[cell_idx].cell_voltage < min_voltage) {
-      min_voltage = pcb->batteries[cell_idx].cell_voltage;
-      base = pcb->batteries[cell_idx];
+    voltage_readings_t curr_cell = pcb->batteries[cell_idx].cell_voltage;
+    if (curr_cell < min_voltage) {
+      min_voltage = curr_cell;
+      min_cell = pcb->batteries[cell_idx];
+    }
+    if (curr_cell > max_voltage) {
+      max_voltage = curr_cell;
+      max_cell = pcb->batteries[cell_idx];
     }
   }
 
-  pcb->lowest_cell = base;
+  pcb->lowest_cell = min_cell;
+  pcb->highest_cell = max_cell;
 }
 
 /**
@@ -115,5 +150,6 @@ void find_cell_deltas(pcb_ctx_t *pcb) {
  */
 void init_cell_balancing(pcb_ctx_t *pcb,
                          voltage_readings_t max_cell_delta_allowed) {
-  pcb->maximum_cell_delta_allowed = max_cell_delta_allowed;
+  pcb->config.maximum_cell_delta_allowed = max_cell_delta_allowed;
+  pcb->config.lvl = AGGRESSIVE;
 }

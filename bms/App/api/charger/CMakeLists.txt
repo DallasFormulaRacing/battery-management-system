@@ -10,4 +10,5 @@ target_link_libraries(charger
         adbms
         cb
         segment
+        elcon
 )

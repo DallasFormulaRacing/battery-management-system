@@ -11,11 +11,19 @@ typedef struct {
   int16_t delta;
 } battery_cell_t;
 
+typedef enum { AGGRESSIVE, NORMAL, CAUTIOUS } cell_balancing_level_t;
+
 typedef struct {
   voltage_readings_t maximum_cell_delta_allowed;
+  cell_balancing_level_t lvl;
+} pcb_cfg_t;
+
+typedef struct {
+  pcb_cfg_t config;
   battery_cell_t lowest_cell;
+  battery_cell_t highest_cell;
   battery_cell_t batteries[NUM_CELL_USING];
-  // uint8_t pwm_timer_flag;
+  uint8_t num_cells_violating_delta;
 } pcb_ctx_t;
 
 void find_cell_deltas(pcb_ctx_t *pcb);
