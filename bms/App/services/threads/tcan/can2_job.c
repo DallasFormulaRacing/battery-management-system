@@ -40,8 +40,9 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
       .TxFrameType = FDCAN_DATA_FRAME,
       .DataLength = can2_len_to_dlc(msg->len),
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-      .BitRateSwitch = FDCAN_BRS_OFF,
-      .FDFormat = FDCAN_CLASSIC_CAN,
+      .BitRateSwitch = FDCAN_BRS_ON,
+      .FDFormat = FDCAN_FD_CAN,
+
       .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
       .MessageMarker = 0U,
   };
