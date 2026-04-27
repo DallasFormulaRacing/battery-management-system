@@ -2,10 +2,12 @@
 #ifndef FDCAN_H
 #define FDCAN_H
 
+//#include "can.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <stdint.h>
 extern FDCAN_HandleTypeDef hfdcan2;
+extern FDCAN_HandleTypeDef hfdcan1;
 
 /**
  * @brief Send an extended-ID CAN FD data frame (FDCAN2).

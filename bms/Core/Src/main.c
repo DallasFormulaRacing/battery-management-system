@@ -139,6 +139,10 @@ int main(void)
   MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
 
+fdcan_hardware_init();
+
+
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -178,11 +182,11 @@ int main(void)
   //     osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
   //                 &bms_safety_task_attributes);
 
-  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  //osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
+  //    osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
 
-  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  //osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
+  //    osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -208,6 +212,7 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
+
 
 /**
   * @brief System Clock Configuration
@@ -634,11 +639,35 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     uint32_t id = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, CMD_ID_TEST_FRAME, BMS_DEVICE_ID);
     fdcan_send(id, NULL, FDCAN_DLC_BYTES_0);
 
-    HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_SET);
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(USER_LED_GPIO_Port, USER_LED_Pin, GPIO_PIN_RESET);
   }
   }
+
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
+                               uint32_t RxFifo0ITs) {
+  if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+    FDCAN_RxHeaderTypeDef rxHeader;
+    fdcan_msg_t msg;
+
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, msg.data) ==
+        HAL_OK) {
+      msg.id = rxHeader.Identifier;
+      // this can2
+      if (hfdcan->Instance == FDCAN1) {
+        //osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0);
+        HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+      }
+
+      // this is fdcan
+      if (hfdcan->Instance == FDCAN2) {
+        //osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
+        HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+
+      }
+      /*If msg comes from something else, send it to its own message queue*/
+    }
+  }
+}
+
 
 /* USER CODE END 4 */
 
