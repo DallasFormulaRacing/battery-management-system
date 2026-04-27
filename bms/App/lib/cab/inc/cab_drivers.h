@@ -11,7 +11,8 @@
 #include "stm32g4xx_hal_fdcan.h"
 #include <stdint.h>
 
+#define ERROR_INFORMATION_BITMASK 0xFE
 
-CABMessage ProcessCABMessage();
+cab_message_t process_cab_message();
 
 #endif
