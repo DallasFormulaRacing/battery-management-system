@@ -213,7 +213,6 @@ fdcan_hardware_init();
   /* USER CODE END 3 */
 }
 
-
 /**
   * @brief System Clock Configuration
   * @retval None
