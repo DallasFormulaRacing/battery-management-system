@@ -14,4 +14,7 @@ target_include_directories(threads PUBLIC
     safety
     precharge
 )
-target_link_libraries(threads PRIVATE program fdcan can imd gui freertos elcon thermal cb adbms charger segment amc)
+target_link_libraries(threads PRIVATE program 
+fdcan 
+can 
+imd gui freertos elcon thermal cb adbms charger segment amc)
