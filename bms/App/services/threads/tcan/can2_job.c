@@ -3,6 +3,7 @@
 #include "cmsis_os2.h"
 #include "elcon_comms.h"
 #include "fdcan.h"
+#include "gui_types.h"
 #include "imd_drivers.h"
 #include "imd_types.h"
 #include "stm32g474xx.h"
@@ -46,33 +47,39 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
 
   switch (msg->id) {
   case PLACEHOLDER_CURRENT_SENSOR_CAN_ID:
-    header.Identifier = DFR_CAN_BMS_CURRENT_SENSOR;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_CURRENT_SENSOR, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_REQUEST:
-    header.Identifier = DFR_CAN_BMS_IMD_REQUEST;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_REQUEST, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_RESPONSE:
-    header.Identifier = DFR_CAN_BMS_IMD_RESPONSE;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_RESPONSE, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_GENERAL:
-    header.Identifier = DFR_CAN_BMS_IMD_GENERAL;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_GENERAL, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_ISO_DETAIL:
-    header.Identifier = DFR_CAN_BMS_IMD_ISO_DETAIL;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_ISO_DETAIL, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_VOLTAGE:
-    header.Identifier = DFR_CAN_BMS_IMD_VOLTAGE;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_VOLTAGE, BMS_DEVICE_ID);
     break;
   case IMD_CAN_ID_IT_SYSTEM:
-    header.Identifier = DFR_CAN_BMS_IMD_IT_SYSTEM;
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
+                                     DFR_CAN_BMS_IMD_IT_SYSTEM, BMS_DEVICE_ID);
     break;
   default:
     break;
   }
 
   // todo map can ids to dfr
-
-  return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header, (uint8_t *)msg->data);
+  // return fdcan_send(, const uint8_t *data, uint32_t dlc_code);
 }
 
 static void process_can2_protocols(const can2_msg_t *msg) {
