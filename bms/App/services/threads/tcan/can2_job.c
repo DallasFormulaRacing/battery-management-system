@@ -79,7 +79,7 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
   }
 
   // todo map can ids to dfr
-  // return fdcan_send(, const uint8_t *data, uint32_t dlc_code);
+  return fdcan_send(header.Identifier, msg->data, header.DataLength);
 }
 
 static void process_can2_protocols(const can2_msg_t *msg) {
