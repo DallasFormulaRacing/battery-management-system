@@ -179,10 +179,12 @@ int main(void) {
                   &bms_safety_task_attributes);
 
   // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-  osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
 
   // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-  osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
 
   /* USER CODE END RTOS_THREADS */
 

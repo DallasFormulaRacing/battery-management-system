@@ -15,7 +15,7 @@ extern osMessageQueueId_t can2_rx_dispatch_queueHandle;
 const osThreadAttr_t gui_can_job_runner_attributes = {
     .name = "gui_can_job_runner",
     .priority = (osPriority_t)osPriorityHigh,
-    .stack_size = 128 * 4};
+    .stack_size = 128 * 8};
 
 /**
  * @brief
