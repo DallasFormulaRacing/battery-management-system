@@ -82,7 +82,7 @@ can2_forwarding_stats_t can2_forwarding_stats_get(void) {
 const osThreadAttr_t can2_job_runner_attributes = {
     .name = "can2_job_runner",
     .priority = (osPriority_t)osPriorityHigh,
-    .stack_size = 128 * 4};
+    .stack_size = 128 * 8};
 
 void can2_job_runner(void *argument) {
   (void)argument;
