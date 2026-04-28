@@ -52,10 +52,9 @@ typedef enum {
   ERROR_ID_INVALID_ID = 0xF003,
 } can_error_id_t;
 
-static inline can_ext_id_t can_id_build(can_priority_t priority,
-                                        can_device_id_t target,
-                                        can_command_id_t cmd,
-                                        can_device_id_t source) {
+inline can_ext_id_t can_id_build(can_priority_t priority,
+                                 can_device_id_t target, can_command_id_t cmd,
+                                 can_device_id_t source) {
   uint32_t priority_field = ((uint32_t)priority & 0x07U) << 26;
   uint32_t target_field = ((uint32_t)target & 0x1FU) << 21;
   uint32_t cmd_field = ((uint32_t)cmd & 0xFFFFU) << 5;
