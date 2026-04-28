@@ -67,6 +67,8 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
   }
 }
 
+// **************************************************
+
 void gui_can_job_runner(void *argument) {
   fdcan_msg_t msg;
   fdcan_hardware_init();

@@ -33,8 +33,8 @@ static uint32_t can2_len_to_dlc(uint32_t len) {
 
 static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
   FDCAN_TxHeaderTypeDef header = {
-      .IdType = msg->id_type,
-      .Identifier = FDCAN_EXTENDED_ID,
+      .IdType = FDCAN_EXTENDED_ID,
+      .Identifier = 0,
       .TxFrameType = FDCAN_DATA_FRAME,
       .DataLength = can2_len_to_dlc(msg->len),
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
@@ -43,6 +43,34 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
       .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
       .MessageMarker = 0U,
   };
+
+  switch (msg->id) {
+  case PLACEHOLDER_CURRENT_SENSOR_CAN_ID:
+    header.Identifier = DFR_CAN_BMS_CURRENT_SENSOR;
+    break;
+  case IMD_CAN_ID_REQUEST:
+    header.Identifier = DFR_CAN_BMS_IMD_REQUEST;
+    break;
+  case IMD_CAN_ID_RESPONSE:
+    header.Identifier = DFR_CAN_BMS_IMD_RESPONSE;
+    break;
+  case IMD_CAN_ID_GENERAL:
+    header.Identifier = DFR_CAN_BMS_IMD_GENERAL;
+    break;
+  case IMD_CAN_ID_ISO_DETAIL:
+    header.Identifier = DFR_CAN_BMS_IMD_ISO_DETAIL;
+    break;
+  case IMD_CAN_ID_VOLTAGE:
+    header.Identifier = DFR_CAN_BMS_IMD_VOLTAGE;
+    break;
+  case IMD_CAN_ID_IT_SYSTEM:
+    header.Identifier = DFR_CAN_BMS_IMD_IT_SYSTEM;
+    break;
+  default:
+    break;
+  }
+
+  // todo map can ids to dfr
 
   return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header, (uint8_t *)msg->data);
 }

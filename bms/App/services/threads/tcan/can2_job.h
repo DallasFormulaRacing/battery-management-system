@@ -5,6 +5,9 @@
 #include "cmsis_os2.h"
 #include <stdint.h>
 
+// todo: placeholder, replace ASAP
+#define PLACEHOLDER_CURRENT_SENSOR_CAN_ID 0xFF0FF00F
+
 typedef struct {
   uint32_t rx_total;
   uint32_t forwarded_total;
