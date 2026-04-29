@@ -105,6 +105,21 @@ void defaultTaskFn(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+uint8_t global_rx_payload[64];
+volatile uint32_t rx_flag = 0;
+
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
+    FDCAN_RxHeaderTypeDef rxHeader;
+    uint8_t rx_payload[64];
+
+    if (HAL_FDCAN_GetRxMessage(&hfdcan1, FDCAN_RX_FIFO0, &rxHeader, rx_payload) == HAL_OK) {
+        
+        memcpy(global_rx_payload, rx_payload, 64);
+        
+        rx_flag = 1;
+    }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -343,7 +358,7 @@ static void MX_FDCAN1_Init(void)
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
   hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
@@ -386,7 +401,7 @@ static void MX_FDCAN2_Init(void)
   /* USER CODE END FDCAN2_Init 1 */
   hfdcan2.Instance = FDCAN2;
   hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+  hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
   hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
@@ -718,7 +733,7 @@ void defaultTaskFn(void *argument)
       .MessageMarker = 0U,
   };
 
-  uint8_t pTxData[16] = {0xAA, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+  uint8_t pTxData[8] = {0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xAA, 0xAA};
                         // 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
   uint8_t pTxData2[8] = {0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0,0xF0};
 
@@ -728,11 +743,16 @@ void defaultTaskFn(void *argument)
   fdcan_init2 = HAL_FDCAN_Init(&hfdcan2);
   fdcan_start2 = HAL_FDCAN_Start(&hfdcan2);
 
+  HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+
+  
+
   for (;;) {
     osDelay(1);
-    fdcan_fifoq = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &header1, pTxData);
-    rx_qfull = HAL_FDCAN_GetRxFifoFillLevel(&hfdcan1, FDCAN_RX_FIFO0);
-    tx_qfree = HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan1);
+    fdcan_fifoq = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header1, pTxData);
+    rx_qfull = HAL_FDCAN_GetRxFifoFillLevel(&hfdcan2, FDCAN_RX_FIFO0);
+    tx_qfree = HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2);
+    
     //osDelay(1);
     //HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header, pTxData2);
   }
