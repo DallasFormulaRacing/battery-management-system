@@ -100,6 +100,7 @@ target_link_libraries(${PROJECT_NAME}
         adbms  
         segment
         charger
+        eeprom
         program    
         daemons    
         threads

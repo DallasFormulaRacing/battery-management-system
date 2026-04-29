@@ -29,6 +29,7 @@
 #include "gui_can_job.h"
 #include "safety_monitor.h"
 #include "state.h"
+#include "eeprom.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -689,6 +690,11 @@ static void MX_GPIO_Init(void)
 // void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //   HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 // }
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c) {
+  if (hi2c->Instance == I2C1) {
+    eeprom_TxCpltCallback(); 
+  }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_defaultTaskFn */
