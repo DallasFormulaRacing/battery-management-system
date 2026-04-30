@@ -1,12 +1,17 @@
 #include "gui_drivers.h"
 #include "cb.h"
-#include "config.h"
+//#include "config.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                         can_command_id_t resp_id);
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id);
 static void send_metadata_frame(can_command_id_t resp_id);
+
+//demo purposes only
+#define NUM_ICS 12 // need to define macro since config.h not included
+static cell_asic_ctx_t asic_ctx_demo[NUM_ICS];
+
 
 /*
  * NON-RTOS IMPL
@@ -38,6 +43,19 @@ static void send_metadata_frame(can_command_id_t resp_id);
  * @return none
  */
 void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
+
+  /*
+The following code is solely for the gui demo
+The hbms master variable that is automatically populated from the ASICs are now manually configured
+*/
+
+//each cell value per asic has the value cell_idx + asic_idx
+for (int i = 0; i < NUM_ICS; i++) {
+    for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++) {
+        asic_ctx_demo[i].filt_cell.filt_cell_voltages_array[i] = j + i;
+    }
+}
+
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);
@@ -96,7 +114,7 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
  */
 void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                  can_command_id_t resp_id) {
-  cell_asic_ctx_t *asic_array = hbms.asic;
+  cell_asic_ctx_t *asic_array = asic_ctx_demo;
 
   // build data function call with first 24 cell configured in parameters
   uint8_t tx_frame[48];
@@ -118,7 +136,7 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
  */
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id) {
-  cell_asic_ctx_t *asic_array = hbms.asic;
+  cell_asic_ctx_t *asic_array = asic_ctx_demo;
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
   therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);

@@ -53,7 +53,7 @@ void fdcan_configure_filter(void) {
 // Called once from main.c before program/bms init runs.
 // configures filter, starts FDCAN, and enables RX FIFO0 notification
 void fdcan_hardware_init(void) {
-  fdcan_configure_filter();
+  //fdcan_configure_filter();
 
   if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
     /* handle error */

@@ -105,20 +105,20 @@ void defaultTaskFn(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t global_rx_payload[64];
-volatile uint32_t rx_flag = 0;
+// uint8_t global_rx_payload[64];
+// volatile uint32_t rx_flag = 0;
 
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
-    FDCAN_RxHeaderTypeDef rxHeader;
-    uint8_t rx_payload[64];
+// void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
+//     FDCAN_RxHeaderTypeDef rxHeader;
+//     uint8_t rx_payload[64];
 
-    if (HAL_FDCAN_GetRxMessage(&hfdcan1, FDCAN_RX_FIFO0, &rxHeader, rx_payload) == HAL_OK) {
+//     if (HAL_FDCAN_GetRxMessage(&hfdcan1, FDCAN_RX_FIFO0, &rxHeader, rx_payload) == HAL_OK) {
         
-        memcpy(global_rx_payload, rx_payload, 64);
+//         memcpy(global_rx_payload, rx_payload, 64);
         
-        rx_flag = 1;
-    }
-}
+//         rx_flag = 1;
+//     }
+// }
 
 /* USER CODE END 0 */
 
@@ -194,17 +194,17 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  // osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
-  //                 &bms_safety_task_attributes);
+  osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
+      osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
+                  &bms_safety_task_attributes);
 
-  // // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
   // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
 
-  // // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
   // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -358,7 +358,7 @@ static void MX_FDCAN1_Init(void)
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
   hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
@@ -749,9 +749,9 @@ void defaultTaskFn(void *argument)
 
   for (;;) {
     osDelay(1);
-    fdcan_fifoq = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header1, pTxData);
-    rx_qfull = HAL_FDCAN_GetRxFifoFillLevel(&hfdcan2, FDCAN_RX_FIFO0);
-    tx_qfree = HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2);
+    //fdcan_fifoq = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &header1, pTxData);
+    //rx_qfull = HAL_FDCAN_GetRxFifoFillLevel(&hfdcan2, FDCAN_RX_FIFO0);
+    //tx_qfree = HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2);
     
     //osDelay(1);
     //HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &header, pTxData2);

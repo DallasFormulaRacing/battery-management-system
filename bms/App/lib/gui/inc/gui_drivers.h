@@ -4,7 +4,7 @@
 #include "bms.h"
 #include "bms_types.h"
 #include "cmsis_os2.h"
-#include "config.h"
+//#include "config.h"
 #include "fdcan.h"
 #include "gui_types.h"
 #include "stm32g4xx_hal.h"
