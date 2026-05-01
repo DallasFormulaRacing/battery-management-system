@@ -68,14 +68,15 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 }
 
 // **************************************************
-
+osStatus_t status;
 void gui_can_job_runner(void *argument) {
   fdcan_msg_t msg;
   fdcan_hardware_init();
 
   for (;;) {
-    if (osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
-                          osWaitForever) == osOK) {
+    status = osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
+                          osWaitForever);
+    if (status == osOK) {
       gui_process_can_command(msg.id, msg.data);
     }
   }

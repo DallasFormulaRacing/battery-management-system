@@ -1,5 +1,6 @@
 #include "gui_drivers.h"
 #include "cb.h"
+#include "stm32g4xx_hal_def.h"
 //#include "config.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
@@ -10,7 +11,9 @@ static void send_metadata_frame(can_command_id_t resp_id);
 
 //demo purposes only
 #define NUM_ICS 12 // need to define macro since config.h not included
+#define NUM_CELLS_PER_SEGMENT 12
 static cell_asic_ctx_t asic_ctx_demo[NUM_ICS];
+static uint8_t cell_voltage_tx_frame[48];
 
 
 /*
@@ -51,8 +54,8 @@ The hbms master variable that is automatically populated from the ASICs are now 
 
 //each cell value per asic has the value cell_idx + asic_idx
 for (int i = 0; i < NUM_ICS; i++) {
-    for (int j = 0; j < ADBMS_NUM_CELLS_PER_IC; j++) {
-        asic_ctx_demo[i].filt_cell.filt_cell_voltages_array[i] = j + i;
+    for (int j = 0; j < NUM_CELLS_PER_SEGMENT; j++) {
+        asic_ctx_demo[i].filt_cell.filt_cell_voltages_array[j] = j + i;
     }
 }
 
@@ -117,13 +120,13 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
   cell_asic_ctx_t *asic_array = asic_ctx_demo;
 
   // build data function call with first 24 cell configured in parameters
-  uint8_t tx_frame[48];
-  cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
+  //uint8_t tx_frame[48];
+  cell_voltage_readings(asic_array, start_ic, end_ic, cell_voltage_tx_frame);
 
   // send can frame with first_24_cells as command id
   can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
                                         (uint16_t)resp_id, BMS_DEVICE_ID);
-  fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
+  HAL_StatusTypeDef send_status = fdcan_send(tx_header, cell_voltage_tx_frame, FDCAN_DLC_BYTES_48);
 }
 
 /*
@@ -191,7 +194,7 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic,
   uint8_t cell_counter = 0;
   for (uint8_t ic = start_ic; ic < end_ic; ic++) {
     // grab cell reading from asic array
-    for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < NUM_CELLS_PER_SEGMENT; cell_idx++) {
       int16_t voltage = asic[ic].filt_cell.filt_cell_voltages_array[cell_idx];
 
       // convert 16 bit signed uint8_t into 2 bytes, big endian

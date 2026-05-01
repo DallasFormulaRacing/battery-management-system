@@ -1,4 +1,5 @@
 #include "fdcan.h"
+#include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 
@@ -21,7 +22,8 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data,
   tx_header.DataLength = dlc_code;
 
   /* HAL expects a non-const pointer; we won't mutate it. */
-  return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &tx_header, (uint8_t *)data);
+  HAL_StatusTypeDef status = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &tx_header, (uint8_t *)data);
+  return status;
 }
 
 /* ---------------------------------------------------------
