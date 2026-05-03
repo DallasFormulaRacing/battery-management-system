@@ -5,7 +5,7 @@
 const osThreadAttr_t bms_safety_task_attributes = {
     .name = "bms_safety_task",
     .priority = (osPriority_t)osPriorityNormal,
-    .stack_size = 128 * 4};
+    .stack_size = 128 * 32};
 
 const timing_parameters_t bms_safety_task_time =
     (timing_parameters_t){.frequency = 500};

@@ -13,7 +13,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-volatile float look[4][13];
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -243,28 +242,25 @@ void measure_during_fault() {
   // measure voltages (top level task)
   // measure temps (top level task)
 }
-
+volatile float look[NUM_IC_COUNT_CHAIN][NUM_CELLS_PER_SEGMENT];
 static void pop() {
-  for (uint8_t i = 0; i < 12; i++) {
-    look[0][i] =
-        convert_voltage_human_readable(hbms.asic[0].aux.aux_voltages_array[i]);
+  for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    for (uint8_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
+      look[seg_num][cell_num] = convert_voltage_human_readable(
+          hbms.asic[seg_num].cell.cell_voltages_array[cell_num]);
+    }
   }
-
-  for (uint8_t i = 0; i < 12; i++) {
-    look[1][i] =
-        convert_voltage_human_readable(hbms.asic[1].aux.aux_voltages_array[i]);
-  }
-
-  // for (uint8_t i = 0; i < 12; i++) {
-  //   look[2][i] = convert_voltage_human_readable(
-  //       hbms.asic[0].cell.cell_voltages_array[i]);
-  // }
-
-  // for (uint8_t i = 0; i < 12; i++) {
-  //   look[3][i] = convert_voltage_human_readable(
-  //       hbms.asic[1].cell.cell_voltages_array[i]);
-  // }
 }
+
+// for (uint8_t i = 0; i < 12; i++) {
+//   look[2][i] = convert_voltage_human_readable(
+//       hbms.asic[0].cell.cell_voltages_array[i]);
+// }
+
+// for (uint8_t i = 0; i < 12; i++) {
+//   look[3][i] = convert_voltage_human_readable(
+//       hbms.asic[1].cell.cell_voltages_array[i]);
+// }
 
 /* ----------------------------------------------------- */
 /* testing functions ------------------------------------ */

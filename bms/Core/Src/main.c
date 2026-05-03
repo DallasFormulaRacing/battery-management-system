@@ -18,13 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 #include "can.h"
 #include "can2_job.h"
-#include "cmsis_os2.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
 #include "safety_monitor.h"
@@ -88,9 +88,10 @@ static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_LPUART1_UART_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_TIM3_Init(void);
 static void MX_FDCAN1_Init(void);
 static void MX_FDCAN2_Init(void);
+static void MX_TIM3_Init(void);
+void defaultTaskFn(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -135,9 +136,9 @@ int main(void) {
   MX_I2C1_Init();
   MX_LPUART1_UART_Init();
   MX_SPI1_Init();
-  MX_TIM3_Init();
   MX_FDCAN1_Init();
   MX_FDCAN2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -169,8 +170,7 @@ int main(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  // defaultTaskHandle = osThreadNew(bms_safety_task, NULL,
-  // &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -178,9 +178,11 @@ int main(void) {
       osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
                   &bms_safety_task_attributes);
 
+  // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
 
+  // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
 
@@ -342,7 +344,7 @@ static void MX_FDCAN1_Init(void) {
   hfdcan1.Init.DataTimeSeg1 = 4;
   hfdcan1.Init.DataTimeSeg2 = 5;
   hfdcan1.Init.StdFiltersNbr = 0;
-  hfdcan1.Init.ExtFiltersNbr = 0;
+  hfdcan1.Init.ExtFiltersNbr = 2;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK) {
     Error_Handler();
@@ -533,7 +535,7 @@ static void MX_TIM3_Init(void) {
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 2600;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -645,6 +647,22 @@ static void MX_GPIO_Init(void) {
 //   HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 // }
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_defaultTaskFn */
+/**
+ * @brief  Function implementing the defaultTask thread.
+ * @param  argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_defaultTaskFn */
+void defaultTaskFn(void *argument) {
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for (;;) {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
 
 /**
  * @brief  Period elapsed callback in non blocking mode

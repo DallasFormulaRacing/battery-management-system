@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 // This has to be at compile time.
-#define NUM_IC_COUNT_CHAIN 2
+#define NUM_IC_COUNT_CHAIN 1
 #define WRITE_SIZE (ADBMS_TX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
 #define COMMAND_HEADER_SIZE 4
 // #define READ_SIZE (ADBMS_RX_FRAME_BYTES * NUM_IC_COUNT_CHAIN)
