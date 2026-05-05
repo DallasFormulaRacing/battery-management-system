@@ -16,7 +16,7 @@
 #define CAB_ID 0x3C2
 #define CAB_0_CURRENT_OFFSET 0x80000000
 
-cab_message_t parse_cab_message(uint8_t* data);
-void process_cab_message(uint8_t* data);
+cab_message_t parse_cab_message(const uint8_t* data);
+void process_cab_message(const uint8_t* data);
 
 #endif
