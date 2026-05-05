@@ -5,6 +5,7 @@ bms/build/
 /*.hex
 /*.bin
 /*.map
+**Makefile
 
 /.clangd
 
