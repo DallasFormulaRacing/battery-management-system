@@ -1,8 +1,6 @@
 #ifndef CAB_TYPES
 #define CAB_TYPES
 
-const uint32_t CAB_ID = 0x3C2;
-
 typedef enum
 {
     OK = 0x00,
@@ -18,7 +16,7 @@ typedef enum
 
 typedef struct
 {
-    uint32_t current;
+    int32_t current;
     cab_error_t error_status;
     uint8_t productName[2];
     uint8_t softwareRevision;
