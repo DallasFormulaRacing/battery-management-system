@@ -10,10 +10,11 @@
 // Index enum for messages, make up the CAN header
 typedef enum {
   IMD_CAN_ID_REQUEST = 0x18EAFF1C,
-  IMD_CAN_INFO_GENERAL = 0xFF01,
-  IMD_CAN_INFO_ISOLATION = 0xFF02,
-  IMD_CAN_INFO_VOLTAGE = 0xFF03,
-  IMD_CAN_INFO_IT = 0xFF04
+  IMD_CAN_ID_RESPONSE = 0x23,
+  IMD_CAN_ID_GENERAL = 0xFF01,
+  IMD_CAN_ID_ISO_DETAIL = 0xFF02,
+  IMD_CAN_ID_VOLTAGE = 0xFF03,
+  IMD_CAN_ID_IT_SYSTEM = 0xFF04
 } IMD_CanId_t;
 
 // Index enum for commands, parsed by the IMD to determine specific function

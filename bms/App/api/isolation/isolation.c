@@ -10,10 +10,10 @@ void imd_init() {
 void imd_update() {
   IMD_Packet_t packet = imd_get_data();
   switch (packet.can_id) {
-  case (IMD_CAN_INFO_GENERAL):
+  case (IMD_CAN_ID_GENERAL):
     handle_general(packet.data);
     break;
-  case (IMD_CAN_INFO_VOLTAGE):
+  case (IMD_CAN_ID_VOLTAGE):
     handle_voltage(packet.data);
     break;
   default:
