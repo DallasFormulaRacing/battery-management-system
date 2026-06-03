@@ -4,7 +4,7 @@ add_library(threads STATIC
     safety/safety_monitor.c
     vcan/gui_can_job.c
     tcan/can2_job.c
-    precharge/precharge.c
+
 )
 
 target_include_directories(threads PUBLIC 
@@ -12,7 +12,7 @@ target_include_directories(threads PUBLIC
     vcan
     tcan
     safety
-    precharge
+
 )
 target_link_libraries(threads PRIVATE program 
 fdcan 
