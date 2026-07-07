@@ -129,7 +129,6 @@ void can2_job_runner(void *argument) {
                           osWaitForever) != osOK) {
       continue;
     }
-
     handle_forwarding(&msg);
     process_can2_protocols(&msg);
   }

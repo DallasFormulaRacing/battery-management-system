@@ -1,4 +1,5 @@
 #include "can.h"
+#include "cmsis_gcc.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_fdcan.h"
 
@@ -18,9 +19,11 @@ HAL_StatusTypeDef can2_send(FDCAN_TxHeaderTypeDef *header, uint8_t *data) {
 }
 
 void can2_configure_filter(void) {
-  (void)HAL_FDCAN_ConfigGlobalFilter(&hfdcan1, FDCAN_ACCEPT_IN_RX_FIFO0,
-                                     FDCAN_ACCEPT_IN_RX_FIFO0,
-                                     FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
+  HAL_StatusTypeDef status = HAL_FDCAN_ConfigGlobalFilter(
+      &hfdcan1, FDCAN_ACCEPT_IN_RX_FIFO0, FDCAN_ACCEPT_IN_RX_FIFO0,
+      FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
+  if (status != HAL_OK) {
+  }
 }
 
 void can2_hardware_init(void) {
@@ -28,10 +31,12 @@ void can2_hardware_init(void) {
 
   if (HAL_FDCAN_Start(&hfdcan1) != HAL_OK) {
     // Handle error
+    __NOP();
   }
 
   if (HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE,
                                      0) != HAL_OK) {
     /* handle error */
+    __NOP();
   }
 }

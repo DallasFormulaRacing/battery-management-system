@@ -8,6 +8,7 @@
 #include "gui_drivers.h"
 #include "gui_types.h"
 #include <stdbool.h>
+#include <string.h>
 
 void imd_init(void); // calls configure_imd_params + configure_imd_cyclic
 

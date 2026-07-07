@@ -9,7 +9,7 @@
 
 // Index enum for messages, make up the CAN header
 typedef enum {
-  IMD_CAN_ID_REQUEST = 0x18EAFF1C,
+  IMD_CAN_ID_REQUEST = 0x18FF01F4,
   IMD_CAN_ID_RESPONSE = 0x23,
   IMD_CAN_ID_GENERAL = 0xFF01,
   IMD_CAN_ID_ISO_DETAIL = 0xFF02,
