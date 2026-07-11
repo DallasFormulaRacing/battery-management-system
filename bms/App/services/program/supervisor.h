@@ -5,7 +5,7 @@
 #include "elcon_comms.h"
 #include <stdbool.h>
 
-void charger_supervisor_fsm(charger_t *hchg);
+bms_fault_t charger_supervisor_fsm(charger_t *hchg);
 
 bool is_charging_permitted();
 

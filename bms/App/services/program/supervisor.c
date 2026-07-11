@@ -20,6 +20,7 @@ static void report_internal_state();
 static bool is_pack_full();
 static bool is_elcon_ready();
 static bool is_charging_command_stale();
+static bool is_pack_okay();
 
 typedef void (*charging_handler_t)(charger_t *hchg);
 
@@ -41,6 +42,16 @@ void charging_fsm_transition(charger_t *hchg, charging_state_t new_state) {
 
 void charging_state_standby(charger_t *hchg) {
   //
+  bool is_charging_ok = is_charging_permitted() && !is_pack_full() &&
+                        !is_charging_command_stale() && is_pack_okay();
+
+  if (is_charging_ok) {
+    charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
+  }
+
+  else {
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  }
 }
 
 void charging_state_ready2charge(charger_t *hchg) {
@@ -65,12 +76,14 @@ void charging_state_fault(charger_t *hchg) {
  * updates faults, runs the charge state machine, sends elcon command and
  * reports state
  */
-void charger_supervisor_fsm(charger_t *hchg) {
+bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
   // exits the charging fsm to the greater BMS fsm above
   if (CHARGING_STATE_FAULT == hchg->state)
-    return;
+    return BMS_ERR_CHARGING;
 
   chg_state_handlers[hchg->state](hchg);
+
+  return BMS_ERR_NONE;
 }
 
 /**
@@ -89,6 +102,10 @@ static bool is_elcon_ready() {
 
 static bool is_pack_full() {
   // if highest cell is >= ov error AND no cells violating delta
+}
+
+static bool is_pack_okay() {
+  // idk what to check for here
 }
 
 /**
