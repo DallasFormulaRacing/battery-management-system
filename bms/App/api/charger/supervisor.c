@@ -60,9 +60,9 @@ bool is_charging_permitted() {
 }
 
 /**
- * @brief periodic charging supervisor task
+ * @brief periodic charging supervisor task (runs the FSM)
  *
  * updates faults, runs the charge state machine, sends elcon command and
  * reports state
  */
-void charger_supervisor(void) {}
+void charger_supervisor_fsm(void) {}

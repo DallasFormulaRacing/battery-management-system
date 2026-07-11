@@ -43,7 +43,7 @@ typedef struct {
   bms_fault_t error_code;
   uint32_t state_entry_tick;
   uint32_t fault_flags;
-} bms_sm_ctx_t;
+} bms_fsm_ctx_t;
 
 typedef struct {
   uint16_t packvoltage;
@@ -53,7 +53,7 @@ typedef struct {
 
 typedef struct {
   bms_cfg_t *config;
-  bms_sm_ctx_t state;
+  bms_fsm_ctx_t state;
   cell_asic_ctx_t *asic;
   pcb_ctx_t *pcb;
   pack_data_t *pack;

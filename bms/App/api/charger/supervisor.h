@@ -4,14 +4,14 @@
 #include "elcon_comms.h"
 #include <stdbool.h>
 
-void charger_supervisor(void);
+void charger_supervisor_fsm(void);
 
 bool is_charging_permitted();
 
 typedef enum {
   CHARGING_STATE_IDLE,
-  CHARGING_STATE_READY,
-  CHARGING_STATE_ENERGIZED,
+  CHARGING_STATE_READY2CHARGE,
+  CHARGING_STATE_REQUEST4POWER,
   CHARGING_STATE_BALANCING,
   CHARGING_STATE_FAULT
 } charging_state_t;
