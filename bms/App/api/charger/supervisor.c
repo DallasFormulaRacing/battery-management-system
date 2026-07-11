@@ -21,6 +21,30 @@ static bool is_pack_full();
 static bool is_elcon_ready();
 static bool is_charging_command_stale();
 
+typedef void (*charging_handler_t)(charger_t *hchg);
+
+static const charging_handler_t chg_state_handlers[] = {
+    [CHARGING_STATE_IDLE] = charging_state_idle,
+    [CHARGING_STATE_READY2CHARGE] = charging_state_ready2charge,
+    [CHARGING_STATE_REQUEST4POWER] = charging_state_request4power,
+    [CHARGING_STATE_BALANCING] = charging_state_balancing,
+    [CHARGING_STATE_FAULT] = charging_state_fault,
+};
+
+void charging_fsm_init(charger_t *hchg) {}
+
+void charging_fsm_run(charger_t *hchg) {
+  chg_state_handlers[hchg->state](hchg);
+}
+
+/**
+ * @brief periodic charging supervisor task (runs the FSM)
+ *
+ * updates faults, runs the charge state machine, sends elcon command and
+ * reports state
+ */
+void charger_supervisor_fsm(void) {}
+
 /**
  * @brief checks if the elcon charger status can message is fresh and not
  * reporting a startup failure
@@ -58,11 +82,3 @@ bool is_charging_permitted() {
   // return is
   return false;
 }
-
-/**
- * @brief periodic charging supervisor task (runs the FSM)
- *
- * updates faults, runs the charge state machine, sends elcon command and
- * reports state
- */
-void charger_supervisor_fsm(void) {}

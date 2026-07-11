@@ -8,6 +8,12 @@ void charger_supervisor_fsm(void);
 
 bool is_charging_permitted();
 
+void charging_state_idle(charger_t *hchg);
+void charging_state_ready2charge(charger_t *hchg);
+void charging_state_request4power(charger_t *hchg);
+void charging_state_balancing(charger_t *hchg);
+void charging_state_fault(charger_t *hchg);
+
 typedef enum {
   CHARGING_STATE_IDLE,
   CHARGING_STATE_READY2CHARGE,
@@ -18,7 +24,7 @@ typedef enum {
 
 typedef struct {
   charging_state_t state;
-  elcon_internal_t elcon;
+  elcon_internal_t *elcon;
   uint16_t reported_voltage;
   uint16_t requested_voltage;
   uint16_t reported_current;
