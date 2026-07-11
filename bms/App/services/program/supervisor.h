@@ -1,21 +1,22 @@
 #ifndef CHARGING_SUPERVISOR_H
 #define CHARGING_SUPERVISOR_H
 
+#include "bms.h"
 #include "elcon_comms.h"
 #include <stdbool.h>
 
-void charger_supervisor_fsm(void);
+void charger_supervisor_fsm(charger_t *hchg);
 
 bool is_charging_permitted();
 
-void charging_state_idle(charger_t *hchg);
+void charging_state_standby(charger_t *hchg);
 void charging_state_ready2charge(charger_t *hchg);
 void charging_state_request4power(charger_t *hchg);
 void charging_state_balancing(charger_t *hchg);
 void charging_state_fault(charger_t *hchg);
 
 typedef enum {
-  CHARGING_STATE_IDLE,
+  CHARGING_STATE_STANDBY,
   CHARGING_STATE_READY2CHARGE,
   CHARGING_STATE_REQUEST4POWER,
   CHARGING_STATE_BALANCING,
