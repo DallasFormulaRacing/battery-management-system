@@ -1,5 +1,6 @@
 #include "elcon_comms.h"
 #include "can.h"
+#include "cmsis_os2.h"
 #include "elcon_types.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <stdbool.h>
@@ -70,5 +71,7 @@ elcon_status_t elcon_handle_heartbeat(const can2_msg_t *msg) {
   }
 
   elcon_unpack_status_byte(msg->data[4], &status);
+  g_elcon.heartbeat_msg = status;
+  g_elcon.heartbeat_tick = osKernelGetTickCount();
   return status;
 }

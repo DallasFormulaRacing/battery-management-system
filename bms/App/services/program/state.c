@@ -1,11 +1,14 @@
 #include "state.h"
 #include "bms.h"
 #include "cmsis_os2.h"
+#include "supervisor.h"
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
 const osMutexAttr_t bms_mutex_attr = {
     "bms_mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
+
+static charger_t g_charger;
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
@@ -24,6 +27,7 @@ void bms_fsm_init(bms_handler_t *hbms) {
   hbms->state.error_code = BMS_ERR_NONE;
   hbms->state.state_entry_tick = 0;
   hbms->state.fault_flags = 0;
+  charging_fsm_init(&g_charger);
 }
 
 void bms_fsm_run(bms_handler_t *hbms) {
@@ -153,13 +157,13 @@ void bms_state_charging(bms_handler_t *hbms) {
   we need to alternate between charging and measuring states
   */
 
-  // if charging flag on, run charger fsm, else no.
-  // then the CAN messages from GUI will change charging flag
+  if (charger_supervisor_fsm(&g_charger) != BMS_ERR_NONE) {
+    hbms->state.error_code = BMS_ERR_CHARGING;
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    return;
+  }
 
   cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
-  // need to handle errors
-  // todo: handle safety as in check for UV and OV
-  // todo: put this in a loop to stop when no cells need balancing
 
   bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }

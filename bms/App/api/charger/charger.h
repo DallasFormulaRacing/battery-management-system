@@ -2,9 +2,12 @@
 #define CHARGER_H
 
 #include "cb.h"
+#include "elcon_comms.h"
 #include "segment.h"
 
 void cell_delta_policy_enforcer(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
 void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb);
+
+void send_to_charger(elcon_internal_t *command_profile);
 
 #endif

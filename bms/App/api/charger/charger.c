@@ -2,11 +2,25 @@
 #include "cb.h"
 #include "cmsis_os2.h"
 #include "config.h"
+#include "elcon_comms.h"
 #include "segment.h"
 #include <stdatomic.h>
 #include <stdint.h>
 
 // ******************* CHARGING
+
+/**
+ * @brief send voltage/current/enable command to the elcon charger
+ *
+ * @param command_profile elcon command (max_voltage, max_current, enable)
+ */
+void send_to_charger(elcon_internal_t *command_profile) {
+  if (command_profile == NULL) {
+    return;
+  }
+  elcon_send_command(command_profile);
+}
+
 /**
  * @brief cell balance super loop
  *
@@ -53,6 +67,8 @@ void populate_pwm_register(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
                        map_delta_to_pwm_discretize(pcb, cell->delta));
   }
 }
+
+
 
 // ! MAKE SURE THE DAISY CHAIN COMM PACKET ORDER IS RESPECTED HERE!
 // ! THE FIRST PACKET NEEDS TO GO LAST, IS THIS HANDLED IN write_to_all_ics????
