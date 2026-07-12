@@ -25,14 +25,14 @@ static const uint16_t MAX_PACK_CHARGING_AMPS = 10;
 static const uint32_t ELCON_HEARTBEAT_STALE_MS = 5000;
 
 // low level helpers
-static void report_internal_state(charger_t *hchg);
 static void update_charge_command(charger_t *hchg);
 static void clear_charge_command(charger_t *hchg);
 
 // high level helpers
 static bool is_pack_full(void);
-static bool is_elcon_ready(charger_t *hchg);
 static bool is_pack_okay(void);
+static bool is_elcon_ready(charger_t *hchg);
+static bool is_elcon_okay(charger_t *hchg);
 static bool pack_needs_balancing(bool refresh);
 
 typedef void (*charging_handler_t)(charger_t *hchg);
@@ -68,7 +68,11 @@ void charging_state_standby(charger_t *hchg) {
   /* charger must stay off while idle */
   clear_charge_command(hchg);
 
-  if (is_charging_permitted(hchg)) {
+  if (!is_pack_okay() || !is_elcon_okay(hchg)) {
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  } 
+  
+  else if (is_charging_permitted(hchg)) {
     /* pack/elcon interlocks allow charging */
     charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
   }
@@ -78,28 +82,44 @@ void charging_state_ready2charge(charger_t *hchg) {
   /* no power request until REQUEST4POWER */
   clear_charge_command(hchg);
 
-  if (!is_charging_permitted(hchg)) {
-    /* lost charge permission */
+  if (!is_pack_okay() || !is_elcon_okay(hchg)) {
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  } 
+  
+  else if (!is_charging_permitted(hchg)) {
     charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
-  } else if (pack_needs_balancing(true)) {
+  } 
+  
+  else if (pack_needs_balancing(true)) {
     /* cell spread above limit so balance before requesting power */
     charging_fsm_transition(hchg, CHARGING_STATE_BALANCING);
-  } else {
+  } 
+  
+  else {
     /* permitted and balanced so request charger power */
     charging_fsm_transition(hchg, CHARGING_STATE_REQUEST4POWER);
   }
 }
 
 void charging_state_request4power(charger_t *hchg) {
-  if (!is_charging_permitted(hchg)) {
-    /* lost charge permission so stop charger */
+  if (!is_pack_okay() || !is_elcon_okay(hchg)) {
+    clear_charge_command(hchg);
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  } 
+  
+  else if (!is_charging_permitted(hchg)) {
+    /* soft deny so stop charger and wait */
     clear_charge_command(hchg);
     charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
-  } else if (pack_needs_balancing(true)) {
+  } 
+  
+  else if (pack_needs_balancing(true)) {
     /* imbalance while charging so stop charger and balance */
     clear_charge_command(hchg);
     charging_fsm_transition(hchg, CHARGING_STATE_BALANCING);
-  } else {
+  } 
+  
+  else {
     /* still permitted and balanced so keep requesting power */
     update_charge_command(hchg);
   }
@@ -109,13 +129,21 @@ void charging_state_balancing(charger_t *hchg) {
   /* charger must stay off while balancing */
   clear_charge_command(hchg);
 
-  if (!is_charging_permitted(hchg)) {
-    /* lost charge permission so abort balancing */
+  if (!is_pack_okay() || !is_elcon_okay(hchg)) {
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  } 
+  
+  else if (hbms.asic == NULL || hbms.pcb == NULL) {
+    /* cannot safely balance without asic/pcb context */
+    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  } 
+  
+  else if (!is_charging_permitted(hchg)) {
+    /* soft deny so abort balancing */
     charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
-  } else if (hbms.asic == NULL || hbms.pcb == NULL) {
-    /* cannot balance without asic/pcb context */
-    charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
-  } else {
+  } 
+  
+  else {
     cell_delta_policy_enforcer(hbms.asic, hbms.pcb);
 
     if (!pack_needs_balancing(false)) {
@@ -128,8 +156,7 @@ void charging_state_balancing(charger_t *hchg) {
 void charging_state_fault(charger_t *hchg) {
   /* charger must stay off in fault */
   clear_charge_command(hchg);
-  send_to_charger(hchg->elcon);
-  report_internal_state(hchg);
+  // report fault to GUI with CAN message
 }
 
 /**************** CHARGING FSM Periodic Task ****************/
@@ -137,8 +164,6 @@ void charging_state_fault(charger_t *hchg) {
 /**
  * @brief periodic charging supervisor task (runs the FSM)
  *
- * runs the active charge state, then always sends the elcon command and
- * reports mirrored voltage/current
  */
 bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
   if (hchg == NULL || hchg->elcon == NULL) {
@@ -151,9 +176,7 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
   }
 
   chg_state_handlers[hchg->state](hchg);
-
-  send_to_charger(hchg->elcon);
-  report_internal_state(hchg);
+  // report internal state will need to happen in the CAN2 job in ISR.
 
   return BMS_ERR_NONE;
 }
@@ -176,6 +199,17 @@ static bool is_elcon_ready(charger_t *hchg) {
   }
 
   return status->charger_OKAY && !status->starting_state;
+}
+
+/**
+ * @brief true when elcon reports no hardware safety faults
+ *
+ * ignores stale heartbeat, starting_state, and comm_state
+ */
+static bool is_elcon_okay(charger_t *hchg) {
+  const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
+
+  return !status->hw && !status->temp && !status->input_voltage;
 }
 
 /**
@@ -262,7 +296,6 @@ static void update_charge_command(charger_t *hchg) {
   hchg->elcon->max_voltage = requested_voltage;
   hchg->elcon->max_current = requested_current;
   hchg->elcon->charge_disable = false;
-  hchg->elcon->charge_disable = 0;
 
   elcon_send_command(hchg->elcon);
 }
@@ -275,18 +308,7 @@ static void clear_charge_command(charger_t *hchg) {
   hchg->elcon->max_voltage = 0;
   hchg->elcon->max_current = 0;
   hchg->elcon->charge_disable = true;
-  hchg->elcon->charge_disable = 1;
   elcon_send_command(hchg->elcon);
-}
-
-/**
- * @brief reports the internal state of the charger to the host computer
- *
- * @param hchg charger context
- */
-static void report_internal_state(charger_t *hchg) {
-  hchg->reported_voltage = hchg->elcon->max_voltage;
-  hchg->reported_current = hchg->elcon->max_current;
 }
 
 /**
