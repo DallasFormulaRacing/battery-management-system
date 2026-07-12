@@ -50,7 +50,7 @@ static const charging_handler_t chg_state_handlers[] = {
 void charging_fsm_init(charger_t *hchg) {
   hchg->state = CHARGING_STATE_STANDBY;
   hchg->elcon = &g_elcon;
-  hchg->charge_enable = false;
+  hchg->elcon->charge_disable = true;
   hchg->requested_voltage = MAX_PACK_CHARGING_VOLTS;
   hchg->requested_current = MAX_PACK_CHARGING_AMPS;
   hchg->reported_voltage = 0;
@@ -243,8 +243,9 @@ static bool pack_needs_balancing(bool refresh) {
 }
 
 /**
- * @brief applies voltage/current caps and refreshes local command and enable
- * flags from the charger request fields
+ * @brief applies voltage/current caps and enables charging
+ *
+ * Elcon control byte: 0 = charging on, 1 = charging off
  */
 static void update_charge_command(charger_t *hchg) {
   uint16_t requested_voltage = hchg->requested_voltage;
@@ -260,9 +261,8 @@ static void update_charge_command(charger_t *hchg) {
 
   hchg->elcon->max_voltage = requested_voltage;
   hchg->elcon->max_current = requested_current;
-  hchg->charge_enable = true;
-  /* Elcon control byte: 0 = charging allowed, 1 = charger closed */
-  hchg->elcon->enable = 0;
+  hchg->elcon->charge_disable = false;
+  hchg->elcon->charge_disable = 0;
 
   elcon_send_command(hchg->elcon);
 }
@@ -274,8 +274,8 @@ static void clear_charge_command(charger_t *hchg) {
 
   hchg->elcon->max_voltage = 0;
   hchg->elcon->max_current = 0;
-  hchg->charge_enable = false;
-  hchg->elcon->enable = 1;
+  hchg->elcon->charge_disable = true;
+  hchg->elcon->charge_disable = 1;
   elcon_send_command(hchg->elcon);
 }
 

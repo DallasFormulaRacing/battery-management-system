@@ -36,7 +36,7 @@ can2_msg_t elcon_pack_can(elcon_internal_t *command_profile) {
   charge_request.data[1] = U16_BOT_HALF_8B(max_volt_cmd);
   charge_request.data[2] = U16_TOP_HALF_8B(max_curr_cmd);
   charge_request.data[3] = U16_BOT_HALF_8B(max_curr_cmd);
-  charge_request.data[4] = command_profile->enable;
+  charge_request.data[4] = command_profile->charge_disable;
 
   return charge_request;
 }

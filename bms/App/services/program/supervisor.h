@@ -21,7 +21,6 @@ typedef struct {
   uint16_t requested_voltage;
   uint16_t reported_current;
   uint16_t requested_current;
-  bool charge_enable;
 } charger_t;
 
 void charging_fsm_init(charger_t *hchg);
