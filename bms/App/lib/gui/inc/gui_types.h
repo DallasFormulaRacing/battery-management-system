@@ -20,7 +20,9 @@ typedef enum {
 
 typedef enum { BMS_DEVICE_ID = 0x1F, GUI_DEVICE_ID = 0x1E } can_device_id_t;
 
-typedef enum {
+typedef uint16_t can_command_id_t;
+
+enum {
   CMD_ID_FIRST_24_CELLS = 0x00A0,
   CMD_ID_SECOND_24_CELLS = 0x00A1,
   CMD_ID_THIRD_24_CELLS = 0x00A2,
@@ -31,7 +33,7 @@ typedef enum {
   CMD_ID_LAST_60_TEMPS = 0x00B1,
   CMD_ID_PACK_METADATA = 0x00C0,
   CMD_ID_IMD_DATA = 0x00D0,
-} can_command_id_t;
+};
 
 // typedef enum {
 //   CMD_ID_FIRST_24_CELLS_RESP = 0x01A0,
