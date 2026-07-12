@@ -13,12 +13,9 @@ static charger_t g_charger;
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
     [BMS_STATE_INIT] = bms_state_init,
-    [BMS_STATE_TRANSMIT_DATA] = bms_state_transmit_data,
     [BMS_STATE_MEASURE] = bms_state_measure,
     [BMS_STATE_CHARGING] = bms_state_charging,
-    [BMS_STATE_BALANCING] = bms_state_balancing,
     [BMS_STATE_FAULT] = bms_state_fault,
-    [BMS_STATE_SLEEP] = bms_state_sleep,
 };
 
 void bms_fsm_init(bms_handler_t *hbms) {
@@ -82,21 +79,6 @@ void bms_state_init(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }
 
-void bms_state_transmit_data(bms_handler_t *hbms) {
-  /*
-  - needs to transmit the following data to the host computer:
-    - all 144 cell voltages
-    - current
-    - pack voltage
-    - all 120 temperature readings
-    - which cells are being balanced
-    - any faults that have occurred
-    - transmit the onboard SoC calculation
-    -
-
-  */
-}
-
 // NOTE
 // bms will not immediately transfer to fault upon bad value,
 // it will finish the current measurement task first.
@@ -145,7 +127,7 @@ void bms_state_measure(bms_handler_t *hbms) {
 
   osMutexRelease(bms_mutex_id);
 
-  bms_fsm_transition(hbms, BMS_STATE_TRANSMIT_DATA);
+  bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
 void bms_state_charging(bms_handler_t *hbms) {
@@ -163,21 +145,7 @@ void bms_state_charging(bms_handler_t *hbms) {
     return;
   }
 
-  cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
-
   bms_fsm_transition(hbms, BMS_STATE_MEASURE);
-}
-
-void bms_state_balancing(bms_handler_t *hbms) {
-  /*
-  adbms_start_cell_voltage_measurement(asic_ctx);
-  adbms_read_cell_voltages(asic_ctx);
-
-  --> if bad cell, stop execution and move to fault state
-
-  cell_delta_policy_enforcer;
-
-  */
 }
 
 void bms_state_fault(bms_handler_t *hbms) {
@@ -194,12 +162,4 @@ void bms_state_fault(bms_handler_t *hbms) {
   hard_fault_disable_openwire_on_profiles();
   for (;;)
     measure_during_fault();
-}
-
-void bms_state_sleep(bms_handler_t *hbms) {
-  /*
-  idk what this state does
-
-  maybe triggers lpcm?
-  */
 }

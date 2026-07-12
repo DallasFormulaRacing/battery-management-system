@@ -1,5 +1,5 @@
-#ifndef parse__H
-#define parse__H
+#ifndef PARSE_H
+#define PARSE_H
 
 #include "bms_enums.h"
 #include "bms_types.h"
