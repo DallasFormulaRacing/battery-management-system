@@ -130,22 +130,34 @@ void bms_state_measure(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
+// an ISR will set this to true the command is received from the GUI
+static volatile bool g_charging_allowed_GUI_flag = false;
+// an ISR will do g_last_run_cmd_tick = osKernelGetTickCount();
+static volatile uint32_t g_last_run_cmd_tick = 0;
+static const uint32_t CAN_RUN_CMD_TIMEOUT_MS = 3000;
+
 void bms_state_charging(bms_handler_t *hbms) {
-  /*
-  how do we want to handle this state?
+  // directly skip to measure if the GUI flag is not set
+  if (!g_charging_allowed_GUI_flag) {
+    bms_fsm_transition(hbms, BMS_STATE_MEASURE);
+    return;
+  }
 
-  we need to interface with the charger here
+  // is message stale
+  uint32_t elapsed_ms = osKernelGetTickCount() - g_last_run_cmd_tick;
+  if (elapsed_ms > CAN_RUN_CMD_TIMEOUT_MS) {
+    g_charging_allowed_GUI_flag = false; 
+    bms_fsm_transition(hbms, BMS_STATE_MEASURE);
+    return;
+  }
 
-  we need to alternate between charging and measuring states
-  */
-
+  // run the charger FSM
   if (charger_supervisor_fsm(&g_charger) != BMS_ERR_NONE) {
     hbms->state.error_code = BMS_ERR_CHARGING;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
     return;
   }
 
-  bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }
 
 void bms_state_fault(bms_handler_t *hbms) {
