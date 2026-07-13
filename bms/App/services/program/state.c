@@ -8,7 +8,7 @@ extern osMutexId_t bms_mutex_id;
 const osMutexAttr_t bms_mutex_attr = {
     "bms_mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
-static charger_t g_charger;
+extern volatile charger_t g_charger;
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,

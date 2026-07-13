@@ -18,6 +18,7 @@ display meter can show the status of the charger according to up-to-date
 information.
 
 */
+volatile charger_t g_charger;
 
 // params for charging
 static const uint16_t MAX_PACK_CHARGING_VOLTS = 600;
@@ -25,17 +26,17 @@ static const uint16_t MAX_PACK_CHARGING_AMPS = 10;
 static const uint32_t ELCON_HEARTBEAT_STALE_MS = 5000;
 
 // low level helpers
-static void update_charge_command(charger_t *hchg);
-static void clear_charge_command(charger_t *hchg);
+static void update_charge_command(volatile charger_t *hchg);
+static void clear_charge_command(volatile charger_t *hchg);
 
 // high level helpers
 static bool is_pack_full(void);
 static bool is_pack_okay(void);
-static bool is_elcon_ready(charger_t *hchg);
-static bool is_elcon_okay(charger_t *hchg);
+static bool is_elcon_ready(volatile charger_t *hchg);
+static bool is_elcon_okay(volatile charger_t *hchg);
 static bool pack_needs_balancing(bool refresh);
 
-typedef void (*charging_handler_t)(charger_t *hchg);
+typedef void (*charging_handler_t)(volatile charger_t *hchg);
 
 static const charging_handler_t chg_state_handlers[] = {
     [CHARGING_STATE_STANDBY] = charging_state_standby,
@@ -47,7 +48,7 @@ static const charging_handler_t chg_state_handlers[] = {
 
 /**************** CHARGING FSM Helpers ****************/
 
-void charging_fsm_init(charger_t *hchg) {
+void charging_fsm_init(volatile charger_t *hchg) {
   hchg->state = CHARGING_STATE_STANDBY;
   hchg->elcon = &g_elcon;
   hchg->elcon->charge_disable = true;
@@ -58,13 +59,13 @@ void charging_fsm_init(charger_t *hchg) {
   clear_charge_command(hchg);
 }
 
-void charging_fsm_transition(charger_t *hchg, charging_state_t new_state) {
+void charging_fsm_transition(volatile charger_t *hchg, charging_state_t new_state) {
   hchg->state = new_state;
 }
 
 /**************** CHARGING FSM State functions ****************/
 
-void charging_state_standby(charger_t *hchg) {
+void charging_state_standby(volatile charger_t *hchg) {
   /* charger must stay off while idle */
   clear_charge_command(hchg);
 
@@ -78,7 +79,7 @@ void charging_state_standby(charger_t *hchg) {
   }
 }
 
-void charging_state_ready2charge(charger_t *hchg) {
+void charging_state_ready2charge(volatile charger_t *hchg) {
   /* no power request until REQUEST4POWER */
   clear_charge_command(hchg);
 
@@ -101,7 +102,7 @@ void charging_state_ready2charge(charger_t *hchg) {
   }
 }
 
-void charging_state_request4power(charger_t *hchg) {
+void charging_state_request4power(volatile charger_t *hchg) {
   if (!is_pack_okay() || !is_elcon_okay(hchg)) {
     clear_charge_command(hchg);
     charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
@@ -125,7 +126,7 @@ void charging_state_request4power(charger_t *hchg) {
   }
 }
 
-void charging_state_balancing(charger_t *hchg) {
+void charging_state_balancing(volatile charger_t *hchg) {
   /* charger must stay off while balancing */
   clear_charge_command(hchg);
 
@@ -153,7 +154,7 @@ void charging_state_balancing(charger_t *hchg) {
   }
 }
 
-void charging_state_fault(charger_t *hchg) {
+void charging_state_fault(volatile charger_t *hchg) {
   /* charger must stay off in fault */
   clear_charge_command(hchg);
   // report fault to GUI with CAN message
@@ -165,7 +166,7 @@ void charging_state_fault(charger_t *hchg) {
  * @brief periodic charging supervisor task (runs the FSM)
  *
  */
-bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
+bms_fault_t charger_supervisor_fsm(volatile charger_t *hchg) {
   if (hchg == NULL || hchg->elcon == NULL) {
     return BMS_ERR_CHARGING;
   }
@@ -190,7 +191,7 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
  * @return true if elcon status is fresh and no startup failure
  * @return false otherwise
  */
-static bool is_elcon_ready(charger_t *hchg) {
+static bool is_elcon_ready(volatile charger_t *hchg) {
   const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
   uint32_t age_ms = osKernelGetTickCount() - hchg->elcon->heartbeat_tick;
 
@@ -206,15 +207,15 @@ static bool is_elcon_ready(charger_t *hchg) {
  *
  * ignores stale heartbeat, starting_state, and comm_state
  */
-static bool is_elcon_okay(charger_t *hchg) {
+static bool is_elcon_okay(volatile charger_t *hchg) {
   const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
 
   return !status->hw && !status->temp && !status->input_voltage;
 }
 
 /**
- * @brief checks if the pack is full by looking at the difference between the highest and lowest cell voltage
- * if the lowest cell voltage is greater than (CELL MAX), 
+ * @brief checks if the pack is full by checking if ANY cell voltage is greater than the overvoltage threshold
+ * this is about not overcharging a cell
  *
  * @return true if the pack is full
  * @return false otherwise
@@ -281,7 +282,7 @@ static bool pack_needs_balancing(bool refresh) {
  *
  * Elcon control byte: 0 = charging on, 1 = charging off
  */
-static void update_charge_command(charger_t *hchg) {
+static void update_charge_command(volatile charger_t *hchg) {
   uint16_t requested_voltage = hchg->requested_voltage;
   uint16_t requested_current = hchg->requested_current;
 
@@ -300,7 +301,7 @@ static void update_charge_command(charger_t *hchg) {
   elcon_send_command(hchg->elcon);
 }
 
-static void clear_charge_command(charger_t *hchg) {
+static void clear_charge_command(volatile charger_t *hchg) {
   if (hchg == NULL || hchg->elcon == NULL) {
     return;
   }
@@ -320,6 +321,6 @@ static void clear_charge_command(charger_t *hchg) {
  * @return true if charging is permitted
  * @return false otherwise
  */
-bool is_charging_permitted(charger_t *hchg) {
+bool is_charging_permitted(volatile charger_t *hchg) {
   return !is_pack_full() && is_pack_okay() && is_elcon_ready(hchg);
 }
