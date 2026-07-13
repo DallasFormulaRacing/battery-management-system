@@ -11,7 +11,7 @@
 #include "stm32g4xx_hal_fdcan.h"
 #include <stdint.h>
 
-void gui_process_can_command(uint32_t ext_id, const uint8_t *data);
+void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len);
 
 void send_can_error(can_error_id_t error_id);
 

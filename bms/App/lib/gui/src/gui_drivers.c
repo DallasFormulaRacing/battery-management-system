@@ -36,11 +36,11 @@ extern osMutexId_t bms_mutex_id;
 /*
  * @brief uses can frame id to perform command
  * @param ext_id: can frame id to branch off of
- * @param data: buffer with any data given along with the command (unused for
- * now)
+ * @param data: payload bytes
+ * @param len: payload length from DLC
  * @return none
  */
-void gui_process_can_command(uint32_t ext_id, const uint8_t *data) {
+void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) {
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);
@@ -86,8 +86,12 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data) {
   //todo implement
     break;
   case CMD_ID_CHARGER_POWER_SETPOINT: {
-    uint16_t rx_volts = (data[0] << 8) | data[1];
-    uint16_t rx_amps = (data[2] << 8) | data[3];
+    if (data == NULL || len < 4U) {
+      send_can_error(ERROR_ID_INVALID_CMD);
+      break;
+    }
+    uint16_t rx_volts = (uint16_t)((data[0] << 8) | data[1]);
+    uint16_t rx_amps = (uint16_t)((data[2] << 8) | data[3]);
     charger_update_requested_setpoints(rx_volts, rx_amps);
     charging_session_kick_wdt();
     break;
@@ -101,6 +105,7 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data) {
     break;
   default:
     send_can_error(ERROR_ID_INVALID_CMD);
+    osMutexRelease(bms_mutex_id);
     return;
   }
   osMutexRelease(bms_mutex_id);
