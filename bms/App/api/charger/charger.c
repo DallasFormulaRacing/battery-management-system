@@ -10,18 +10,6 @@
 // ******************* CHARGING
 
 /**
- * @brief send voltage/current/enable command to the elcon charger
- *
- * @param command_profile elcon command (max_voltage, max_current, enable)
- */
-void send_to_charger(elcon_internal_t *command_profile) {
-  if (command_profile == NULL) {
-    return;
-  }
-  elcon_send_command(command_profile);
-}
-
-/**
  * @brief cell balance super loop
  *
   - read all cell voltages
