@@ -162,11 +162,7 @@ void charging_state_balancing(charger_t *hchg) {
   /* charger must stay off while balancing */
   clear_charge_command(hchg);
 
-  if (!is_okay(hchg)) {
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
-  } 
-  
-  else if (hbms.asic == NULL || hbms.pcb == NULL) {
+  if (!is_okay(hchg) || (hbms.asic == NULL || hbms.pcb == NULL)) {
     /* cannot safely balance without asic/pcb context */
     charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
   } 

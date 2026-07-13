@@ -40,7 +40,7 @@ extern osMutexId_t bms_mutex_id;
  * now)
  * @return none
  */
-void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
+void gui_process_can_command(uint32_t ext_id, const uint8_t *data) {
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);

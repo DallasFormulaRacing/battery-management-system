@@ -108,6 +108,7 @@ void defaultTaskFn(void *argument);
  * @brief  The application entry point.
  * @retval int
  */
+// NOLINTNEXTLINE(readability-function-size)
 int main(void) {
 
   /* USER CODE BEGIN 1 */
