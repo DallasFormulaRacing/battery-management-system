@@ -18,6 +18,10 @@ const extern osMutexAttr_t bms_mutex_attr;
 void bms_fsm_init(bms_handler_t *hbms);
 void bms_fsm_run(bms_handler_t *hbms);
 
+void charging_session_enable(void);
+void charging_session_disable(void);
+void charging_session_kick_wdt(void);
+
 void bms_state_entry(bms_handler_t *hbms);
 void bms_state_init(bms_handler_t *hbms);
 void bms_state_measure(bms_handler_t *hbms);

@@ -1,6 +1,7 @@
 #include "gui_drivers.h"
 #include "cb.h"
 #include "config.h"
+#include "state.h"
 #include "supervisor.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
@@ -8,9 +9,6 @@ static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id);
 static void send_metadata_frame(can_command_id_t resp_id);
-
-// this thread will set this to true the command is received from the GUI
-static volatile bool g_charging_allowed_GUI_flag = false;
 
 /*
  * NON-RTOS IMPL
@@ -85,23 +83,20 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
   case CMD_ID_IMD_DATA:
   //todo implement
     break;
-  case CMD_ID_CHARGER_POWER_SETPOINT: { // todo implement
+  case CMD_ID_CHARGER_POWER_SETPOINT: {
     uint16_t rx_volts = (data[0] << 8) | data[1];
     uint16_t rx_amps = (data[2] << 8) | data[3];
     charger_update_requested_setpoints(rx_volts, rx_amps);
+    charging_session_kick_wdt();
     break;
   }
 
-  case CMD_ID_CHARGER_START_CHARGING: { // todo implement
-    // enable charging flag
-    g_charging_allowed_GUI_flag = true;
+  case CMD_ID_CHARGER_START_CHARGING:
+    charging_session_enable();
     break;
-  }
-  case CMD_ID_CHARGER_STOP_CHARGING: { // todo implement
-    // disable charging flag
-    g_charging_allowed_GUI_flag = false;
+  case CMD_ID_CHARGER_STOP_CHARGING:
+    charging_session_disable();
     break;
-  }
   default:
     send_can_error(ERROR_ID_INVALID_CMD);
     return;

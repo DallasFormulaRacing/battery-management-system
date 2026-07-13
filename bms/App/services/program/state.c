@@ -130,34 +130,49 @@ void bms_state_measure(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
-// an ISR will set this to true the command is received from the GUI
-static volatile bool g_charging_allowed_GUI_flag = false;
-// an ISR will do g_last_run_cmd_tick = osKernelGetTickCount();
-static volatile uint32_t g_last_run_cmd_tick = 0;
+/*
+ * GUI charging session: owned here, written by GUI CAN job via the APIs below.
+ * enable/disable = session latch; kick refreshes the keepalive timestamp.
+ */
+static bool g_charging_session_active = false;
+static uint32_t g_last_run_cmd_tick = 0;
 static const uint32_t CAN_RUN_CMD_TIMEOUT_MS = 3000;
 
+void charging_session_enable(void) {
+  g_last_run_cmd_tick = osKernelGetTickCount();
+  g_charging_session_active = true;
+  // set event flag to true RTOS.
+}
+
+void charging_session_disable(void) {
+  g_charging_session_active = false;
+  // set event flag to false/ clear an event flag RTOS.
+}
+
+void charging_session_kick_wdt(void) {
+  if (g_charging_session_active) {
+    g_last_run_cmd_tick = osKernelGetTickCount();
+  }
+}
+
 void bms_state_charging(bms_handler_t *hbms) {
-  // directly skip to measure if the GUI flag is not set
-  if (!g_charging_allowed_GUI_flag) {
+  if (!g_charging_session_active) {
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }
 
-  // is message stale
   uint32_t elapsed_ms = osKernelGetTickCount() - g_last_run_cmd_tick;
   if (elapsed_ms > CAN_RUN_CMD_TIMEOUT_MS) {
-    g_charging_allowed_GUI_flag = false; 
+    charging_session_disable();
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }
 
-  // run the charger FSM
   if (charger_supervisor_fsm(&g_charger) != BMS_ERR_NONE) {
     hbms->state.error_code = BMS_ERR_CHARGING;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
     return;
   }
-
 }
 
 void bms_state_fault(bms_handler_t *hbms) {
