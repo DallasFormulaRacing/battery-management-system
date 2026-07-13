@@ -29,6 +29,7 @@
 #include "gui_can_job.h"
 #include "safety_monitor.h"
 #include "state.h"
+#include "supervisor.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -77,6 +78,7 @@ osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_processing_queueHandle;
+osMessageQueueId_t charger_power_setpoint_queueHandle;
 
 /* USER CODE END PV */
 
@@ -166,6 +168,9 @@ int main(void) {
       osMessageQueueNew(16, sizeof(fdcan_msg_t), NULL);
   can2_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can2_msg_t), NULL);
+  charger_power_setpoint_queueHandle =
+      osMessageQueueNew(1, sizeof(charger_power_setpoint_t),
+                        &charger_power_setpoint_queue_attributes);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */

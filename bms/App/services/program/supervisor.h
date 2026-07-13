@@ -2,6 +2,7 @@
 #define CHARGING_SUPERVISOR_H
 
 #include "bms.h"
+#include "cmsis_os2.h"
 #include "elcon_comms.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -22,6 +23,16 @@ typedef struct {
   uint16_t reported_current;
   uint16_t requested_current;
 } charger_t;
+
+typedef struct {
+  uint16_t voltage;
+  uint16_t current;
+} charger_power_setpoint_t;
+
+extern osMessageQueueId_t charger_power_setpoint_queueHandle;
+const extern osMessageQueueAttr_t charger_power_setpoint_queue_attributes;
+
+void charger_update_requested_setpoints(uint16_t volts, uint16_t amps);
 
 void charging_fsm_init(charger_t *hchg);
 void charging_fsm_transition(charger_t *hchg, charging_state_t new_state);

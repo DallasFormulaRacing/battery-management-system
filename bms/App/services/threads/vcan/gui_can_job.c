@@ -11,6 +11,7 @@
 // make sure this exists irl
 extern osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 extern osMessageQueueId_t can2_rx_dispatch_queueHandle;
+extern osMessageQueueId_t charger_power_setpoint_queueHandle;
 
 const osThreadAttr_t gui_can_job_runner_attributes = {
     .name = "gui_can_job_runner",
