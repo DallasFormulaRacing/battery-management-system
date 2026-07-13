@@ -31,6 +31,10 @@ void bms_fsm_init(bms_handler_t *hbms) {
   charging_fsm_init(&g_charger);
 }
 
+bool bms_check_for_fault(bms_handler_t *hbms) {
+  return hbms->state.fault_flags != 0U;
+}
+
 void bms_fsm_run(bms_handler_t *hbms) {
   if (hbms->state.current_state != BMS_STATE_FAULT &&
       bms_check_for_fault(hbms)) {
