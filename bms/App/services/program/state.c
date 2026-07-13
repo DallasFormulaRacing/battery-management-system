@@ -9,6 +9,10 @@ const osMutexAttr_t bms_mutex_attr = {
     "bms_mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
 extern charger_t g_charger;
+const osEventFlagsAttr_t charging_session_active_event_attr = {
+    .name = "charging_session_active",
+};
+osEventFlagsId_t charging_session_active_osEventFlags;
 
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
@@ -134,29 +138,26 @@ void bms_state_measure(bms_handler_t *hbms) {
  * GUI charging session: owned here, written by GUI CAN job via the APIs below.
  * enable/disable = session latch; kick refreshes the keepalive timestamp.
  */
-static bool g_charging_session_active = false;
 static uint32_t g_last_run_cmd_tick = 0;
 static const uint32_t CAN_RUN_CMD_TIMEOUT_MS = 3000;
 
 void charging_session_enable(void) {
   g_last_run_cmd_tick = osKernelGetTickCount();
-  g_charging_session_active = true;
-  // set event flag to true RTOS.
+  osEventFlagsSet(charging_session_active_osEventFlags, 1);
 }
 
 void charging_session_disable(void) {
-  g_charging_session_active = false;
-  // set event flag to false/ clear an event flag RTOS.
+  osEventFlagsClear(charging_session_active_osEventFlags, 1);
 }
 
 void charging_session_kick_wdt(void) {
-  if (g_charging_session_active) {
+  if (osEventFlagsGet(charging_session_active_osEventFlags) == 1) {
     g_last_run_cmd_tick = osKernelGetTickCount();
   }
 }
 
 void bms_state_charging(bms_handler_t *hbms) {
-  if (!g_charging_session_active) {
+  if (osEventFlagsGet(charging_session_active_osEventFlags) == 0) {
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }

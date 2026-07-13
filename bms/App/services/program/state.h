@@ -15,6 +15,8 @@
 const extern osMutexAttr_t spi_mutex_attr;
 const extern osMutexAttr_t bms_mutex_attr;
 
+extern osEventFlagsId_t charging_session_active_osEventFlags;
+extern const osEventFlagsAttr_t charging_session_active_event_attr;
 void bms_fsm_init(bms_handler_t *hbms);
 void bms_fsm_run(bms_handler_t *hbms);
 

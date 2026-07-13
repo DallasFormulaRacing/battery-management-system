@@ -194,6 +194,8 @@ int main(void) {
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
+  charging_session_active_osEventFlags = 
+    osEventFlagsNew(&charging_session_active_event_attr);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
