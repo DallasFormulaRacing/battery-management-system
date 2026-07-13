@@ -103,3 +103,5 @@ measurement_config_t g_meas_cfg = {
     .measure_raux = ENABLED,
     .measure_stat = ENABLED,
 };
+
+const uint32_t g_cell_balance_pwm_ms = 4000;

@@ -1,5 +1,6 @@
 #include "elcon_comms.h"
 #include "can.h"
+#include "cmsis_os2.h"
 #include "elcon_types.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <stdbool.h>
@@ -35,7 +36,7 @@ can2_msg_t elcon_pack_can(elcon_internal_t *command_profile) {
   charge_request.data[1] = U16_BOT_HALF_8B(max_volt_cmd);
   charge_request.data[2] = U16_TOP_HALF_8B(max_curr_cmd);
   charge_request.data[3] = U16_BOT_HALF_8B(max_curr_cmd);
-  charge_request.data[4] = command_profile->enable;
+  charge_request.data[4] = command_profile->charge_disable;
 
   return charge_request;
 }
@@ -70,5 +71,7 @@ elcon_status_t elcon_handle_heartbeat(const can2_msg_t *msg) {
   }
 
   elcon_unpack_status_byte(msg->data[4], &status);
+  g_elcon.heartbeat_msg = status;
+  g_elcon.heartbeat_tick = osKernelGetTickCount();
   return status;
 }

@@ -14,12 +14,9 @@
 typedef enum {
   BMS_STATE_BOOT,
   BMS_STATE_INIT,
-  BMS_STATE_TRANSMIT_DATA,
   BMS_STATE_MEASURE,
   BMS_STATE_CHARGING,
-  BMS_STATE_BALANCING,
   BMS_STATE_FAULT,
-  BMS_STATE_SLEEP,
 } bms_state_t;
 
 typedef enum {
@@ -35,6 +32,7 @@ typedef enum {
   BMS_ERR_AUX_OPENWIRE,
   BMS_ERR_THERM_OVER_TEMP,
   BMS_ERR_THERM_UNDER_TEMP,
+  BMS_ERR_CHARGING
 } bms_fault_t;
 
 typedef struct {
@@ -43,7 +41,7 @@ typedef struct {
   bms_fault_t error_code;
   uint32_t state_entry_tick;
   uint32_t fault_flags;
-} bms_sm_ctx_t;
+} bms_fsm_ctx_t;
 
 typedef struct {
   uint16_t packvoltage;
@@ -53,7 +51,7 @@ typedef struct {
 
 typedef struct {
   bms_cfg_t *config;
-  bms_sm_ctx_t state;
+  bms_fsm_ctx_t state;
   cell_asic_ctx_t *asic;
   pcb_ctx_t *pcb;
   pack_data_t *pack;

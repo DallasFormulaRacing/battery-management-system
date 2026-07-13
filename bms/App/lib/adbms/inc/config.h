@@ -72,6 +72,7 @@ extern adc_config_t g_cell_open_wire_check_profile;
 extern adc_config_t g_cell_force_sync_s_adc;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
+extern const uint32_t g_cell_balance_pwm_ms;
 
 #endif
 

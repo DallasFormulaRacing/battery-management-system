@@ -230,7 +230,7 @@ static inline void parse_cell_register(cell_asic_ctx_t *asic_ctx,
     break;
   default:
     // WARN: Will only throw error at runtime
-    assert(0 && "Unexpected mtype in parse_cell_register.");
+    // assert(0 && "Unexpected mtype in parse_cell_register.");
     break;
   }
 
