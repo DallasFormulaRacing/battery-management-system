@@ -10,6 +10,7 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id);
 static void send_metadata_frame(can_command_id_t resp_id);
 
+extern osMutexId_t bms_mutex_id;
 /*
  * NON-RTOS IMPL
  */
@@ -50,6 +51,7 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
     return;
   }
 
+  osMutexAcquire(bms_mutex_id, osWaitForever);
   switch (can_id_get_cmd(ext_id)) {
   case CMD_ID_FIRST_24_CELLS:
     send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS);
@@ -101,6 +103,7 @@ void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
     send_can_error(ERROR_ID_INVALID_CMD);
     return;
   }
+  osMutexRelease(bms_mutex_id);
 }
 
 /*
