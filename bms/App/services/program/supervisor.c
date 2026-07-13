@@ -20,10 +20,16 @@ information.
 */
 
 /*
-charger concurrency is not supported by the current implementation
-
-*/
+ * GUI CAN job publishes charger_power_setpoint_t into
+ * charger_power_setpoint_queueHandle (depth 1). The charging FSM is the sole
+ * consumer. Overwrite-on-full is handled by the publisher (evict then put).
+ * The CAN ISR only enqueues frames; it does not touch charger setpoints.
+ */
 charger_t g_charger;
+
+const osMessageQueueAttr_t charger_power_setpoint_queue_attributes = {
+    .name = "chg_pwr_setpoint",
+};
 
 // params for charging
 static const uint16_t MAX_PACK_CHARGING_VOLTS = 600;
@@ -51,6 +57,23 @@ static const charging_handler_t chg_state_handlers[] = {
     [CHARGING_STATE_FAULT] = charging_state_fault,
 };
 
+/****************** Queue Overrun Counter ****************/
+void charger_update_requested_setpoints(uint16_t volts, uint16_t amps) {
+  charger_power_setpoint_t new_setpoint = {.voltage = volts, .current = amps};
+
+  // Attempt non-blocking push
+  osStatus_t status =
+      osMessageQueuePut(charger_power_setpoint_queueHandle, &new_setpoint, 0U, 0U);
+
+  // If full, evict the stale setpoint and swap in the newest one
+  if (status == osErrorResource) {
+    charger_power_setpoint_t stale_dummy;
+    (void)osMessageQueueGet(charger_power_setpoint_queueHandle, &stale_dummy,
+                            NULL, 0U);
+    (void)osMessageQueuePut(charger_power_setpoint_queueHandle, &new_setpoint,
+                            0U, 0U);
+  }
+}
 /**************** CHARGING FSM Helpers ****************/
 
 void charging_fsm_init(charger_t *hchg) {
@@ -184,7 +207,12 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
     charging_state_fault(hchg);
     return BMS_ERR_CHARGING;
   }
-
+  charger_power_setpoint_t inbound_setpoint;
+  osStatus_t status = osMessageQueueGet(charger_power_setpoint_queueHandle, &inbound_setpoint, NULL, 0U);
+  if (status == osOK) {
+    hchg->requested_voltage = inbound_setpoint.voltage;
+    hchg->requested_current = inbound_setpoint.current;
+  }
   chg_state_handlers[hchg->state](hchg);
   // report internal state will need to happen in the CAN2 job in ISR.
 
