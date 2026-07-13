@@ -134,35 +134,52 @@ void bms_state_measure(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
-/*
- * GUI charging session: owned here, written by GUI CAN job via the APIs below.
- * enable/disable = session latch; kick refreshes the keepalive timestamp.
- */
+// ======== CHARGING SESSION ========
+
+#define CHARGING_SESSION_ACTIVE_FLAG (1U)
+
 static uint32_t g_last_run_cmd_tick = 0;
 static const uint32_t CAN_RUN_CMD_TIMEOUT_MS = 3000;
 
+static uint32_t charging_session_get_last_tick(void) {
+  int32_t lock = osKernelLock();
+  uint32_t tick = g_last_run_cmd_tick;
+  (void)osKernelRestoreLock(lock);
+  return tick;
+}
+
+static void charging_session_set_last_tick(uint32_t tick) {
+  int32_t lock = osKernelLock();
+  g_last_run_cmd_tick = tick;
+  (void)osKernelRestoreLock(lock);
+}
+
 void charging_session_enable(void) {
-  g_last_run_cmd_tick = osKernelGetTickCount();
-  osEventFlagsSet(charging_session_active_osEventFlags, 1);
+  /* tick before flag so a concurrent reader never sees active + stale zero tick */
+  charging_session_set_last_tick(osKernelGetTickCount());
+  osEventFlagsSet(charging_session_active_osEventFlags, CHARGING_SESSION_ACTIVE_FLAG);
 }
 
 void charging_session_disable(void) {
-  osEventFlagsClear(charging_session_active_osEventFlags, 1);
+  osEventFlagsClear(charging_session_active_osEventFlags, CHARGING_SESSION_ACTIVE_FLAG);
 }
 
 void charging_session_kick_wdt(void) {
-  if (osEventFlagsGet(charging_session_active_osEventFlags) == 1) {
-    g_last_run_cmd_tick = osKernelGetTickCount();
+  uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
+  if ((flags & CHARGING_SESSION_ACTIVE_FLAG) != 0U) {
+    charging_session_set_last_tick(osKernelGetTickCount());
   }
 }
 
 void bms_state_charging(bms_handler_t *hbms) {
-  if (osEventFlagsGet(charging_session_active_osEventFlags) == 0) {
+  uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
+  if ((flags & CHARGING_SESSION_ACTIVE_FLAG) == 0U) {
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }
 
-  uint32_t elapsed_ms = osKernelGetTickCount() - g_last_run_cmd_tick;
+  uint32_t elapsed_ms =
+      osKernelGetTickCount() - charging_session_get_last_tick();
   if (elapsed_ms > CAN_RUN_CMD_TIMEOUT_MS) {
     charging_session_disable();
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);

@@ -69,7 +69,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 }
 
 // **************************************************
-
+// actual thread function
 void gui_can_job_runner(void *argument) {
   fdcan_msg_t msg;
   fdcan_hardware_init();
@@ -77,7 +77,7 @@ void gui_can_job_runner(void *argument) {
   for (;;) {
     if (osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
                           osWaitForever) == osOK) {
-      gui_process_can_command(msg.id, msg.data);
+      gui_process_can_command(msg.id, msg.data, msg.len);
     }
   }
 }
