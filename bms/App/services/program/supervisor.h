@@ -23,17 +23,17 @@ typedef struct {
   uint16_t requested_current;
 } charger_t;
 
-void charging_fsm_init(volatile charger_t *hchg);
-void charging_fsm_transition(volatile charger_t *hchg, charging_state_t new_state);
+void charging_fsm_init(charger_t *hchg);
+void charging_fsm_transition(charger_t *hchg, charging_state_t new_state);
 
-bms_fault_t charger_supervisor_fsm(volatile charger_t *hchg);
+bms_fault_t charger_supervisor_fsm(charger_t *hchg);
 
-bool is_charging_permitted(volatile charger_t *hchg);
+bool is_charging_permitted(charger_t *hchg);
 
-void charging_state_standby(volatile charger_t *hchg);
-void charging_state_ready2charge(volatile charger_t *hchg);
-void charging_state_request4power(volatile charger_t *hchg);
-void charging_state_balancing(volatile charger_t *hchg);
-void charging_state_fault(volatile charger_t *hchg);
+void charging_state_standby(charger_t *hchg);
+void charging_state_ready2charge(charger_t *hchg);
+void charging_state_request4power(charger_t *hchg);
+void charging_state_balancing(charger_t *hchg);
+void charging_state_fault(charger_t *hchg);
 
 #endif
