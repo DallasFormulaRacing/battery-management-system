@@ -55,12 +55,13 @@ bms_fault_t therm_temp_in_range_check() {
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
     for (uint16_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
          therm_num++) {
+
+      // converts here
       float temp = thermistor_from_adc(
           hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
 
       hbms.asic[seg_num].thermistor[therm_num] = temp;
-      // NOTE: we should define max and min temp constant somewhere
-      if (temp > 60.0F) {
+      if (temp > g_voltage_cfg.overtemp_threshold_f) {
         over_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
@@ -68,7 +69,7 @@ bms_fault_t therm_temp_in_range_check() {
         }
       }
 
-      if (temp < -20.0F) {
+      if (temp < g_voltage_cfg.undertemp_threshold_f) {
         under_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
