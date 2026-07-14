@@ -84,9 +84,6 @@ void bms_state_init(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }
 
-// NOTE
-// bms will not immediately transfer to fault upon bad value,
-// it will finish the current measurement task first.
 void bms_state_measure(bms_handler_t *hbms) {
   /*
   - this state must be able to:
