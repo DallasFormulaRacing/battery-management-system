@@ -169,36 +169,47 @@ int main(void) {
   /* add queues, ... */
   fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(fdcan_msg_t), NULL);
+  configASSERT(fdcan_rx_dispatch_queueHandle != NULL);
+
   can2_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can2_msg_t), NULL);
+  configASSERT(can2_rx_dispatch_queueHandle != NULL);
+
   charger_power_setpoint_queueHandle =
       osMessageQueueNew(1, sizeof(charger_power_setpoint_t),
                         &charger_power_setpoint_queue_attributes);
+  configASSERT(charger_power_setpoint_queueHandle != NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
+  defaultTaskHandle = 
+    osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
+  configASSERT(defaultTaskHandle != NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
       osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
                   &bms_safety_task_attributes);
+  configASSERT(bms_safety_osTaskHandler != NULL);
 
   // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  configASSERT(gui_can_job_osTaskHandler != NULL);
 
   // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  configASSERT(can2_job_osTaskHandler != NULL);
 
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   charging_session_active_osEventFlags = 
     osEventFlagsNew(&charging_session_active_event_attr);
+  configASSERT(charging_session_active_osEventFlags != NULL);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
