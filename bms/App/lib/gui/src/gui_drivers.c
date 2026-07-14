@@ -163,7 +163,10 @@ void send_metadata_frame(can_command_id_t resp_id) {
   pack_data_t *pack_data = hbms.pack;
   pcb_ctx_t *pcb = hbms.pcb;
   uint8_t tx_frame[24] = {0};
-  metadata_readings(pack_data, pcb, tx_frame);
+
+  if (pack_data != NULL) {
+    metadata_readings(pack_data, pcb, tx_frame);
+  }
 
   can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
                                         (uint16_t)resp_id, BMS_DEVICE_ID);

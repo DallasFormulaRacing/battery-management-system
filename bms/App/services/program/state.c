@@ -29,6 +29,8 @@ void bms_fsm_init(bms_handler_t *hbms) {
   hbms->state.state_entry_tick = 0;
   hbms->state.fault_flags = 0;
   charging_fsm_init(&g_charger);
+  init_cell_balancing(hbms->pcb, 67); 
+  // about 10mV (see cb.c)
 }
 
 bool bms_check_for_fault(bms_handler_t *hbms) {

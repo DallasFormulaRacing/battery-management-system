@@ -16,6 +16,9 @@
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
+static pack_data_t g_pack;
+static pcb_ctx_t g_pcb;
+
 static bms_cfg_t g_bms_cfg = {
     .adc = &g_cell_profile,
     .voltage = &g_voltage_cfg,
@@ -33,7 +36,8 @@ bms_handler_t hbms = {
             .fault_flags = 0,
         },
     .asic = asic,
-
+    .pcb = &g_pcb,
+    .pack = &g_pack,
 };
 
 /*
