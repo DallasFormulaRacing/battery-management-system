@@ -60,7 +60,7 @@ bms_fault_t therm_temp_in_range_check() {
           hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
 
       hbms.asic[seg_num].thermistor[therm_num] = temp;
-      if (temp > g_voltage_cfg.overtemp_threshold_f) {
+      if (temp > g_voltage_cfg.overtemp_threshold_c) {
         over_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
@@ -68,7 +68,7 @@ bms_fault_t therm_temp_in_range_check() {
         }
       }
 
-      if (temp < g_voltage_cfg.undertemp_threshold_f) {
+      if (temp < g_voltage_cfg.undertemp_threshold_c) {
         under_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
