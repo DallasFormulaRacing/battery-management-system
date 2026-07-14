@@ -84,7 +84,7 @@ bms_fault_t therm_temp_in_range_check() {
     return BMS_ERR_THERM_OVER_TEMP;
   }
   if (under_temp_flag) {
-    return BMS_ERR_THERM_OVER_TEMP;
+    return BMS_ERR_THERM_UNDER_TEMP;
   }
 
   return BMS_ERR_NONE;
