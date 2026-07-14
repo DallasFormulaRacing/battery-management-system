@@ -120,32 +120,47 @@ void bms_state_measure(bms_handler_t *hbms) {
   osMutexAcquire(bms_mutex_id, 1000);
   status = cell_voltage_in_range_check();
   if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
+    hbms->state.error_code = status;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
+    return;
   }
 
   status = therm_temp_in_range_check();
   if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
+    hbms->state.error_code = status;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
+    return;
   }
 
   status = cell_open_wire_check_odd();
   if (BMS_ERR_CELL_OPENWIRE == status) {
+    hbms->state.error_code = status;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
+    return;
   }
 
   status = cell_open_wire_check_even();
   if (BMS_ERR_CELL_OPENWIRE == status) {
+    hbms->state.error_code = status;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
+    return;
   }
 
   status = therm_open_wire_check();
   if (BMS_ERR_AUX_OPENWIRE == status) {
+    hbms->state.error_code = status;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    osMutexRelease(bms_mutex_id);
+    return;
   }
 
   osMutexRelease(bms_mutex_id);
 
-  bms_fsm_transition(hbms, BMS_STATE_CHARGING);
+  if(BMS_ERR_NONE == status) bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
 // ======== CHARGING SESSION ========
