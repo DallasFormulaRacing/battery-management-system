@@ -71,7 +71,11 @@ elcon_status_t elcon_handle_heartbeat(const can2_msg_t *msg) {
   }
 
   elcon_unpack_status_byte(msg->data[4], &status);
+
+  int32_t lock = osKernelLock();
   g_elcon.heartbeat_msg = status;
   g_elcon.heartbeat_tick = osKernelGetTickCount();
+  (void)osKernelRestoreLock(lock);
+
   return status;
 }

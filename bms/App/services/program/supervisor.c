@@ -225,14 +225,17 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
  * @return false otherwise
  */
 static bool is_elcon_ready(charger_t *hchg) {
-  const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
-  uint32_t age_ms = osKernelGetTickCount() - hchg->elcon->heartbeat_tick;
+  int32_t lock = osKernelLock();
+  elcon_status_t status = hchg->elcon->heartbeat_msg;
+  uint32_t tick = hchg->elcon->heartbeat_tick;
+  (void)osKernelRestoreLock(lock);
 
+  uint32_t age_ms = osKernelGetTickCount() - tick;
   if (age_ms > ELCON_HEARTBEAT_STALE_MS) {
     return false;
   }
 
-  return status->charger_OKAY && !status->starting_state;
+  return status.charger_OKAY && !status.starting_state;
 }
 
 /**
@@ -241,9 +244,11 @@ static bool is_elcon_ready(charger_t *hchg) {
  * ignores stale heartbeat, starting_state, and comm_state
  */
 static bool is_elcon_okay(charger_t *hchg) {
-  const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
+  int32_t lock = osKernelLock();
+  elcon_status_t status = hchg->elcon->heartbeat_msg;
+  (void)osKernelRestoreLock(lock);
 
-  return !status->hw && !status->temp && !status->input_voltage;
+  return !status.hw && !status.temp && !status.input_voltage;
 }
 
 /**
