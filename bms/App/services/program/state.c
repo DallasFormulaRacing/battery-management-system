@@ -23,19 +23,6 @@ static const state_handler_t state_handlers[] = {
 };
 
 void bms_fsm_init(bms_handler_t *hbms) {
-  hbms->config->adc = &g_cell_profile;
-  hbms->config->voltage = &g_voltage_cfg;
-  hbms->config->measurement = &g_meas_cfg;
-
-  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
-    hbms->asic[i].ic_count = NUM_IC_COUNT_CHAIN;
-  }
-  
-  hbms->state.current_state = BMS_STATE_BOOT;
-  hbms->state.previous_state = BMS_STATE_BOOT;
-  hbms->state.error_code = BMS_ERR_NONE;
-  hbms->state.state_entry_tick = 0;
-  hbms->state.fault_flags = 0;
   charging_fsm_init(&g_charger);
   init_cell_balancing(hbms->pcb, 67); 
   // about 10mV (see cb.c)
@@ -78,6 +65,16 @@ void bms_state_entry(bms_handler_t *hbms) {
   hbms->config->adc = &g_cell_profile;
   hbms->config->voltage = &g_voltage_cfg;
   hbms->config->measurement = &g_meas_cfg;
+
+  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
+    hbms->asic[i].ic_count = NUM_IC_COUNT_CHAIN;
+  }
+
+  hbms->state.current_state = BMS_STATE_BOOT;
+  hbms->state.previous_state = BMS_STATE_BOOT;
+  hbms->state.error_code = BMS_ERR_NONE;
+  hbms->state.state_entry_tick = 0;
+  hbms->state.fault_flags = 0;
   bms_fsm_transition(hbms, BMS_STATE_INIT);
 }
 
@@ -88,6 +85,9 @@ void bms_state_entry(bms_handler_t *hbms) {
  */
 void bms_state_init(bms_handler_t *hbms) {
   comm_status_t status = adbms_init_config(hbms->asic);
+  adbms_start_aux_voltage_measurement(hbms->asic);
+  adbms_clear_all_pwm(hbms->asic);
+  adbms_start_cell_voltage_measurement(hbms->asic);
 
   if (status != COMM_OK) {
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
