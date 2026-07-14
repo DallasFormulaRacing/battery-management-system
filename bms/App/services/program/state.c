@@ -229,6 +229,8 @@ void bms_state_fault(bms_handler_t *hbms) {
   // keep monitoring so the we can see wtf is happening
   open_shutdown_circuit();
   hard_fault_disable_openwire_on_profiles();
-  for (;;)
+  for (;;) {
     measure_during_fault();
+    osDelay(1000);
+  }
 }
