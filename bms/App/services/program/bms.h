@@ -32,7 +32,8 @@ typedef enum {
   BMS_ERR_AUX_OPENWIRE,
   BMS_ERR_THERM_OVER_TEMP,
   BMS_ERR_THERM_UNDER_TEMP,
-  BMS_ERR_CHARGING
+  BMS_ERR_CHARGING,
+  BMS_ERR_TIMEOUT,
 } bms_fault_t;
 
 typedef struct {

@@ -117,49 +117,55 @@ void bms_state_measure(bms_handler_t *hbms) {
   // adbms_read_aux_open_wire(hbms->asic);
 
   bms_fault_t status = BMS_ERR_NONE;
-  osMutexAcquire(bms_mutex_id, 1000);
-  status = cell_voltage_in_range_check();
-  if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
-    hbms->state.error_code = status;
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+  if (osOK == osMutexAcquire(bms_mutex_id, 1000)) {
+    status = cell_voltage_in_range_check();
+    if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = therm_temp_in_range_check();
+    if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = cell_open_wire_check_odd();
+    if (BMS_ERR_CELL_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = cell_open_wire_check_even();
+    if (BMS_ERR_CELL_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = therm_open_wire_check();
+    if (BMS_ERR_AUX_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
     osMutexRelease(bms_mutex_id);
-    return;
   }
 
-  status = therm_temp_in_range_check();
-  if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
-    hbms->state.error_code = status;
+  else { //failed to acquire mutex - why did this happen?
+    hbms->state.error_code = BMS_ERR_TIMEOUT;
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
     return;
   }
-
-  status = cell_open_wire_check_odd();
-  if (BMS_ERR_CELL_OPENWIRE == status) {
-    hbms->state.error_code = status;
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
-    return;
-  }
-
-  status = cell_open_wire_check_even();
-  if (BMS_ERR_CELL_OPENWIRE == status) {
-    hbms->state.error_code = status;
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
-    return;
-  }
-
-  status = therm_open_wire_check();
-  if (BMS_ERR_AUX_OPENWIRE == status) {
-    hbms->state.error_code = status;
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    osMutexRelease(bms_mutex_id);
-    return;
-  }
-
-  osMutexRelease(bms_mutex_id);
-
   if(BMS_ERR_NONE == status) bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
