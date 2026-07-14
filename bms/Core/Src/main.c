@@ -669,7 +669,7 @@ static void MX_GPIO_Init(void) {
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-
+  HAL_GPIO_WritePin(SDC_GPIO_Port, SDC_Pin, GPIO_PIN_SET);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
