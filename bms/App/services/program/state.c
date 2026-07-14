@@ -23,6 +23,14 @@ static const state_handler_t state_handlers[] = {
 };
 
 void bms_fsm_init(bms_handler_t *hbms) {
+  hbms->config->adc = &g_cell_profile;
+  hbms->config->voltage = &g_voltage_cfg;
+  hbms->config->measurement = &g_meas_cfg;
+
+  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
+    hbms->asic[i].ic_count = NUM_IC_COUNT_CHAIN;
+  }
+  
   hbms->state.current_state = BMS_STATE_BOOT;
   hbms->state.previous_state = BMS_STATE_BOOT;
   hbms->state.error_code = BMS_ERR_NONE;
