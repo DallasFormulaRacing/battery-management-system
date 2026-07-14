@@ -31,5 +31,4 @@ void bms_state_charging(bms_handler_t *hbms);
 void bms_state_fault(bms_handler_t *hbms);
 
 void bms_fsm_transition(bms_handler_t *hbms, bms_state_t new_state);
-bool bms_check_for_fault(bms_handler_t *hbms);
 #endif

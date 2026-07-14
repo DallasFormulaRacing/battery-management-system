@@ -41,7 +41,6 @@ typedef struct {
   bms_state_t previous_state;
   bms_fault_t error_code;
   uint32_t state_entry_tick;
-  uint32_t fault_flags;
 } bms_fsm_ctx_t;
 
 typedef struct {

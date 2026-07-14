@@ -33,7 +33,6 @@ bms_handler_t hbms = {
             .previous_state = BMS_STATE_BOOT,
             .error_code = BMS_ERR_NONE,
             .state_entry_tick = 0,
-            .fault_flags = 0,
         },
     .asic = asic,
     .pcb = &g_pcb,

@@ -28,17 +28,7 @@ void bms_fsm_init(bms_handler_t *hbms) {
   // about 10mV (see cb.c)
 }
 
-bool bms_check_for_fault(bms_handler_t *hbms) {
-  return hbms->state.fault_flags != 0U;
-}
-
 void bms_fsm_run(bms_handler_t *hbms) {
-  if (hbms->state.current_state != BMS_STATE_FAULT &&
-      bms_check_for_fault(hbms)) {
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    return;
-  }
-
   state_handlers[hbms->state.current_state](hbms);
 }
 
@@ -74,7 +64,6 @@ void bms_state_entry(bms_handler_t *hbms) {
   hbms->state.previous_state = BMS_STATE_BOOT;
   hbms->state.error_code = BMS_ERR_NONE;
   hbms->state.state_entry_tick = 0;
-  hbms->state.fault_flags = 0;
   bms_fsm_transition(hbms, BMS_STATE_INIT);
 }
 
