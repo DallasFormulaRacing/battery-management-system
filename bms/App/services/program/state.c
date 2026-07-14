@@ -73,12 +73,10 @@ void bms_state_entry(bms_handler_t *hbms) {
  * @param hbms, bms handler struct
  */
 void bms_state_init(bms_handler_t *hbms) {
-  comm_status_t status = adbms_init_config(hbms->asic);
-  adbms_start_aux_voltage_measurement(hbms->asic);
-  adbms_clear_all_pwm(hbms->asic);
-  adbms_start_cell_voltage_measurement(hbms->asic);
-
-  if (status != COMM_OK) {
+  if (adbms_init_config(hbms->asic) != COMM_OK ||
+      adbms_start_aux_voltage_measurement(hbms->asic) != COMM_OK ||
+      adbms_clear_all_pwm(hbms->asic) != COMM_OK ||
+      adbms_start_cell_voltage_measurement(hbms->asic) != COMM_OK) {
     bms_fsm_transition(hbms, BMS_STATE_FAULT);
     return;
   }
