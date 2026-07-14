@@ -292,10 +292,16 @@ void cell_open_wire_test() {
   force_sync_s_adc();
 }
 
+GPIO_TypeDef *SHUTDOWN_GPIO_Port = GPIOA;
+uint16_t SHUTDOWN_Pin = GPIO_PIN_8;
+
 void open_shutdown_circuit() {
   // todo
   // just a gpio flip
   // check rules
+
+  // nFlt so high = good, low = bad
+  HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
 }
 
 void bms_test_run() {
