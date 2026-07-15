@@ -43,11 +43,11 @@ can2_msg_t elcon_pack_can(elcon_internal_t *command_profile) {
 
 static void elcon_unpack_status_byte(uint8_t stb, elcon_status_t *stat) {
   //
-  stat->hw = stb & (1 << 0);
-  stat->temp = stb & (1 << 1);
-  stat->input_voltage = stb & (1 << 2);
-  stat->starting_state = stb & (1 << 3);
-  stat->comm_state = stb & (1 << 4);
+  stat->hw             = !!(stb & (1 << 0));
+  stat->temp           = !!(stb & (1 << 1));
+  stat->input_voltage  = !!(stb & (1 << 2));
+  stat->starting_state = !!(stb & (1 << 3));
+  stat->comm_state     = !!(stb & (1 << 4));
 
   // if any 1s = error
   bool err = (stat->hw || stat->temp || stat->input_voltage ||
@@ -71,7 +71,11 @@ elcon_status_t elcon_handle_heartbeat(const can2_msg_t *msg) {
   }
 
   elcon_unpack_status_byte(msg->data[4], &status);
+
+  int32_t lock = osKernelLock();
   g_elcon.heartbeat_msg = status;
   g_elcon.heartbeat_tick = osKernelGetTickCount();
+  (void)osKernelRestoreLock(lock);
+
   return status;
 }

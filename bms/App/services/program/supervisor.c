@@ -20,10 +20,16 @@ information.
 */
 
 /*
-charger concurrency is not supported by the current implementation
-
-*/
+ * GUI CAN job publishes charger_power_setpoint_t into
+ * charger_power_setpoint_queueHandle (depth 1). The charging FSM is the sole
+ * consumer. Overwrite-on-full is handled by the publisher (evict then put).
+ * The CAN ISR only enqueues frames; it does not touch charger setpoints.
+ */
 charger_t g_charger;
+
+const osMessageQueueAttr_t charger_power_setpoint_queue_attributes = {
+    .name = "chg_pwr_setpoint",
+};
 
 // params for charging
 static const uint16_t MAX_PACK_CHARGING_VOLTS = 600;
@@ -51,6 +57,23 @@ static const charging_handler_t chg_state_handlers[] = {
     [CHARGING_STATE_FAULT] = charging_state_fault,
 };
 
+/****************** Queue Overrun Counter ****************/
+void charger_update_requested_setpoints(uint16_t volts, uint16_t amps) {
+  charger_power_setpoint_t new_setpoint = {.voltage = volts, .current = amps};
+
+  // Attempt non-blocking push
+  osStatus_t status =
+      osMessageQueuePut(charger_power_setpoint_queueHandle, &new_setpoint, 0U, 0U);
+
+  // If full, evict the stale setpoint and swap in the newest one
+  if (status == osErrorResource) {
+    charger_power_setpoint_t stale_dummy;
+    (void)osMessageQueueGet(charger_power_setpoint_queueHandle, &stale_dummy,
+                            NULL, 0U);
+    (void)osMessageQueuePut(charger_power_setpoint_queueHandle, &new_setpoint,
+                            0U, 0U);
+  }
+}
 /**************** CHARGING FSM Helpers ****************/
 
 void charging_fsm_init(charger_t *hchg) {
@@ -139,11 +162,7 @@ void charging_state_balancing(charger_t *hchg) {
   /* charger must stay off while balancing */
   clear_charge_command(hchg);
 
-  if (!is_okay(hchg)) {
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
-  } 
-  
-  else if (hbms.asic == NULL || hbms.pcb == NULL) {
+  if (!is_okay(hchg) || (hbms.asic == NULL || hbms.pcb == NULL)) {
     /* cannot safely balance without asic/pcb context */
     charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
   } 
@@ -156,7 +175,7 @@ void charging_state_balancing(charger_t *hchg) {
   else {
     cell_delta_policy_enforcer(hbms.asic, hbms.pcb);
 
-    if (!pack_needs_balancing(false)) {
+    if (!pack_needs_balancing(true)) {
       /* pack within delta limit so resume charge sequence */
       charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
     }
@@ -184,7 +203,12 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
     charging_state_fault(hchg);
     return BMS_ERR_CHARGING;
   }
-
+  charger_power_setpoint_t inbound_setpoint;
+  osStatus_t status = osMessageQueueGet(charger_power_setpoint_queueHandle, &inbound_setpoint, NULL, 0U);
+  if (status == osOK) {
+    hchg->requested_voltage = inbound_setpoint.voltage;
+    hchg->requested_current = inbound_setpoint.current;
+  }
   chg_state_handlers[hchg->state](hchg);
   // report internal state will need to happen in the CAN2 job in ISR.
 
@@ -201,14 +225,17 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
  * @return false otherwise
  */
 static bool is_elcon_ready(charger_t *hchg) {
-  const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
-  uint32_t age_ms = osKernelGetTickCount() - hchg->elcon->heartbeat_tick;
+  int32_t lock = osKernelLock();
+  elcon_status_t status = hchg->elcon->heartbeat_msg;
+  uint32_t tick = hchg->elcon->heartbeat_tick;
+  (void)osKernelRestoreLock(lock);
 
+  uint32_t age_ms = osKernelGetTickCount() - tick;
   if (age_ms > ELCON_HEARTBEAT_STALE_MS) {
     return false;
   }
 
-  return status->charger_OKAY && !status->starting_state;
+  return status.charger_OKAY && !status.starting_state;
 }
 
 /**
@@ -217,9 +244,11 @@ static bool is_elcon_ready(charger_t *hchg) {
  * ignores stale heartbeat, starting_state, and comm_state
  */
 static bool is_elcon_okay(charger_t *hchg) {
-  const elcon_status_t *status = &hchg->elcon->heartbeat_msg;
+  int32_t lock = osKernelLock();
+  elcon_status_t status = hchg->elcon->heartbeat_msg;
+  (void)osKernelRestoreLock(lock);
 
-  return !status->hw && !status->temp && !status->input_voltage;
+  return !status.hw && !status.temp && !status.input_voltage;
 }
 
 /**

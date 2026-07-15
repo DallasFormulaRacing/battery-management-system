@@ -29,6 +29,7 @@
 #include "gui_can_job.h"
 #include "safety_monitor.h"
 #include "state.h"
+#include "supervisor.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -77,6 +78,7 @@ osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_processing_queueHandle;
+osMessageQueueId_t charger_power_setpoint_queueHandle;
 
 /* USER CODE END PV */
 
@@ -106,6 +108,7 @@ void defaultTaskFn(void *argument);
  * @brief  The application entry point.
  * @retval int
  */
+// NOLINTNEXTLINE(readability-function-size)
 int main(void) {
 
   /* USER CODE BEGIN 1 */
@@ -130,15 +133,17 @@ int main(void) {
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_I2C1_Init();
-  MX_LPUART1_UART_Init();
-  MX_SPI1_Init();
-  MX_FDCAN1_Init();
-  MX_FDCAN2_Init();
-  MX_TIM3_Init();
+  {
+    MX_GPIO_Init();
+    MX_DMA_Init();
+    MX_ADC1_Init();
+    MX_I2C1_Init();
+    MX_LPUART1_UART_Init();
+    MX_SPI1_Init();
+    MX_FDCAN1_Init();
+    MX_FDCAN2_Init();
+    MX_TIM3_Init();
+  }
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -164,31 +169,47 @@ int main(void) {
   /* add queues, ... */
   fdcan_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(fdcan_msg_t), NULL);
+  configASSERT(fdcan_rx_dispatch_queueHandle != NULL);
+
   can2_rx_dispatch_queueHandle =
       osMessageQueueNew(16, sizeof(can2_msg_t), NULL);
+  configASSERT(can2_rx_dispatch_queueHandle != NULL);
+
+  charger_power_setpoint_queueHandle =
+      osMessageQueueNew(1, sizeof(charger_power_setpoint_t),
+                        &charger_power_setpoint_queue_attributes);
+  configASSERT(charger_power_setpoint_queueHandle != NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
+  defaultTaskHandle = 
+    osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
+  configASSERT(defaultTaskHandle != NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
       osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
                   &bms_safety_task_attributes);
+  configASSERT(bms_safety_osTaskHandler != NULL);
 
   // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  configASSERT(gui_can_job_osTaskHandler != NULL);
 
   // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
   osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  configASSERT(can2_job_osTaskHandler != NULL);
 
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
+  charging_session_active_osEventFlags = 
+    osEventFlagsNew(&charging_session_active_event_attr);
+  configASSERT(charging_session_active_osEventFlags != NULL);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
 
@@ -596,6 +617,9 @@ static void MX_GPIO_Init(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SDC_GPIO_Port, SDC_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
@@ -620,6 +644,13 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SDC_Pin */
+  GPIO_InitStruct.Pin = SDC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SDC_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PA10 */
   GPIO_InitStruct.Pin = GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -638,7 +669,7 @@ static void MX_GPIO_Init(void) {
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-
+  HAL_GPIO_WritePin(SDC_GPIO_Port, SDC_Pin, GPIO_PIN_SET);
   /* USER CODE END MX_GPIO_Init_2 */
 }
 

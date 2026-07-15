@@ -88,6 +88,8 @@ adc_config_t g_cell_force_sync_s_adc = {
 voltage_config_t g_voltage_cfg = {
     .overvoltage_threshold_v = 4.15F,
     .undervoltage_threshold_v = 2.51F,
+    .overtemp_threshold_c = 60.0F,
+    .undertemp_threshold_c = -20.0F,
     .openwire_cell_threshold_mv = 1000,
     .openwire_aux_threshold_mv = 2900,
     .loop_meas_count = 4,
@@ -104,4 +106,4 @@ measurement_config_t g_meas_cfg = {
     .measure_stat = ENABLED,
 };
 
-const uint32_t g_cell_balance_pwm_ms = 4000;
+const uint32_t g_cell_balance_pwm_ms = 1000;
