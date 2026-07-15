@@ -123,8 +123,15 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                  can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
+  if (end_ic > NUM_IC_COUNT_CHAIN) {
+    end_ic = NUM_IC_COUNT_CHAIN;
+  }
+  if (start_ic >= end_ic) {
+    start_ic = end_ic;
+  }
+
   // build data function call with first 24 cell configured in parameters
-  uint8_t tx_frame[48];
+  uint8_t tx_frame[48] = {0};
   cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
 
   // send can frame with first_24_cells as command id
@@ -144,6 +151,13 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
 static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
+
+  if (end_ic > NUM_IC_COUNT_CHAIN) {
+    end_ic = NUM_IC_COUNT_CHAIN;
+  }
+  if (start_ic >= end_ic) {
+    start_ic = end_ic;
+  }
 
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
   therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);
@@ -201,7 +215,7 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic,
   uint8_t cell_counter = 0;
   for (uint8_t ic = start_ic; ic < end_ic; ic++) {
     // grab cell reading from asic array
-    for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < NUM_CELLS_PER_SEGMENT; cell_idx++) {
       int16_t voltage = asic[ic].filt_cell.filt_cell_voltages_array[cell_idx];
 
       // convert 16 bit signed uint8_t into 2 bytes, big endian
