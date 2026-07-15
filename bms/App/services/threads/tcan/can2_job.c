@@ -45,41 +45,49 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
       .MessageMarker = 0U,
   };
 
+  bool UNKNOWN_CAN_ID = true;
+
   switch (msg->id) {
   case PLACEHOLDER_CURRENT_SENSOR_CAN_ID:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_CURRENT_SENSOR, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_REQUEST:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_REQUEST, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_RESPONSE:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_RESPONSE, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_GENERAL:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_GENERAL, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_ISO_DETAIL:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_ISO_DETAIL, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_VOLTAGE:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_VOLTAGE, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   case IMD_CAN_ID_IT_SYSTEM:
     header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
                                      DFR_CAN_BMS_IMD_IT_SYSTEM, BMS_DEVICE_ID);
+    UNKNOWN_CAN_ID = false;
     break;
   default:
     break;
   }
 
-  // todo map can ids to dfr
-  return fdcan_send(header.Identifier, msg->data, header.DataLength);
+  return UNKNOWN_CAN_ID ? HAL_BUSY : fdcan_send(header.Identifier, msg->data, header.DataLength);
 }
 
 static void process_can2_protocols(const can2_msg_t *msg) {
