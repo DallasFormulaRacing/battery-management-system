@@ -100,8 +100,8 @@ bms_fault_t therm_open_wire_check() {
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
       // if voltage is greater than 2.9 V, there is probably an OW or it's
       // really cold
-      if (hbms.asic[seg_num].aux.aux_voltages_array[i] >
-          g_voltage_cfg.openwire_aux_threshold_mv) {
+      float aux_v = convert_voltage_human_readable(hbms.asic[seg_num].aux.aux_voltages_array[i]);
+      if (aux_v * 1000.0F > (float)g_voltage_cfg.openwire_aux_threshold_mv) {
         hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
         open_wire_flag = true;
       }
