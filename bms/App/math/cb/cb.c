@@ -54,11 +54,11 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
  */
 pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
                                              voltage_readings_t delta) {
-  float delta_v = convert_voltage_human_readable(delta);
+  float delta_v = (float)delta * 0.000150F;
 
   // if within OK margin of error, dont balance at all
   if (delta_v <=
-      convert_voltage_human_readable(pcb->config.maximum_cell_delta_allowed))
+      (float)pcb->config.maximum_cell_delta_allowed * 0.000150F)
     return PWM_0_0_PERCENT_DUTY_CYCLE;
 
   // else map
