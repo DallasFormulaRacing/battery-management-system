@@ -35,36 +35,33 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
   static const uint8_t dlc_to_len[] = {0, 1,  2,  3,  4,  5,  6,  7,
                                        8, 12, 16, 20, 24, 32, 48, 64};
 
-  if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rx_payload) !=
-      HAL_OK) {
-    return;
-  }
+  while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader,
+                                rx_payload) == HAL_OK) {
+    const uint8_t len = dlc_to_len[rxHeader.DataLength & 0x0FU];
+    const uint32_t tick = osKernelGetTickCount();
 
-  const uint8_t len = dlc_to_len[rxHeader.DataLength & 0x0FU];
-  const uint32_t tick = osKernelGetTickCount();
+    if (hfdcan->Instance == FDCAN1) {
+      can2_msg_t msg = {
+          .id = rxHeader.Identifier,
+          .id_type = rxHeader.IdType,
+          .len = (len > 8U) ? 8U : len, // clamp to 8 (can2 max)
+          .rx_tick = tick,
+      };
+      memcpy(msg.data, rx_payload, msg.len);
 
-  if (hfdcan->Instance == FDCAN1) {
-    can2_msg_t msg = {
-        .id = rxHeader.Identifier,
-        .id_type = rxHeader.IdType,
-        .len = (len > 8U) ? 8U : len, // clamp to 8 (can2 max)
-        .rx_tick = tick,
-    };
-    memcpy(msg.data, rx_payload, msg.len);
-
-    if (osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0) != osOK) {
-      can2_forwarding_count_queue_overrun();
+      if (osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0) !=
+          osOK) {
+        can2_forwarding_count_queue_overrun();
+      }
+    } else if (hfdcan->Instance == FDCAN2) {
+      fdcan_msg_t msg = {
+          .id = rxHeader.Identifier,
+          .len = len,
+          .rx_tick = tick,
+      };
+      memcpy(msg.data, rx_payload, len);
+      (void)osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
     }
-  }
-
-  else if (hfdcan->Instance == FDCAN2) {
-    fdcan_msg_t msg = {
-        .id = rxHeader.Identifier,
-        .len = len,
-        .rx_tick = tick,
-    };
-    memcpy(msg.data, rx_payload, len);
-    (void)osMessageQueuePut(fdcan_rx_dispatch_queueHandle, &msg, 0, 0);
   }
 }
 
