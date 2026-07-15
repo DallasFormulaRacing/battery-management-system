@@ -175,7 +175,7 @@ void charging_state_balancing(charger_t *hchg) {
   else {
     cell_delta_policy_enforcer(hbms.asic, hbms.pcb);
 
-    if (!pack_needs_balancing(false)) {
+    if (!pack_needs_balancing(true)) {
       /* pack within delta limit so resume charge sequence */
       charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
     }
