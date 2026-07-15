@@ -46,6 +46,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 }
 
 void spi_write(uint16_t size, uint8_t *tx_data) {
+  spi_thread_pid = osThreadGetId();
   asic_cs_low();
   if (HAL_OK == HAL_SPI_Transmit_DMA(&hspi1, tx_data, size)) {
 
@@ -60,6 +61,7 @@ void spi_write(uint16_t size, uint8_t *tx_data) {
 }
 
 void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
+  spi_thread_pid = osThreadGetId();
   asic_cs_low();
   if (HAL_OK == HAL_SPI_TransmitReceive_DMA(&hspi1, tx_data, rx_data, size)) {
     uint32_t flags = osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny,
@@ -72,6 +74,7 @@ void spi_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t size) {
 }
 
 void spi_read(uint16_t size, uint8_t *rx_data) {
+  spi_thread_pid = osThreadGetId();
   asic_cs_low();
   if (HAL_OK == HAL_SPI_Receive_DMA(&hspi1, rx_data, size)) {
     uint32_t flags = osThreadFlagsWait(SPI_THREAD_READY_FLAG, osFlagsWaitAny,
