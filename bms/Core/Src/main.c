@@ -30,6 +30,8 @@
 #include "safety_monitor.h"
 #include "state.h"
 #include "supervisor.h"
+#include "gui_drivers.h"
+#include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
 
 /* USER CODE END Includes */
@@ -71,6 +73,10 @@ const osThreadAttr_t defaultTask_attributes = {
     .name = "defaultTask",
     .priority = (osPriority_t)osPriorityNormal,
     .stack_size = 128 * 4};
+const osThreadAttr_t dummy_voltage_attributes = {
+    .name = "dummyTask",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 128 * 8};
 /* USER CODE BEGIN PV */
 osThreadId_t spi_thread_pid;
 osMutexId_t spi_mutex_id;
@@ -94,6 +100,7 @@ static void MX_FDCAN1_Init(void);
 static void MX_FDCAN2_Init(void);
 static void MX_TIM3_Init(void);
 void defaultTaskFn(void *argument);
+void send_dummy_voltage_task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -189,20 +196,23 @@ int main(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
-      osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
-                  &bms_safety_task_attributes);
-  configASSERT(bms_safety_osTaskHandler != NULL);
+  // osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
+  //     osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
+  //                 &bms_safety_task_attributes);
+  // configASSERT(bms_safety_osTaskHandler != NULL);
 
+  // // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
   // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
-  configASSERT(gui_can_job_osTaskHandler != NULL);
+  //     osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  // configASSERT(gui_can_job_osTaskHandler != NULL);
 
+  // // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
   // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
-  configASSERT(can2_job_osTaskHandler != NULL);
+  //     osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  // configASSERT(can2_job_osTaskHandler != NULL);
+
+  osThreadId_t dummy_data_osTaskHandler __attribute__((unused)) =
+      osThreadNew(send_dummy_voltage_task, NULL, &dummy_voltage_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -227,6 +237,34 @@ int main(void) {
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
+}
+
+void send_dummy_voltage_frame(can_command_id_t resp_id) {
+
+  // build data function call with first 24 cell configured in parameters
+  uint8_t tx_frame[48] = {0};
+  for(int i = 0; i < sizeof(tx_frame); i++) {
+    tx_frame[i] = (i + resp_id) & 0xFF;
+  }
+
+  // send can frame with first_24_cells as command id
+  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
+                                        (uint16_t)resp_id, BMS_DEVICE_ID);
+  fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
+}
+
+void send_dummy_voltage_task(void *argument){
+  (void)argument;
+
+  for(;;) {
+    send_dummy_voltage_frame(CMD_ID_FIRST_24_CELLS);
+    send_dummy_voltage_frame(CMD_ID_SECOND_24_CELLS);
+    send_dummy_voltage_frame(CMD_ID_THIRD_24_CELLS);
+    send_dummy_voltage_frame(CMD_ID_FOURTH_24_CELLS);
+    send_dummy_voltage_frame(CMD_ID_FIFTH_24_CELLS);
+    send_dummy_voltage_frame(CMD_ID_SIXTH_24_CELLS);
+    osDelay(500);
+  }
 }
 
 /**
