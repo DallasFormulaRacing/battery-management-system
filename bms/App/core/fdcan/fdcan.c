@@ -33,8 +33,7 @@ void fdcan_configure_filter(void) {
    * equals BMS device ID (0x1F), regardless of source/cmd/priority.
    */
 
-  FDCAN_FilterTypeDef filter_config;
-  memset(&filter_config, 0, sizeof(filter_config));
+  FDCAN_FilterTypeDef filter_config = {0};
 
   filter_config.IdType = FDCAN_EXTENDED_ID;
   filter_config.FilterIndex = 0;
