@@ -196,24 +196,24 @@ int main(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  // osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
-  //                 &bms_safety_task_attributes);
-  // configASSERT(bms_safety_osTaskHandler != NULL);
+  osThreadId_t bms_safety_osTaskHandler __attribute__((unused)) =
+      osThreadNew(bms_safety_task, (void *)&bms_safety_task_time,
+                  &bms_safety_task_attributes);
+  configASSERT(bms_safety_osTaskHandler != NULL);
 
   // // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-  // osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
-  // configASSERT(gui_can_job_osTaskHandler != NULL);
+  osThreadId_t gui_can_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(gui_can_job_runner, NULL, &gui_can_job_runner_attributes);
+  configASSERT(gui_can_job_osTaskHandler != NULL);
 
   // // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-  // osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
-  //     osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
-  // configASSERT(can2_job_osTaskHandler != NULL);
+  osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
+      osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
+  configASSERT(can2_job_osTaskHandler != NULL);
 
   osThreadId_t dummy_data_osTaskHandler __attribute__((unused)) =
       osThreadNew(send_dummy_voltage_task, NULL, &dummy_voltage_attributes);
-
+  configASSERT(dummy_data_osTaskHandler != NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -250,7 +250,7 @@ void send_dummy_voltage_frame(can_command_id_t resp_id) {
   // send can frame with first_24_cells as command id
   can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
                                         (uint16_t)resp_id, BMS_DEVICE_ID);
-  fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
+  HAL_StatusTypeDef __attribute__((unused)) send_status = fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
 void send_dummy_voltage_task(void *argument){
