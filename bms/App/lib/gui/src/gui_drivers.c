@@ -54,7 +54,7 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) 
   osMutexAcquire(bms_mutex_id, osWaitForever);
   switch (can_id_get_cmd(ext_id)) {
   case CMD_ID_FIRST_24_CELLS:
-    send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS);
+    // send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS);
     break;
   case CMD_ID_SECOND_24_CELLS:
     send_filtered_voltage_frame(2, 4, CMD_ID_SECOND_24_CELLS);
