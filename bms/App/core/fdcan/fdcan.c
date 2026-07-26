@@ -30,7 +30,7 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data,
 void fdcan_configure_filter(void) {
   /*
    * Hardcoded filter to accept messages whose "target" field (bits 25..21)
-   * equals BMS device ID (0x1F), regardless of source/cmd/priority.
+   * equals NODE_BMS (0x1C), regardless of source/cmd/priority.
    */
 
   FDCAN_FilterTypeDef filter_config = {0};
@@ -41,7 +41,7 @@ void fdcan_configure_filter(void) {
   filter_config.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
 
   const uint32_t target_mask = (0x1FU << 21); /* only care about target bits */
-  const uint32_t bms_target = (0x1FU << 21);  /* BMS_DEVICE_ID == 0x1F */
+  const uint32_t bms_target = (0x1CU << 21);  /* NODE_BMS == 0x1C */
 
   filter_config.FilterID1 = bms_target;
   filter_config.FilterID2 = target_mask;

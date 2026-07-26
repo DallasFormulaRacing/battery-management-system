@@ -229,6 +229,34 @@ int main(void) {
   /* USER CODE END 3 */
 }
 
+void send_dummy_voltage_frame(can_command_id_t resp_id) {
+
+  // build data function call with first 24 cell configured in parameters
+  uint8_t tx_frame[48] = {0};
+  for(int i = 0; i < sizeof(tx_frame); i++) {
+    tx_frame[i] = (i + resp_id) & 0xFF;
+  }
+
+  // send can frame with first_24_cells as command id
+  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
+                                        (uint16_t)resp_id, NODE_BMS);
+  HAL_StatusTypeDef __attribute__((unused)) send_status = fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
+}
+
+void send_dummy_voltage_task(void *argument){
+  (void)argument;
+
+  for(;;) {
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_1);
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_2);
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_3);
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_4);
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_5);
+    send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_6);
+    osDelay(500);
+  }
+}
+
 /**
  * @brief System Clock Configuration
  * @retval None
