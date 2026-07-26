@@ -27,6 +27,7 @@
 #include "can2_job.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
+#include "gui_types.h"
 #include "safety_monitor.h"
 #include "state.h"
 #include "supervisor.h"
