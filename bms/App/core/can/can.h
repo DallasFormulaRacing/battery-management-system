@@ -12,6 +12,7 @@ extern FDCAN_HandleTypeDef hfdcan1;
 #define DFR_CAN_BMS_IMD_ISO_DETAIL 0xBF38
 #define DFR_CAN_BMS_IMD_VOLTAGE 0xBF39
 #define DFR_CAN_BMS_IMD_IT_SYSTEM 0xBF3A
+// todo: this is not being implemented, but im keeping it here in case
 #define DFR_CAN_BMS_PRECHARGE_FAILURE 0xBFAA
 
 void configure_can2_tx_header(FDCAN_TxHeaderTypeDef *header);
