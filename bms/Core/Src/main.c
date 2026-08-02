@@ -261,22 +261,19 @@ void send_dummy_voltage_task(void *argument){
     if(HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2) != 0U) {
       send_dummy_voltage_frame(CMD_ID_FIRST_24_CELLS);
       osDelay(5);
-      // send_dummy_voltage_frame(CMD_ID_SECOND_24_CELLS);
-      // osDelay(5);
-      // send_dummy_voltage_frame(CMD_ID_THIRD_24_CELLS);
-      // osDelay(5);
-      // send_dummy_voltage_frame(CMD_ID_FOURTH_24_CELLS);
-      // osDelay(5);    
-      // send_dummy_voltage_frame(CMD_ID_FIFTH_24_CELLS);
-      // osDelay(5);
-      // send_dummy_voltage_frame(CMD_ID_SIXTH_24_CELLS);
-      // osDelay(5);
+      send_dummy_voltage_frame(CMD_ID_SECOND_24_CELLS);
+      osDelay(5);
+      send_dummy_voltage_frame(CMD_ID_THIRD_24_CELLS);
+      osDelay(5);
+      send_dummy_voltage_frame(CMD_ID_FOURTH_24_CELLS);
+      osDelay(5);    
+      send_dummy_voltage_frame(CMD_ID_FIFTH_24_CELLS);
+      osDelay(5);
+      send_dummy_voltage_frame(CMD_ID_SIXTH_24_CELLS);
+      osDelay(5);
     }
     HAL_FDCAN_GetProtocolStatus(&hfdcan2, &psr);
     HAL_FDCAN_GetErrorCounters(&hfdcan2, &ecr);
-    if(psr.LastErrorCode != 7) {
-      osDelay(10);
-    }
     osDelay(500);
   }
 }
