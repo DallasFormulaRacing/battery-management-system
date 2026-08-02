@@ -6,7 +6,7 @@ static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header) {
   tx_header->IdType = FDCAN_EXTENDED_ID;
   tx_header->TxFrameType = FDCAN_DATA_FRAME;
   tx_header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-  tx_header->BitRateSwitch = FDCAN_BRS_ON;
+  tx_header->BitRateSwitch = FDCAN_BRS_OFF;
   tx_header->FDFormat = FDCAN_FD_CAN;
   tx_header->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
   tx_header->MessageMarker = 0;
@@ -53,6 +53,9 @@ void fdcan_configure_filter(void) {
 // configures filter, starts FDCAN, and enables RX FIFO0 notification
 void fdcan_hardware_init(void) {
   fdcan_configure_filter();
+
+  HAL_FDCAN_ConfigTxDelayCompensation(&hfdcan2, 31, 0);
+  HAL_FDCAN_EnableTxDelayCompensation(&hfdcan2);
 
   if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
     /* handle error */
