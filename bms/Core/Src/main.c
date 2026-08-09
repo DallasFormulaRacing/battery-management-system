@@ -260,20 +260,23 @@ void send_dummy_voltage_task(void *argument){
   for(;;) {
     if(HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2) != 0U) {
       send_dummy_voltage_frame(CMD_ID_FIRST_24_CELLS);
-      osDelay(5);
-      send_dummy_voltage_frame(CMD_ID_SECOND_24_CELLS);
-      osDelay(5);
-      send_dummy_voltage_frame(CMD_ID_THIRD_24_CELLS);
-      osDelay(5);
-      send_dummy_voltage_frame(CMD_ID_FOURTH_24_CELLS);
-      osDelay(5);    
-      send_dummy_voltage_frame(CMD_ID_FIFTH_24_CELLS);
-      osDelay(5);
-      send_dummy_voltage_frame(CMD_ID_SIXTH_24_CELLS);
-      osDelay(5);
+      osDelay(1000);
+      // send_dummy_voltage_frame(CMD_ID_SECOND_24_CELLS);
+      // osDelay(5);
+      // send_dummy_voltage_frame(CMD_ID_THIRD_24_CELLS);
+      // osDelay(5);
+      // send_dummy_voltage_frame(CMD_ID_FOURTH_24_CELLS);
+      // osDelay(5);    
+      // send_dummy_voltage_frame(CMD_ID_FIFTH_24_CELLS);
+      // osDelay(5);
+      // send_dummy_voltage_frame(CMD_ID_SIXTH_24_CELLS);
+      // osDelay(5);
     }
     HAL_FDCAN_GetProtocolStatus(&hfdcan2, &psr);
     HAL_FDCAN_GetErrorCounters(&hfdcan2, &ecr);
+    if (psr.BusOff) {
+      CLEAR_BIT(FDCAN2->CCCR, FDCAN_CCCR_INIT);   /* starts 128×11 recessive recovery */
+    }
     osDelay(500);
   }
 }
@@ -451,13 +454,13 @@ static void MX_FDCAN2_Init(void)
 
   /* USER CODE END FDCAN2_Init 1 */
   hfdcan2.Instance = FDCAN2;
-  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV2;
   hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
   hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = 4;
+  hfdcan2.Init.NominalPrescaler = 8;
   hfdcan2.Init.NominalSyncJumpWidth = 6;
   hfdcan2.Init.NominalTimeSeg1 = 33;
   hfdcan2.Init.NominalTimeSeg2 = 6;
