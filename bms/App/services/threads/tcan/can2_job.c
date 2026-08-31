@@ -83,7 +83,7 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
 }
 
 static void process_can2_protocols(const can2_msg_t *msg) {
-  if (msg->id == IMD_CAN_ID_REQUEST) {
+  if (msg->id == IMD_CAN_ID) {
     parse_imd_msg(msg->id, msg->data);
   }
 
