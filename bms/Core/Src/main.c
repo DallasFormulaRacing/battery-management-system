@@ -78,11 +78,8 @@ osMutexId_t spi_mutex_id;
 osMutexId_t bms_mutex_id;
 osMessageQueueId_t fdcan_rx_dispatch_queueHandle;
 osMessageQueueId_t can2_rx_dispatch_queueHandle;
-<<<<<<< HEAD
-=======
 osMessageQueueId_t can2_rx_processing_queueHandle;
 osMessageQueueId_t charger_power_setpoint_queueHandle;
->>>>>>> master
 
 /* USER CODE END PV */
 
@@ -187,8 +184,7 @@ int main(void) {
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = 
-    osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(defaultTaskFn, NULL, &defaultTask_attributes);
   configASSERT(defaultTaskHandle != NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -211,8 +207,8 @@ int main(void) {
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  charging_session_active_osEventFlags = 
-    osEventFlagsNew(&charging_session_active_event_attr);
+  charging_session_active_osEventFlags =
+      osEventFlagsNew(&charging_session_active_event_attr);
   configASSERT(charging_session_active_osEventFlags != NULL);
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
@@ -237,20 +233,21 @@ void send_dummy_voltage_frame(can_command_id_t resp_id) {
 
   // build data function call with first 24 cell configured in parameters
   uint8_t tx_frame[48] = {0};
-  for(int i = 0; i < sizeof(tx_frame); i++) {
+  for (int i = 0; i < sizeof(tx_frame); i++) {
     tx_frame[i] = (i + resp_id) & 0xFF;
   }
 
   // send can frame with first_24_cells as command id
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
-                                        (uint16_t)resp_id, NODE_BMS);
-  HAL_StatusTypeDef __attribute__((unused)) send_status = fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
+  HAL_StatusTypeDef __attribute__((unused)) send_status =
+      fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
-void send_dummy_voltage_task(void *argument){
+void send_dummy_voltage_task(void *argument) {
   (void)argument;
 
-  for(;;) {
+  for (;;) {
     send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_1);
     send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_2);
     send_dummy_voltage_frame(BMS_CELL_VOLTAGES_PACK_3);

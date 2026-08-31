@@ -36,8 +36,8 @@ void handle_general(IMD_Data_t data) {
   memcpy(tx_frame, data.raw, IMD_MAX_FRAME_LEN);
 
   // Create fdcan packet and send to gui
-  can_ext_id_t tx_id = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
-                                    CMD_ID_IMD_DATA, BMS_DEVICE_ID);
+  can_ext_id_t tx_id =
+      can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID, BMS_IMD_DATA, BMS_DEVICE_ID);
   fdcan_send(tx_id, tx_frame, FDCAN_DLC_BYTES_8);
 }
 
