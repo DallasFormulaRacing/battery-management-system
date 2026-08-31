@@ -40,7 +40,8 @@ extern osMutexId_t bms_mutex_id;
  * @param len: payload length from DLC
  * @return none
  */
-void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) {
+void gui_process_can_command(uint32_t ext_id, const uint8_t *data,
+                             uint8_t len) {
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);
@@ -138,8 +139,8 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
   cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
 
   // send can frame with first_24_cells as command id
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
-                                        (uint16_t)resp_id, NODE_BMS);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
@@ -165,8 +166,8 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
   therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);
 
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
-                                        (uint16_t)resp_id, NODE_BMS);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
 }
 
@@ -185,8 +186,8 @@ void send_metadata_frame(can_command_id_t resp_id) {
     metadata_readings(pack_data, pcb, tx_frame);
   }
 
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
-                                        (uint16_t)resp_id, NODE_BMS);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
 }
 
@@ -197,8 +198,8 @@ void send_metadata_frame(can_command_id_t resp_id) {
  */
 void send_can_error(can_error_id_t error_id) {
   uint8_t tx_frame = 0;
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, NODE_RASPI,
-                                        (uint16_t)error_id, NODE_BMS);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)error_id, NODE_BMS);
   fdcan_send(tx_header, &tx_frame, FDCAN_DLC_BYTES_0);
 }
 

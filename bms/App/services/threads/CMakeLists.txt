@@ -1,5 +1,3 @@
-# services/threads/CMakeLists.txt
-
 add_library(threads STATIC 
     safety/safety_monitor.c
     vcan/gui_can_job.c

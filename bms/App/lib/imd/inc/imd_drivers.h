@@ -16,7 +16,7 @@
 HAL_StatusTypeDef imd_send_request(uint8_t can_id, uint8_t index,
                                    const uint8_t *payload, uint8_t len);
 
-void configure_imd_params(void);
+void configure_imd_params(IMD_Config_Profile prof);
 void configure_imd_cyclic(void);
 
 /* -----------------------------------------------------------------------
