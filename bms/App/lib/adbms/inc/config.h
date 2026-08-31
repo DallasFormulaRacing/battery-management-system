@@ -36,6 +36,9 @@ typedef struct {
   const float overvoltage_threshold_v;
   const float undervoltage_threshold_v;
 
+  const float overtemp_threshold_c;
+  const float undertemp_threshold_c;
+
   const uint32_t openwire_cell_threshold_mv;
   const uint32_t openwire_aux_threshold_mv;
 
@@ -72,6 +75,7 @@ extern adc_config_t g_cell_open_wire_check_profile;
 extern adc_config_t g_cell_force_sync_s_adc;
 extern voltage_config_t g_voltage_cfg;
 extern measurement_config_t g_meas_cfg;
+extern const uint32_t g_cell_balance_pwm_ms;
 
 #endif
 

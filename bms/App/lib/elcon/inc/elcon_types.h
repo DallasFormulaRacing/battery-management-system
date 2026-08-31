@@ -15,10 +15,12 @@ typedef struct {
 typedef struct {
   uint16_t max_voltage;
   uint16_t max_current;
-  uint8_t enable;
+  uint8_t charge_disable; /* 0 = charging on, 1 = charging off */
   elcon_status_t heartbeat_msg;
+  uint32_t heartbeat_tick;
 } elcon_internal_t;
 
 extern elcon_internal_t hard_stop;
+extern elcon_internal_t g_elcon;
 
 #endif

@@ -12,6 +12,6 @@ typedef struct {
 
 extern resource_hogs_t stack_stats;
 
-void find_biggest_hog();
+void find_biggest_hog(void);
 
 #endif

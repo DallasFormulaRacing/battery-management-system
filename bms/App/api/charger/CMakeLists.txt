@@ -11,4 +11,5 @@ target_link_libraries(charger
         cb
         segment
         elcon
+        bms
 )

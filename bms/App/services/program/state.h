@@ -15,18 +15,20 @@
 const extern osMutexAttr_t spi_mutex_attr;
 const extern osMutexAttr_t bms_mutex_attr;
 
-void bms_sm_init(bms_handler_t *hbms);
-void bms_sm_run(bms_handler_t *hbms);
+extern osEventFlagsId_t charging_session_active_osEventFlags;
+extern const osEventFlagsAttr_t charging_session_active_event_attr;
+void bms_fsm_init(bms_handler_t *hbms);
+void bms_fsm_run(bms_handler_t *hbms);
+
+void charging_session_enable(void);
+void charging_session_disable(void);
+void charging_session_kick_wdt(void);
 
 void bms_state_entry(bms_handler_t *hbms);
 void bms_state_init(bms_handler_t *hbms);
-void bms_state_transmit_data(bms_handler_t *hbms);
 void bms_state_measure(bms_handler_t *hbms);
 void bms_state_charging(bms_handler_t *hbms);
-void bms_state_balancing(bms_handler_t *hbms);
 void bms_state_fault(bms_handler_t *hbms);
-void bms_state_sleep(bms_handler_t *hbms);
 
-void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state);
-bool bms_check_for_fault(bms_handler_t *hbms);
+void bms_fsm_transition(bms_handler_t *hbms, bms_state_t new_state);
 #endif

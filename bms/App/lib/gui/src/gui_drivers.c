@@ -1,6 +1,8 @@
 #include "gui_drivers.h"
 #include "cb.h"
 #include "config.h"
+#include "state.h"
+#include "supervisor.h"
 
 static void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                         can_command_id_t resp_id);
@@ -8,6 +10,7 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id);
 static void send_metadata_frame(can_command_id_t resp_id);
 
+extern osMutexId_t bms_mutex_id;
 /*
  * NON-RTOS IMPL
  */
@@ -33,57 +36,83 @@ static void send_metadata_frame(can_command_id_t resp_id);
 /*
  * @brief uses can frame id to perform command
  * @param ext_id: can frame id to branch off of
- * @param data: buffer with any data given along with the command (unused for
- * now)
+ * @param data: payload bytes
+ * @param len: payload length from DLC
  * @return none
  */
-void gui_process_can_command(uint32_t ext_id, uint8_t *data) {
+void gui_process_can_command(uint32_t ext_id, const uint8_t *data,
+                             uint8_t len) {
   // redundant checks for header id
   if (!can_id_is_valid(ext_id)) {
     send_can_error(ERROR_ID_INVALID_ID);
     return;
   }
-  if (can_id_get_target(ext_id) != BMS_DEVICE_ID) {
+  if (can_id_get_target(ext_id) != NODE_BMS) {
     send_can_error(ERROR_ID_INVALID_TARGET);
     return;
   }
 
+  osMutexAcquire(bms_mutex_id, osWaitForever);
   switch (can_id_get_cmd(ext_id)) {
-  case CMD_ID_FIRST_24_CELLS:
-    send_filtered_voltage_frame(0, 2, CMD_ID_FIRST_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_1:
+    send_filtered_voltage_frame(0, 2, BMS_CELL_VOLTAGES_PACK_1);
     break;
-  case CMD_ID_SECOND_24_CELLS:
-    send_filtered_voltage_frame(2, 4, CMD_ID_SECOND_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_2:
+    send_filtered_voltage_frame(2, 4, BMS_CELL_VOLTAGES_PACK_2);
     break;
-  case CMD_ID_THIRD_24_CELLS:
-    send_filtered_voltage_frame(4, 6, CMD_ID_THIRD_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_3:
+    send_filtered_voltage_frame(4, 6, BMS_CELL_VOLTAGES_PACK_3);
     break;
-  case CMD_ID_FOURTH_24_CELLS:
-    send_filtered_voltage_frame(6, 8, CMD_ID_FOURTH_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_4:
+    send_filtered_voltage_frame(6, 8, BMS_CELL_VOLTAGES_PACK_4);
     break;
-  case CMD_ID_FIFTH_24_CELLS:
-    send_filtered_voltage_frame(8, 10, CMD_ID_FIFTH_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_5:
+    send_filtered_voltage_frame(8, 10, BMS_CELL_VOLTAGES_PACK_5);
     break;
-  case CMD_ID_SIXTH_24_CELLS:
-    send_filtered_voltage_frame(10, 12, CMD_ID_SIXTH_24_CELLS);
+  case BMS_CELL_VOLTAGES_PACK_6:
+    send_filtered_voltage_frame(10, 12, BMS_CELL_VOLTAGES_PACK_6);
     break;
-  case CMD_ID_FIRST_60_TEMPS:
-    // technically means seg [0,6)
-    send_therm_temp_frame(0, 6, CMD_ID_FIRST_60_TEMPS);
+  case BMS_SEGMENT_TEMPS_HALF_1:
+    /* First 3 packs: 20 therms/pack × 3 = 60 (ICs [0, 6)) */
+    send_therm_temp_frame(0, 6, BMS_SEGMENT_TEMPS_HALF_1);
     break;
-  case CMD_ID_LAST_60_TEMPS:
-    // technically means seg [6,12)
-    send_therm_temp_frame(6, 12, CMD_ID_LAST_60_TEMPS);
+  case BMS_SEGMENT_TEMPS_HALF_2:
+    /* Last 3 packs: ICs [6, 12) */
+    send_therm_temp_frame(6, 12, BMS_SEGMENT_TEMPS_HALF_2);
     break;
-  case CMD_ID_PACK_METADATA:
-    send_metadata_frame(CMD_ID_PACK_METADATA);
+  case BMS_BATTERY_PACK_DATA:
+    send_metadata_frame(BMS_BATTERY_PACK_DATA);
     break;
-  case CMD_ID_IMD_DATA:
+  case BMS_IMD_DATA:
+    /* TODO: implement */
+    break;
+  case BMS_GUI_CHARGING_REQUEST: {
+    if (data == NULL || len < 4U) {
+      send_can_error(ERROR_ID_INVALID_CMD);
+      break;
+    }
+    uint16_t rx_volts = (uint16_t)((data[0] << 8) | data[1]);
+    uint16_t rx_amps = (uint16_t)((data[2] << 8) | data[3]);
+    charger_update_requested_setpoints(rx_volts, rx_amps);
+    charging_session_kick_wdt();
+    break;
+  }
+
+  case BMS_GUI_CONNECT:
+    charging_session_enable();
+    break;
+  case BMS_GUI_DISCONNECT:
+    charging_session_disable();
+    break;
+  case BMS_GUI_CHARGING_SOFTSTOP:
+    charging_session_disable();
     break;
   default:
     send_can_error(ERROR_ID_INVALID_CMD);
+    osMutexRelease(bms_mutex_id);
     return;
   }
+  osMutexRelease(bms_mutex_id);
 }
 
 /*
@@ -98,13 +127,20 @@ void send_filtered_voltage_frame(uint8_t start_ic, uint8_t end_ic,
                                  can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
+  if (end_ic > NUM_IC_COUNT_CHAIN) {
+    end_ic = NUM_IC_COUNT_CHAIN;
+  }
+  if (start_ic >= end_ic) {
+    start_ic = end_ic;
+  }
+
   // build data function call with first 24 cell configured in parameters
-  uint8_t tx_frame[48];
+  uint8_t tx_frame[48] = {0};
   cell_voltage_readings(asic_array, start_ic, end_ic, tx_frame);
 
   // send can frame with first_24_cells as command id
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
-                                        (uint16_t)resp_id, BMS_DEVICE_ID);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_48);
 }
 
@@ -120,11 +156,18 @@ static void send_therm_temp_frame(uint8_t start_ic, uint8_t end_ic,
                                   can_command_id_t resp_id) {
   cell_asic_ctx_t *asic_array = hbms.asic;
 
+  if (end_ic > NUM_IC_COUNT_CHAIN) {
+    end_ic = NUM_IC_COUNT_CHAIN;
+  }
+  if (start_ic >= end_ic) {
+    start_ic = end_ic;
+  }
+
   uint8_t tx_frame[64] = {0}; // since first 4 bytes are 0
   therm_temp_readings(asic_array, start_ic, end_ic, tx_frame);
 
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
-                                        (uint16_t)resp_id, BMS_DEVICE_ID);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_64);
 }
 
@@ -138,10 +181,13 @@ void send_metadata_frame(can_command_id_t resp_id) {
   pack_data_t *pack_data = hbms.pack;
   pcb_ctx_t *pcb = hbms.pcb;
   uint8_t tx_frame[24] = {0};
-  metadata_readings(pack_data, pcb, tx_frame);
 
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
-                                        (uint16_t)resp_id, BMS_DEVICE_ID);
+  if (pack_data != NULL) {
+    metadata_readings(pack_data, pcb, tx_frame);
+  }
+
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)resp_id, NODE_BMS);
   fdcan_send(tx_header, tx_frame, FDCAN_DLC_BYTES_24);
 }
 
@@ -152,8 +198,8 @@ void send_metadata_frame(can_command_id_t resp_id) {
  */
 void send_can_error(can_error_id_t error_id) {
   uint8_t tx_frame = 0;
-  can_ext_id_t tx_header = can_id_build(CAN_PRIORITY_P0, GUI_DEVICE_ID,
-                                        (uint16_t)error_id, BMS_DEVICE_ID);
+  can_ext_id_t tx_header =
+      can_id_build(CAN_PRIORITY_P0, NODE_RASPI, (uint16_t)error_id, NODE_BMS);
   fdcan_send(tx_header, &tx_frame, FDCAN_DLC_BYTES_0);
 }
 
@@ -173,7 +219,7 @@ void cell_voltage_readings(cell_asic_ctx_t *asic, uint8_t start_ic,
   uint8_t cell_counter = 0;
   for (uint8_t ic = start_ic; ic < end_ic; ic++) {
     // grab cell reading from asic array
-    for (uint8_t cell_idx = 0; cell_idx < ADBMS_NUM_CELLS_PER_IC; cell_idx++) {
+    for (uint8_t cell_idx = 0; cell_idx < NUM_CELLS_PER_SEGMENT; cell_idx++) {
       int16_t voltage = asic[ic].filt_cell.filt_cell_voltages_array[cell_idx];
 
       // convert 16 bit signed uint8_t into 2 bytes, big endian

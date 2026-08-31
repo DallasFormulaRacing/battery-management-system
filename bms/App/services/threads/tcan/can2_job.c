@@ -47,38 +47,38 @@ static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
 
   switch (msg->id) {
   case PLACEHOLDER_CURRENT_SENSOR_CAN_ID:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_CURRENT_SENSOR, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_CURRENT_SENSOR, NODE_BMS);
     break;
   case IMD_CAN_ID_REQUEST:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_REQUEST, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_REQUEST, NODE_BMS);
     break;
   case IMD_CAN_ID_RESPONSE:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_RESPONSE, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_RESPONSE, NODE_BMS);
     break;
   case IMD_CAN_ID_GENERAL:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_GENERAL, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_GENERAL, NODE_BMS);
     break;
   case IMD_CAN_ID_ISO_DETAIL:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_ISO_DETAIL, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_ISO_DETAIL, NODE_BMS);
     break;
   case IMD_CAN_ID_VOLTAGE:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_VOLTAGE, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_VOLTAGE, NODE_BMS);
     break;
   case IMD_CAN_ID_IT_SYSTEM:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, GUI_DEVICE_ID,
-                                     DFR_CAN_BMS_IMD_IT_SYSTEM, BMS_DEVICE_ID);
+    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
+                                     BMS_IMD_IT_SYSTEM, NODE_BMS);
     break;
   default:
-    break;
+    // Unmapped (e.g. Elcon heartbeat) — do not emit extended ID 0 on GUI bus
+    return HAL_BUSY;
   }
 
-  // todo map can ids to dfr
   return fdcan_send(header.Identifier, msg->data, header.DataLength);
 }
 
@@ -99,9 +99,10 @@ static void process_can2_protocols(const can2_msg_t *msg) {
 static void handle_forwarding(const can2_msg_t *msg) {
   g_can2_forwarding_stats.rx_total++;
 
-  if (forward_can2_to_fdvcan(msg) == HAL_OK) {
+  const HAL_StatusTypeDef st = forward_can2_to_fdvcan(msg);
+  if (st == HAL_OK) {
     g_can2_forwarding_stats.forwarded_total++;
-  } else {
+  } else if (st != HAL_BUSY) {
     g_can2_forwarding_stats.forward_drop_total++;
   }
 }

@@ -14,6 +14,5 @@ target_link_libraries(api_layer INTERFACE
     eeprom 
     interface 
     isolation
-
     segment
 )
