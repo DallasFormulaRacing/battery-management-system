@@ -275,7 +275,7 @@ void send_dummy_voltage_task(void *argument){
     HAL_FDCAN_GetProtocolStatus(&hfdcan2, &psr);
     HAL_FDCAN_GetErrorCounters(&hfdcan2, &ecr);
     if (psr.BusOff) {
-      CLEAR_BIT(FDCAN2->CCCR, FDCAN_CCCR_INIT);   /* starts 128×11 recessive recovery */
+      CLEAR_BIT(FDCAN2->CCCR, FDCAN_CCCR_INIT);   /* starts 128x11 recessive recovery */
     }
     osDelay(500);
   }
@@ -411,7 +411,7 @@ static void MX_FDCAN1_Init(void)
 
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
-  hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV4;
+  hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
   hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
@@ -454,17 +454,17 @@ static void MX_FDCAN2_Init(void)
 
   /* USER CODE END FDCAN2_Init 1 */
   hfdcan2.Instance = FDCAN2;
-  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV2;
+  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
   hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_BRS;
   hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = 8;
+  hfdcan2.Init.NominalPrescaler = 2;          // -> 1mbps nominal
   hfdcan2.Init.NominalSyncJumpWidth = 6;
   hfdcan2.Init.NominalTimeSeg1 = 33;
   hfdcan2.Init.NominalTimeSeg2 = 6;
-  hfdcan2.Init.DataPrescaler = 1;
+  hfdcan2.Init.DataPrescaler = 1;             // -> 4mbps data
   hfdcan2.Init.DataSyncJumpWidth = 9;
   hfdcan2.Init.DataTimeSeg1 = 10;
   hfdcan2.Init.DataTimeSeg2 = 9;
