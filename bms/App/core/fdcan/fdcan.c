@@ -6,7 +6,7 @@ static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header) {
   tx_header->IdType = FDCAN_EXTENDED_ID;
   tx_header->TxFrameType = FDCAN_DATA_FRAME;
   tx_header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-  tx_header->BitRateSwitch = FDCAN_BRS_OFF;     // Currently only works with BRS OFF; can work with BRS ON at 250kbps nominal
+  tx_header->BitRateSwitch = FDCAN_BRS_ON;
   tx_header->FDFormat = FDCAN_FD_CAN;
   tx_header->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
   tx_header->MessageMarker = 0;

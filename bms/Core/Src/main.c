@@ -460,14 +460,14 @@ static void MX_FDCAN2_Init(void)
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = 2;          // -> 1mbps nominal
+  hfdcan2.Init.NominalPrescaler = 4;
   hfdcan2.Init.NominalSyncJumpWidth = 6;
   hfdcan2.Init.NominalTimeSeg1 = 33;
   hfdcan2.Init.NominalTimeSeg2 = 6;
-  hfdcan2.Init.DataPrescaler = 1;             // -> 4mbps data
-  hfdcan2.Init.DataSyncJumpWidth = 9;
-  hfdcan2.Init.DataTimeSeg1 = 10;
-  hfdcan2.Init.DataTimeSeg2 = 9;
+  hfdcan2.Init.DataPrescaler = 2;
+  hfdcan2.Init.DataSyncJumpWidth = 4;
+  hfdcan2.Init.DataTimeSeg1 = 14;
+  hfdcan2.Init.DataTimeSeg2 = 5;
   hfdcan2.Init.StdFiltersNbr = 0;
   hfdcan2.Init.ExtFiltersNbr = 2;
   hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
@@ -476,7 +476,6 @@ static void MX_FDCAN2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN FDCAN2_Init 2 */
-
   /* USER CODE END FDCAN2_Init 2 */
 
 }
