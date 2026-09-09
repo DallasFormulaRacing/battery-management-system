@@ -1,42 +1,38 @@
 #include "state.h"
 #include "bms.h"
 #include "cmsis_os2.h"
+#include "supervisor.h"
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
 const osMutexAttr_t bms_mutex_attr = {
     "bms_mutex", osMutexRecursive | osMutexPrioInherit, NULL, 0U};
 
+extern charger_t g_charger;
+const osEventFlagsAttr_t charging_session_active_event_attr = {
+    .name = "charging_session_active",
+};
+osEventFlagsId_t charging_session_active_osEventFlags;
+
 static const state_handler_t state_handlers[] = {
     [BMS_STATE_BOOT] = bms_state_entry,
     [BMS_STATE_INIT] = bms_state_init,
-    [BMS_STATE_TRANSMIT_DATA] = bms_state_transmit_data,
     [BMS_STATE_MEASURE] = bms_state_measure,
     [BMS_STATE_CHARGING] = bms_state_charging,
-    [BMS_STATE_BALANCING] = bms_state_balancing,
     [BMS_STATE_FAULT] = bms_state_fault,
-    [BMS_STATE_SLEEP] = bms_state_sleep,
 };
 
-void bms_sm_init(bms_handler_t *hbms) {
-  hbms->state.current_state = BMS_STATE_BOOT;
-  hbms->state.previous_state = BMS_STATE_BOOT;
-  hbms->state.error_code = BMS_ERR_NONE;
-  hbms->state.state_entry_tick = 0;
-  hbms->state.fault_flags = 0;
+void bms_fsm_init(bms_handler_t *hbms) {
+  charging_fsm_init(&g_charger);
+  init_cell_balancing(hbms->pcb, 67); 
+  // about 10mV (see cb.c)
 }
 
-void bms_sm_run(bms_handler_t *hbms) {
-  if (hbms->state.current_state != BMS_STATE_FAULT &&
-      bms_check_for_fault(hbms)) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
-    return;
-  }
-
+void bms_fsm_run(bms_handler_t *hbms) {
   state_handlers[hbms->state.current_state](hbms);
 }
 
-void bms_sm_transition(bms_handler_t *hbms, bms_state_t new_state) {
+void bms_fsm_transition(bms_handler_t *hbms, bms_state_t new_state) {
   hbms->state.previous_state = hbms->state.current_state;
   hbms->state.current_state = new_state;
   hbms->state.state_entry_tick = osKernelGetTickCount();
@@ -59,7 +55,16 @@ void bms_state_entry(bms_handler_t *hbms) {
   hbms->config->adc = &g_cell_profile;
   hbms->config->voltage = &g_voltage_cfg;
   hbms->config->measurement = &g_meas_cfg;
-  bms_sm_transition(hbms, BMS_STATE_INIT);
+
+  for (int i = 0; i < NUM_IC_COUNT_CHAIN; i++) {
+    hbms->asic[i].ic_count = NUM_IC_COUNT_CHAIN;
+  }
+
+  hbms->state.current_state = BMS_STATE_BOOT;
+  hbms->state.previous_state = BMS_STATE_BOOT;
+  hbms->state.error_code = BMS_ERR_NONE;
+  hbms->state.state_entry_tick = 0;
+  bms_fsm_transition(hbms, BMS_STATE_INIT);
 }
 
 /**
@@ -68,34 +73,17 @@ void bms_state_entry(bms_handler_t *hbms) {
  * @param hbms, bms handler struct
  */
 void bms_state_init(bms_handler_t *hbms) {
-  comm_status_t status = adbms_init_config(hbms->asic);
-
-  if (status != COMM_OK) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
+  if (adbms_init_config(hbms->asic) != COMM_OK ||
+      adbms_start_aux_voltage_measurement(hbms->asic) != COMM_OK ||
+      adbms_clear_all_pwm(hbms->asic) != COMM_OK ||
+      adbms_start_cell_voltage_measurement(hbms->asic) != COMM_OK) {
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
     return;
   }
 
-  bms_sm_transition(hbms, BMS_STATE_MEASURE);
+  bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }
 
-void bms_state_transmit_data(bms_handler_t *hbms) {
-  /*
-  - needs to transmit the following data to the host computer:
-    - all 144 cell voltages
-    - current
-    - pack voltage
-    - all 120 temperature readings
-    - which cells are being balanced
-    - any faults that have occurred
-    - transmit the onboard SoC calculation
-    -
-
-  */
-}
-
-// NOTE
-// bms will not immediately transfer to fault upon bad value,
-// it will finish the current measurement task first.
 void bms_state_measure(bms_handler_t *hbms) {
   /*
   - this state must be able to:
@@ -113,63 +101,115 @@ void bms_state_measure(bms_handler_t *hbms) {
   // adbms_read_aux_open_wire(hbms->asic);
 
   bms_fault_t status = BMS_ERR_NONE;
-  osMutexAcquire(bms_mutex_id, 1000);
-  status = cell_voltage_in_range_check();
-  if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
+  if (osOK == osMutexAcquire(bms_mutex_id, 1000)) {
+    status = cell_voltage_in_range_check();
+    if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = therm_temp_in_range_check();
+    if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = cell_open_wire_check_odd();
+    if (BMS_ERR_CELL_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = cell_open_wire_check_even();
+    if (BMS_ERR_CELL_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    status = therm_open_wire_check();
+    if (BMS_ERR_AUX_OPENWIRE == status) {
+      hbms->state.error_code = status;
+      bms_fsm_transition(hbms, BMS_STATE_FAULT);
+      osMutexRelease(bms_mutex_id);
+      return;
+    }
+
+    osMutexRelease(bms_mutex_id);
   }
 
-  status = therm_temp_in_range_check();
-  if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
+  else { //failed to acquire mutex - why did this happen?
+    hbms->state.error_code = BMS_ERR_TIMEOUT;
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    return;
   }
+  if(BMS_ERR_NONE == status) bms_fsm_transition(hbms, BMS_STATE_CHARGING);
+}
 
-  status = cell_open_wire_check_odd();
-  if (BMS_ERR_CELL_OPENWIRE == status) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
+// ======== CHARGING SESSION ========
+
+#define CHARGING_SESSION_ACTIVE_FLAG (1U)
+
+static uint32_t g_last_run_cmd_tick = 0;
+static const uint32_t CAN_RUN_CMD_TIMEOUT_MS = 3000;
+
+static uint32_t charging_session_get_last_tick(void) {
+  int32_t lock = osKernelLock();
+  uint32_t tick = g_last_run_cmd_tick;
+  (void)osKernelRestoreLock(lock);
+  return tick;
+}
+
+static void charging_session_set_last_tick(uint32_t tick) {
+  int32_t lock = osKernelLock();
+  g_last_run_cmd_tick = tick;
+  (void)osKernelRestoreLock(lock);
+}
+
+void charging_session_enable(void) {
+  /* tick before flag so a concurrent reader never sees active + stale zero tick */
+  charging_session_set_last_tick(osKernelGetTickCount());
+  osEventFlagsSet(charging_session_active_osEventFlags, CHARGING_SESSION_ACTIVE_FLAG);
+}
+
+void charging_session_disable(void) {
+  osEventFlagsClear(charging_session_active_osEventFlags, CHARGING_SESSION_ACTIVE_FLAG);
+}
+
+void charging_session_kick_wdt(void) {
+  uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
+  if ((flags & CHARGING_SESSION_ACTIVE_FLAG) != 0U) {
+    charging_session_set_last_tick(osKernelGetTickCount());
   }
-
-  status = cell_open_wire_check_even();
-  if (BMS_ERR_CELL_OPENWIRE == status) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
-  }
-
-  status = therm_open_wire_check();
-  if (BMS_ERR_AUX_OPENWIRE == status) {
-    bms_sm_transition(hbms, BMS_STATE_FAULT);
-  }
-
-  osMutexRelease(bms_mutex_id);
-
-  bms_sm_transition(hbms, BMS_STATE_TRANSMIT_DATA);
 }
 
 void bms_state_charging(bms_handler_t *hbms) {
-  /*
-  how do we want to handle this state?
+  uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
+  if ((flags & CHARGING_SESSION_ACTIVE_FLAG) == 0U) {
+    bms_fsm_transition(hbms, BMS_STATE_MEASURE);
+    return;
+  }
 
-  we need to interface with the charger here
+  uint32_t elapsed_ms =
+      osKernelGetTickCount() - charging_session_get_last_tick();
+  if (elapsed_ms > CAN_RUN_CMD_TIMEOUT_MS) {
+    charging_session_disable();
+    bms_fsm_transition(hbms, BMS_STATE_MEASURE);
+    return;
+  }
 
-  we need to alternate between charging and measuring states
-  */
-  cell_delta_policy_enforcer(hbms->asic, hbms->pcb);
-  // need to handle errors
-  // todo: handle safety as in check for UV and OV
-  // todo: put this in a loop to stop when no cells need balancing
-
-  bms_sm_transition(hbms, BMS_STATE_MEASURE);
-}
-
-void bms_state_balancing(bms_handler_t *hbms) {
-  /*
-  adbms_start_cell_voltage_measurement(asic_ctx);
-  adbms_read_cell_voltages(asic_ctx);
-
-  --> if bad cell, stop execution and move to fault state
-
-  cell_delta_policy_enforcer;
-
-  */
+  if (charger_supervisor_fsm(&g_charger) != BMS_ERR_NONE) {
+    hbms->state.error_code = BMS_ERR_CHARGING;
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    return;
+  }
 }
 
 void bms_state_fault(bms_handler_t *hbms) {
@@ -184,14 +224,8 @@ void bms_state_fault(bms_handler_t *hbms) {
   // keep monitoring so the we can see wtf is happening
   open_shutdown_circuit();
   hard_fault_disable_openwire_on_profiles();
-  for (;;)
+  for (;;) {
     measure_during_fault();
-}
-
-void bms_state_sleep(bms_handler_t *hbms) {
-  /*
-  idk what this state does
-
-  maybe triggers lpcm?
-  */
+    osDelay(1000);
+  }
 }

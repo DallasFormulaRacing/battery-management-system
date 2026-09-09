@@ -16,6 +16,9 @@
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
+static pack_data_t g_pack;
+static pcb_ctx_t g_pcb;
+
 static bms_cfg_t g_bms_cfg = {
     .adc = &g_cell_profile,
     .voltage = &g_voltage_cfg,
@@ -30,10 +33,10 @@ bms_handler_t hbms = {
             .previous_state = BMS_STATE_BOOT,
             .error_code = BMS_ERR_NONE,
             .state_entry_tick = 0,
-            .fault_flags = 0,
         },
     .asic = asic,
-
+    .pcb = &g_pcb,
+    .pack = &g_pack,
 };
 
 /*
@@ -51,12 +54,13 @@ bms_fault_t therm_temp_in_range_check() {
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
     for (uint16_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
          therm_num++) {
+
+      // converts here
       float temp = thermistor_from_adc(
           hbms.asic[seg_num].aux.aux_voltages_array[therm_num]);
 
       hbms.asic[seg_num].thermistor[therm_num] = temp;
-      // NOTE: we should define max and min temp constant somewhere
-      if (temp > 60.0F) {
+      if (temp > g_voltage_cfg.overtemp_threshold_c) {
         over_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
@@ -64,7 +68,7 @@ bms_fault_t therm_temp_in_range_check() {
         }
       }
 
-      if (temp < -20.0F) {
+      if (temp < g_voltage_cfg.undertemp_threshold_c) {
         under_temp_flag = true;
         if (hbms.asic[seg_num].thermistor_fault_status[therm_num] !=
             OPEN_WIRE_FAULT) {
@@ -80,7 +84,7 @@ bms_fault_t therm_temp_in_range_check() {
     return BMS_ERR_THERM_OVER_TEMP;
   }
   if (under_temp_flag) {
-    return BMS_ERR_THERM_OVER_TEMP;
+    return BMS_ERR_THERM_UNDER_TEMP;
   }
 
   return BMS_ERR_NONE;
@@ -96,8 +100,8 @@ bms_fault_t therm_open_wire_check() {
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
       // if voltage is greater than 2.9 V, there is probably an OW or it's
       // really cold
-      if (hbms.asic[seg_num].aux.aux_voltages_array[i] >
-          g_voltage_cfg.openwire_aux_threshold_mv) {
+      float aux_v = convert_voltage_human_readable(hbms.asic[seg_num].aux.aux_voltages_array[i]);
+      if (aux_v * 1000.0F > (float)g_voltage_cfg.openwire_aux_threshold_mv) {
         hbms.asic[seg_num].thermistor_fault_status[i] = OPEN_WIRE_FAULT;
         open_wire_flag = true;
       }
@@ -288,10 +292,16 @@ void cell_open_wire_test() {
   force_sync_s_adc();
 }
 
+GPIO_TypeDef *SHUTDOWN_GPIO_Port = GPIOA;
+uint16_t SHUTDOWN_Pin = GPIO_PIN_8;
+
 void open_shutdown_circuit() {
   // todo
   // just a gpio flip
   // check rules
+
+  // nFlt so high = good, low = bad
+  HAL_GPIO_WritePin(SHUTDOWN_GPIO_Port, SHUTDOWN_Pin, GPIO_PIN_RESET);
 }
 
 void bms_test_run() {

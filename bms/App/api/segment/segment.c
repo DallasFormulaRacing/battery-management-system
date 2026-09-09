@@ -327,19 +327,18 @@ comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {
 comm_status_t adbms_set_cell_pwm(cell_asic_ctx_t *asic_ctx, uint8_t cell_number,
                                  uint8_t segment_number,
                                  pwm_duty_cycle_t duty_cycle) {
-  // problem: cell indexing starts at 0, but pwm indexing starts at 1
-  uint8_t pwm_number = cell_number + 1;
-  if (pwm_number <= ADBMS_NUM_PWMA_CHANNELS) {
-    asic_ctx[segment_number].pwm_ctl_a.pwm_a_ctl_array[pwm_number] = duty_cycle;
-  }
-
-  // use the second pwm register if we are at cells 12-15
+  // PWM channel arrays are 0-based s
+  if (cell_number < ADBMS_NUM_PWMA_CHANNELS) {
+    asic_ctx[segment_number].pwm_ctl_a.pwm_a_ctl_array[cell_number] =
+        duty_cycle;
+  } 
+  
   else {
-    assert(pwm_number > ADBMS_NUM_PWMA_CHANNELS &&
-           pwm_number <= (ADBMS_NUM_PWMA_CHANNELS + ADBMS_NUM_PWMB_CHANNELS));
+    assert(cell_number <
+           (ADBMS_NUM_PWMA_CHANNELS + ADBMS_NUM_PWMB_CHANNELS));
 
     asic_ctx[segment_number]
-        .pwm_ctl_b.pwm_b_ctl_array[pwm_number - ADBMS_NUM_PWMA_CHANNELS - 1] =
+        .pwm_ctl_b.pwm_b_ctl_array[cell_number - ADBMS_NUM_PWMA_CHANNELS] =
         duty_cycle;
   }
   return COMM_OK;

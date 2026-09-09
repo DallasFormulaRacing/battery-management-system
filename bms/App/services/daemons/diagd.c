@@ -1,11 +1,14 @@
 #include "diagd.h"
+#include "FreeRTOS.h"
+#include "cmsis_os2.h"
 #include <stdint.h>
 
 resource_hogs_t stack_stats;
 osThreadId_t ids[20];
+volatile size_t g_min_ever_free_heap;
 
 void find_biggest_hog(void) {
-
+  osKernelLock();
   uint32_t count = osThreadGetCount();
 
   if (osThreadEnumerate(ids, 20) > 0) {
@@ -25,4 +28,9 @@ void find_biggest_hog(void) {
       }
     }
   }
+  osKernelUnlock();
+}
+
+void periodic_get_ever_free_heap_size(void) {
+  g_min_ever_free_heap = xPortGetMinimumEverFreeHeapSize();
 }

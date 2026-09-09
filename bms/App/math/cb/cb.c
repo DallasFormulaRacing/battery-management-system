@@ -31,17 +31,17 @@ static pwm_duty_cycle_t normal_delta_map(float delta_v);
 static pwm_duty_cycle_t aggressive_delta_map(float delta_v);
 
 void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
-  uint8_t segment_idx = 0;
   uint8_t battery_idx = 0;
-  for (battery_idx = 0; battery_idx < NUM_CELL_USING; battery_idx++) {
-    for (uint8_t cell_idx = 0; cell_idx < 12; cell_idx++) {
-      pcb->batteries[battery_idx].cell_voltage =
-          asic_ctx[segment_idx].cell.cell_voltages_array[cell_idx];
+
+  for (uint8_t seg = 0; seg < NUM_IC_COUNT_CHAIN; seg++) {
+    for (uint8_t cell = 0; cell < NUM_CELLS_PER_SEGMENT; cell++) {
+      battery_cell_t *bt = &pcb->batteries[battery_idx++];
+      bt->cell_voltage   = asic_ctx[seg].cell.cell_voltages_array[cell];
+      bt->cell_number    = cell;
+      bt->segment_number = seg;
     }
-    segment_idx++;
   }
 }
-
 /**
  * @brief maps a certain cell delta to an appropriate duty cycle (since time is
  * fixed). if saturated (i.e. above a certain value), clamp to 100%. intervals
@@ -54,11 +54,11 @@ void copy_cell_voltages(cell_asic_ctx_t *asic_ctx, pcb_ctx_t *pcb) {
  */
 pwm_duty_cycle_t map_delta_to_pwm_discretize(pcb_ctx_t *pcb,
                                              voltage_readings_t delta) {
-  float delta_v = convert_voltage_human_readable(delta);
+  float delta_v = (float)delta * 0.000150F;
 
   // if within OK margin of error, dont balance at all
   if (delta_v <=
-      convert_voltage_human_readable(pcb->config.maximum_cell_delta_allowed))
+      (float)pcb->config.maximum_cell_delta_allowed * 0.000150F)
     return PWM_0_0_PERCENT_DUTY_CYCLE;
 
   // else map

@@ -4,17 +4,17 @@ import time
 import random
 import fixedInt
 
-# needs to be extended
-CMD_ID_FIRST_24_CELLS = 0x00A0
-CMD_ID_SECOND_24_CELLS = 0x00A1
-CMD_ID_THIRD_24_CELLS = 0x00A2
-CMD_ID_FOURTH_24_CELLS = 0x00A3
-CMD_ID_FIFTH_24_CELLS = 0x00A4
-CMD_ID_SIXTH_24_CELLS = 0x00A5
-CMD_ID_FIRST_60_TEMPS = 0x00B0
-CMD_ID_LAST_60_TEMPS = 0x00B1
-CMD_ID_PACK_METADATA = 0x00C0
-CMD_ID_IMD_DATA = 0x00D0
+# DFR CAN Standard — BMS GUI Application Commands
+BMS_BATTERY_PACK_DATA = 0xB000
+BMS_CELL_VOLTAGES_PACK_1 = 0xB101
+BMS_CELL_VOLTAGES_PACK_2 = 0xB102
+BMS_CELL_VOLTAGES_PACK_3 = 0xB103
+BMS_CELL_VOLTAGES_PACK_4 = 0xB104
+BMS_CELL_VOLTAGES_PACK_5 = 0xB105
+BMS_CELL_VOLTAGES_PACK_6 = 0xB106
+BMS_SEGMENT_TEMPS_HALF_1 = 0xB111
+BMS_SEGMENT_TEMPS_HALF_2 = 0xB112
+BMS_IMD_DATA = 0xBA01
 
 bus = can.interface.Bus(channel='vcan0', bustype='socketcan')
 # arb_ids_list = [0x123, 0x124, 0x125, 0x126]
@@ -22,15 +22,15 @@ bus = can.interface.Bus(channel='vcan0', bustype='socketcan')
 
 
 while True:
-    send(generate_fake_cell_frame(), CMD_ID_FIRST_24_CELLS)
-    send(generate_fake_cell_frame(), CMD_ID_SECOND_24_CELLS)
-    send(generate_fake_cell_frame(), CMD_ID_THIRD_24_CELLS)
-    send(generate_fake_cell_frame(), CMD_ID_FOURTH_24_CELLS)
-    send(generate_fake_cell_frame(), CMD_ID_FIFTH_24_CELLS)
-    send(generate_fake_cell_frame(), CMD_ID_SIXTH_24_CELLS)
-    send(generate_fake_temp_frame(), CMD_ID_FIRST_60_TEMPS)
-    send(generate_fake_temp_frame(), CMD_ID_LAST_60_TEMPS)
-    send(generate_fake_pack_frame(), CMD_ID_PACK_METADATA)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_1)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_2)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_3)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_4)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_5)
+    send(generate_fake_cell_frame(), BMS_CELL_VOLTAGES_PACK_6)
+    send(generate_fake_temp_frame(), BMS_SEGMENT_TEMPS_HALF_1)
+    send(generate_fake_temp_frame(), BMS_SEGMENT_TEMPS_HALF_2)
+    send(generate_fake_pack_frame(), BMS_BATTERY_PACK_DATA)
     
 
 def send(data_in, CAN_ID):
