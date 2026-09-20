@@ -4,6 +4,7 @@
 #include "elcon_comms.h"
 #include "fdcan.h"
 #include "gui_types.h"
+#include "cab_drivers.h"
 #include "imd_drivers.h"
 #include "imd_types.h"
 #include "stm32g474xx.h"
@@ -91,9 +92,9 @@ static void process_can2_protocols(const can2_msg_t *msg) {
     elcon_handle_heartbeat(msg);
   }
 
-  // if (msg->id == CAB_CAN_ID_REQUEST 1) {
-  //   parse_current_sensor_msg(msg.id, msg.data);
-  // }
+  if (msg->id == CAB_ID) {
+     process_cab_message(msg->data);
+   }
 }
 
 static void handle_forwarding(const can2_msg_t *msg) {
