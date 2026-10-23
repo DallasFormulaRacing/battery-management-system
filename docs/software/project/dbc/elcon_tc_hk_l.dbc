@@ -1,0 +1,117 @@
+VERSION "ELCON_TC_HK_L_PROTOCOL_1000"
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: BMS ELCON_CHARGER
+
+VAL_TABLE_ ELCON_Control 1 "Stop charging (battery protection)" 0 "Start charging" ;
+VAL_TABLE_ ELCON_Fault 1 "Fault" 0 "Normal" ;
+VAL_TABLE_ ELCON_CurrentDirection 1 "Discharging" 0 "Charging" ;
+
+
+BO_ 2550588916 BMS_ChargerRequest: 8 BMS
+ SG_ BMS_MaxChargeVoltage : 7|16@0+ (0.1,0) [0|6553.5] "V" ELCON_CHARGER
+ SG_ BMS_MaxChargeCurrent : 23|16@0+ (0.1,0) [0|6553.5] "A" ELCON_CHARGER
+ SG_ BMS_ChargeControl : 39|8@0+ (1,0) [0|1] "" ELCON_CHARGER
+ SG_ BMS_Reserved : 47|24@0+ (1,0) [0|0] "" ELCON_CHARGER
+
+BO_ 2566869221 ELCON_ChargerStatus: 8 ELCON_CHARGER
+ SG_ ELCON_OutputVoltage : 7|16@0+ (0.1,0) [0|6553.5] "V" BMS
+ SG_ ELCON_CurrentDirection : 23|1@0+ (1,0) [0|1] "" BMS
+ SG_ ELCON_OutputCurrent : 22|15@0+ (0.1,0) [0|3276.7] "A" BMS
+ SG_ ELCON_HardwareFailure : 32|1@1+ (1,0) [0|1] "" BMS
+ SG_ ELCON_OverTemperature : 33|1@1+ (1,0) [0|1] "" BMS
+ SG_ ELCON_InputVoltageFault : 34|1@1+ (1,0) [0|1] "" BMS
+ SG_ ELCON_BatteryNotConnected : 35|1@1+ (1,0) [0|1] "" BMS
+ SG_ ELCON_CommTimeout : 36|1@1+ (1,0) [0|1] "" BMS
+ SG_ ELCON_StatusReserved : 37|3@1+ (1,0) [0|0] "" BMS
+ SG_ ELCON_Reserved : 47|24@0+ (1,0) [0|0] "" BMS
+
+
+
+CM_ "Elcon TC HK-L series 6.6 kW on-board charger (HK-LF-108-60 / 144-46 / 312-20 / 540-14), Elcon standard CAN protocol No. 1000. Classic CAN 2.0B, 29-bit extended identifiers, DLC 8, all multi-byte values big-endian (Motorola, high byte first). BUS SPEED: 500 kbit/s. The datasheet states 250 kbit/s but our charger is configured for 500 kbit/s; the datasheet value is wrong for this unit. The charger has no internal CAN termination. Control mode: the BMS must send BMS_ChargerRequest every 1 s; if the charger receives no request for 5 s it raises ELCON_CommTimeout and stops output. The charger broadcasts ELCON_ChargerStatus every 1 s. IDs follow J1939 layout: request PGN 0x0600 from SA 0xF4 (BMS) to DA 0xE5 (charger); status PGN 0xFF50 broadcast from SA 0xE5. Charger signal connector Molex 348302001: pin 11 CANH, pin 12 CANL, pin 17 GND.";
+CM_ BU_ BMS "Battery management system (DFR EV27 BMS). Transmits the charge request on FDCAN1 at 500 kbit/s.";
+CM_ BU_ ELCON_CHARGER "Elcon TC HK-L 6.6 kW charger, J1939 source address 0xE5.";
+CM_ BO_ 2550588916 "Message 1, BMS to charger, 0x1806E5F4. Operating setpoints and start/stop command. Send every 1000 ms; the charger regulates CV/CC to these limits and stops after 5 s without this frame. BMS firmware limits requests to the pack limits (600 V / 10 A) and clamps to the charger rating (680 V / 14 A), see bms/App/config/bms_limits.h.";
+CM_ SG_ 2550588916 BMS_MaxChargeVoltage "Max allowable charging terminal voltage (CV setpoint). Bytes 1-2, high byte first, 0.1 V/bit, offset 0. Example: raw 3201 = 320.1 V. Usable range depends on model, e.g. HK-LF-540-14 is 350-680 V.";
+CM_ SG_ 2550588916 BMS_MaxChargeCurrent "Max allowable charging current (CC setpoint). Bytes 3-4, high byte first, 0.1 A/bit, offset 0. Example: raw 582 = 58.2 A. Model maximum is 14 A for HK-LF-540-14.";
+CM_ SG_ 2550588916 BMS_ChargeControl "Byte 5. 0 = start charging, 1 = battery protection, stop charging. The BMS sends 1 with 0 V / 0 A whenever it is not actively requesting power.";
+CM_ SG_ 2550588916 BMS_Reserved "Bytes 6-8 reserved, transmit as 0.";
+CM_ BO_ 2566869221 "Message 2, charger to BMS/display broadcast, 0x18FF50E5. Measured output and status, every 1000 ms. The datasheet labels bytes 1-4 'Max Allowable Charging Voltage/Current' but they carry the present output (Vout/Iout).";
+CM_ SG_ 2566869221 ELCON_OutputVoltage "Present output voltage. Bytes 1-2, high byte first, 0.1 V/bit, offset 0. Example: raw 3201 = 320.1 V.";
+CM_ SG_ 2566869221 ELCON_CurrentDirection "Highest bit of the output current word (byte 3 bit 7). 0 = charging, 1 = discharging.";
+CM_ SG_ 2566869221 ELCON_OutputCurrent "Present output current magnitude. Lower 15 bits of bytes 3-4, high byte first, 0.1 A/bit, offset 0. Example: raw 582 = 58.2 A. Direction is in ELCON_CurrentDirection.";
+CM_ SG_ 2566869221 ELCON_HardwareFailure "Status bit 0. 0 = normal, 1 = hardware failure.";
+CM_ SG_ 2566869221 ELCON_OverTemperature "Status bit 1. 0 = normal, 1 = over-temperature protection (derates from 85 C, off at 90 C internal, auto-recovers).";
+CM_ SG_ 2566869221 ELCON_InputVoltageFault "Status bit 2. 0 = AC input voltage normal, 1 = input voltage wrong (outside about 85-270 VAC), charger stops working.";
+CM_ SG_ 2566869221 ELCON_BatteryNotConnected "Status bit 3 ('starting state'). 0 = battery connected normally, 1 = battery not connected or connected in reverse.";
+CM_ SG_ 2566869221 ELCON_CommTimeout "Status bit 4. 0 = communication normal, 1 = charger has not received BMS_ChargerRequest within the timeout (5 s) and has stopped output.";
+CM_ SG_ 2566869221 ELCON_StatusReserved "Status bits 5-7, undefined.";
+CM_ SG_ 2566869221 ELCON_Reserved "Bytes 6-8 reserved.";
+
+BA_DEF_  "BusType" STRING ;
+BA_DEF_  "Baudrate" INT 0 1000000;
+BA_DEF_  "DBName" STRING ;
+BA_DEF_ BO_  "GenMsgCycleTime" INT 0 65535;
+BA_DEF_ BO_  "GenMsgSendType" ENUM  "Cyclic","Spontaneous","IfActive","NoMsgSendType";
+BA_DEF_ BO_  "VFrameFormat" ENUM  "StandardCAN","ExtendedCAN","reserved","J1939PG","StandardCAN_FD","ExtendedCAN_FD";
+BA_DEF_ SG_  "GenSigStartValue" INT 0 65535;
+BA_DEF_ BU_  "NodeLayerModules" STRING ;
+BA_DEF_DEF_  "BusType" "CAN";
+BA_DEF_DEF_  "Baudrate" 500000;
+BA_DEF_DEF_  "DBName" "";
+BA_DEF_DEF_  "GenMsgCycleTime" 0;
+BA_DEF_DEF_  "GenMsgSendType" "Cyclic";
+BA_DEF_DEF_  "VFrameFormat" "ExtendedCAN";
+BA_DEF_DEF_  "GenSigStartValue" 0;
+BA_DEF_DEF_  "NodeLayerModules" "";
+BA_ "BusType" "CAN";
+BA_ "Baudrate" 500000;
+BA_ "DBName" "ELCON_TC_HK_L";
+BA_ "GenMsgCycleTime" BO_ 2550588916 1000;
+BA_ "GenMsgSendType" BO_ 2550588916 0;
+BA_ "VFrameFormat" BO_ 2550588916 1;
+BA_ "GenMsgCycleTime" BO_ 2566869221 1000;
+BA_ "GenMsgSendType" BO_ 2566869221 0;
+BA_ "VFrameFormat" BO_ 2566869221 1;
+BA_ "GenSigStartValue" SG_ 2550588916 BMS_ChargeControl 1;
+
+VAL_ 2550588916 BMS_ChargeControl 1 "Stop charging (battery protection)" 0 "Start charging" ;
+VAL_ 2566869221 ELCON_CurrentDirection 1 "Discharging" 0 "Charging" ;
+VAL_ 2566869221 ELCON_HardwareFailure 1 "Hardware failure" 0 "Normal" ;
+VAL_ 2566869221 ELCON_OverTemperature 1 "Over temperature protection" 0 "Normal" ;
+VAL_ 2566869221 ELCON_InputVoltageFault 1 "Input voltage wrong, charger stopped" 0 "Input voltage normal" ;
+VAL_ 2566869221 ELCON_BatteryNotConnected 1 "Battery not connected or reversed" 0 "Battery connected normally" ;
+VAL_ 2566869221 ELCON_CommTimeout 1 "Communication receive time-out" 0 "Communication normal" ;
+
