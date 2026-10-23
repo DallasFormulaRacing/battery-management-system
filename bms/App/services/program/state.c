@@ -37,8 +37,10 @@ void bms_fsm_transition(bms_handler_t *hbms, bms_state_t new_state) {
   hbms->state.current_state = new_state;
   hbms->state.state_entry_tick = osKernelGetTickCount();
 
-  if (BMS_STATE_FAULT == new_state)
+  if (BMS_STATE_FAULT == new_state) {
     open_shutdown_circuit();
+    charger_supervisor_stop(&g_charger);
+  }
 
   // todo: maybe reset flags here on transition
 }
@@ -193,6 +195,7 @@ void charging_session_kick_wdt(void) {
 void bms_state_charging(bms_handler_t *hbms) {
   uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
   if ((flags & CHARGING_SESSION_ACTIVE_FLAG) == 0U) {
+    charger_supervisor_stop(&g_charger);
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }
@@ -201,6 +204,7 @@ void bms_state_charging(bms_handler_t *hbms) {
       osKernelGetTickCount() - charging_session_get_last_tick();
   if (elapsed_ms > CAN_RUN_CMD_TIMEOUT_MS) {
     charging_session_disable();
+    charger_supervisor_stop(&g_charger);
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
     return;
   }
@@ -228,4 +232,4 @@ void bms_state_fault(bms_handler_t *hbms) {
     measure_during_fault();
     osDelay(1000);
   }
-}
+}

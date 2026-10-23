@@ -18,7 +18,8 @@ typedef enum {
 typedef struct {
   charging_state_t state;
   elcon_internal_t *elcon;
-  uint16_t reported_voltage;
+  bool setpoint_valid; /* GUI sent an in-range setpoint this session */
+  uint16_t reported_voltage; /* charger output readback, whole V / A */
   uint16_t requested_voltage;
   uint16_t reported_current;
   uint16_t requested_current;
@@ -33,9 +34,11 @@ extern osMessageQueueId_t charger_power_setpoint_queueHandle;
 const extern osMessageQueueAttr_t charger_power_setpoint_queue_attributes;
 
 void charger_update_requested_setpoints(uint16_t volts, uint16_t amps);
+bool charger_setpoint_in_range(uint16_t volts, uint16_t amps);
 
 void charging_fsm_init(charger_t *hchg);
 void charging_fsm_transition(charger_t *hchg, charging_state_t new_state);
+void charger_supervisor_stop(charger_t *hchg);
 
 bms_fault_t charger_supervisor_fsm(charger_t *hchg);
 

@@ -7,6 +7,6 @@ add_library(program STATIC
 )
 
 target_include_directories(program PUBLIC .)
-target_link_libraries(program PRIVATE thermal cb adbms charger segment elcon)
+target_link_libraries(program PRIVATE thermal cb adbms charger segment elcon bms_limits)
 
 
