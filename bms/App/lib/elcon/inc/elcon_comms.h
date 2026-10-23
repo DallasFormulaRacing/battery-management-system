@@ -1,7 +1,6 @@
 #ifndef ELCON_COMMS_H
 #define ELCON_COMMS_H
 
-#include "bms_limits.h"
 #include "can.h"
 #include "elcon_types.h"
 
@@ -10,9 +9,7 @@
  * See docs/software/project/elcon_charger.md and
  * docs/software/project/dbc/elcon_tc_hk_l.dbc.
  *
- * The datasheet lists 250 kbit/s but our charger runs at 500 kbit/s, which is
- * what FDCAN1 (the "can2" bus) is configured for in main.c / bms.ioc.
- * Both frames are classic CAN, 29-bit extended IDs, DLC 8, big-endian.
+ * Our charger runs at 500 kbit/s, Classic CAN, 29-bit extended IDs, DLC 8, big-endian.
  */
 #define ELCON_CAN_BITRATE_BPS 500000U
 
@@ -42,8 +39,7 @@
 #define ELCON_STATUS_STARTING_STATE (1U << 3)
 #define ELCON_STATUS_COMM_TIMEOUT (1U << 4)
 
-/* last-line clamp on every outgoing request (whole V / A): the charger's own
- * rating. The pack limits are enforced above this, in the charging supervisor */
+/* hardcoded safety clamps applied to every outgoing request (whole V / A) */
 #define ELCON_CLAMP_MAX_VOLTAGE_V LIMIT_CHARGER_VOLTAGE_MAX_V
 #define ELCON_CLAMP_MAX_CURRENT_A LIMIT_CHARGER_CURRENT_MAX_A
 

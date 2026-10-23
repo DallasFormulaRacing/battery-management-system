@@ -25,7 +25,7 @@ void elcon_send_command(const elcon_internal_t *command_profile) {
   can2_send(&header, elcon_pack_can(command_profile).data);
 }
 
-void elcon_hard_stop(void) { elcon_send_command(&hard_stop); }
+void elcon_hard_stop() { elcon_send_command(&hard_stop); }
 
 /**
  * @brief packs Message 1 (0x1806E5F4)

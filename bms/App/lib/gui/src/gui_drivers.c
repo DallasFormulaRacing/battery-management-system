@@ -92,6 +92,10 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) 
     }
     uint16_t rx_volts = (uint16_t)((data[0] << 8) | data[1]);
     uint16_t rx_amps = (uint16_t)((data[2] << 8) | data[3]);
+    if (!charger_setpoint_in_range(rx_volts, rx_amps)) {
+      send_can_error(ERROR_ID_INVALID_SETPOINT);
+    }
+    /* forwarded either way: an out-of-range setpoint cancels the current one */
     charger_update_requested_setpoints(rx_volts, rx_amps);
     charging_session_kick_wdt();
     break;
@@ -309,4 +313,4 @@ void metadata_readings(pack_data_t *pack, pcb_ctx_t *pcb, uint8_t *data_arr) {
       }
   }
   */
-}
+}

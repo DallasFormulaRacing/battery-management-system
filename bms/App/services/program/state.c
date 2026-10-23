@@ -39,7 +39,7 @@ void bms_fsm_transition(bms_handler_t *hbms, bms_state_t new_state) {
 
   if (BMS_STATE_FAULT == new_state) {
     open_shutdown_circuit();
-    charger_supervisor_stop(&g_charger);
+    charger_supervisor_stop(&g_charger); 
   }
 
   // todo: maybe reset flags here on transition
@@ -232,4 +232,4 @@ void bms_state_fault(bms_handler_t *hbms) {
     measure_during_fault();
     osDelay(1000);
   }
-}
+}
