@@ -11,8 +11,8 @@
 #define U16_FROM_BE(hi, lo) (uint16_t)(((uint16_t)(hi) << 8) | (uint16_t)(lo))
 
 static const elcon_internal_t hard_stop = {
-    .max_voltage = 0,
-    .max_current = 0,
+    .max_voltage_dv = 0,
+    .max_current_da = 0,
     .charge_disable = ELCON_CONTROL_STOP,
 };
 
@@ -42,20 +42,17 @@ can2_msg_t elcon_pack_can(const elcon_internal_t *command_profile) {
   charge_request.len = ELCON_FRAME_DLC;
 
   // hardcoded safety clamps
-  uint16_t volts = (command_profile->max_voltage > ELCON_CLAMP_MAX_VOLTAGE_V)
-                       ? ELCON_CLAMP_MAX_VOLTAGE_V
-                       : command_profile->max_voltage;
-  uint16_t amps = (command_profile->max_current > ELCON_CLAMP_MAX_CURRENT_A)
-                      ? ELCON_CLAMP_MAX_CURRENT_A
-                      : command_profile->max_current;
+  uint16_t max_volt_cmd = (command_profile->max_voltage_dv > ELCON_CLAMP_MAX_VOLTAGE_DV)
+                              ? ELCON_CLAMP_MAX_VOLTAGE_DV
+                              : command_profile->max_voltage_dv;
+  uint16_t max_curr_cmd = (command_profile->max_current_da > ELCON_CLAMP_MAX_CURRENT_DA)
+                              ? ELCON_CLAMP_MAX_CURRENT_DA
+                              : command_profile->max_current_da;
 
   // anything other than an explicit start is a stop
   uint8_t control = (command_profile->charge_disable == ELCON_CONTROL_START)
                         ? ELCON_CONTROL_START
                         : ELCON_CONTROL_STOP;
-
-  uint16_t max_volt_cmd = (uint16_t)(volts * 10U);
-  uint16_t max_curr_cmd = (uint16_t)(amps * 10U);
 
   charge_request.data[0] = U16_TOP_HALF_8B(max_volt_cmd);
   charge_request.data[1] = U16_BOT_HALF_8B(max_volt_cmd);

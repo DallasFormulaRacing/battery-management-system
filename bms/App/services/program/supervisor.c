@@ -32,9 +32,11 @@ const osMessageQueueAttr_t charger_power_setpoint_queue_attributes = {
     .name = "chg_pwr_setpoint",
 };
 
-// params for charging, see bms_limits.h
-static const uint16_t MAX_PACK_CHARGING_VOLTS = LIMIT_PACK_CHARGE_VOLTAGE_MAX_V;
-static const uint16_t MAX_PACK_CHARGING_AMPS = LIMIT_PACK_CHARGE_CURRENT_MAX_A;
+// params for charging, see bms_limits.h. Setpoints are 0.1 V / 0.1 A per bit.
+static const uint16_t MIN_CHARGER_DV = LIMIT_CHARGER_VOLTAGE_MIN_V * 10U;
+static const uint16_t MAX_PACK_CHARGING_DV = LIMIT_PACK_CHARGE_VOLTAGE_MAX_V * 10U;
+static const uint16_t MIN_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MIN_A * 10U;
+static const uint16_t MAX_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MAX_A * 10U;
 static const uint32_t ELCON_HEARTBEAT_STALE_MS = ELCON_COMM_TIMEOUT_MS;
 
 // low level helpers
@@ -60,8 +62,8 @@ static const charging_handler_t chg_state_handlers[] = {
 };
 
 /****************** Queue Overrun Counter ****************/
-void charger_update_requested_setpoints(uint16_t volts, uint16_t amps) {
-  charger_power_setpoint_t new_setpoint = {.voltage = volts, .current = amps};
+void charger_update_requested_setpoints(uint16_t volts_dv, uint16_t amps_da) {
+  charger_power_setpoint_t new_setpoint = {.voltage_dv = volts_dv, .current_da = amps_da};
 
   // Attempt non-blocking push
   osStatus_t status =
@@ -84,10 +86,10 @@ void charging_fsm_init(charger_t *charger_ctx) {
   charger_ctx->elcon->charge_disable = true;
   /* no power is ever requested until the GUI sends an in-range setpoint */
   charger_ctx->setpoint_valid = false;
-  charger_ctx->requested_voltage = 0;
-  charger_ctx->requested_current = 0;
-  charger_ctx->reported_voltage = 0;
-  charger_ctx->reported_current = 0;
+  charger_ctx->requested_voltage_dv = 0;
+  charger_ctx->requested_current_da = 0;
+  charger_ctx->reported_voltage_dv = 0;
+  charger_ctx->reported_current_da = 0;
   clear_charge_command(charger_ctx);
 }
 
@@ -101,17 +103,17 @@ void charging_fsm_transition(charger_t *charger_ctx, charging_state_t new_state)
  * Anything outside the pack limits (bms_limits.h) is rejected outright, never
  * clamped, so a bad frame can't turn into a max-power request.
  */
-bool charger_setpoint_in_range(uint16_t volts, uint16_t amps) {
-  return (volts >= LIMIT_CHARGER_VOLTAGE_MIN_V) &&
-         (volts <= MAX_PACK_CHARGING_VOLTS) &&
-         (amps >= LIMIT_PACK_CHARGE_CURRENT_MIN_A) &&
-         (amps <= MAX_PACK_CHARGING_AMPS);
+bool charger_setpoint_in_range(uint16_t volts_dv, uint16_t amps_da) {
+  return (volts_dv >= MIN_CHARGER_DV) &&
+         (volts_dv <= MAX_PACK_CHARGING_DV) &&
+         (amps_da >= MIN_PACK_CHARGING_DA) &&
+         (amps_da <= MAX_PACK_CHARGING_DA);
 }
 
 static void invalidate_setpoint(charger_t *charger_ctx) {
   charger_ctx->setpoint_valid = false;
-  charger_ctx->requested_voltage = 0;
-  charger_ctx->requested_current = 0;
+  charger_ctx->requested_voltage_dv = 0;
+  charger_ctx->requested_current_da = 0;
 }
 
 /**
@@ -260,10 +262,10 @@ bms_fault_t charger_supervisor_fsm(charger_t *charger_ctx) {
   charger_power_setpoint_t inbound_setpoint;
   osStatus_t status = osMessageQueueGet(charger_power_setpoint_queueHandle, &inbound_setpoint, NULL, 0U);
   if (status == osOK) {
-    if (charger_setpoint_in_range(inbound_setpoint.voltage,
-                                  inbound_setpoint.current)) {
-      charger_ctx->requested_voltage = inbound_setpoint.voltage;
-      charger_ctx->requested_current = inbound_setpoint.current;
+    if (charger_setpoint_in_range(inbound_setpoint.voltage_dv,
+                                  inbound_setpoint.current_da)) {
+      charger_ctx->requested_voltage_dv = inbound_setpoint.voltage_dv;
+      charger_ctx->requested_current_da = inbound_setpoint.current_da;
       charger_ctx->setpoint_valid = true;
     } else {
       /* out of range: drop back to no setpoint, which stops the charger */
@@ -382,25 +384,25 @@ static bool pack_needs_balancing(bool refresh) {
  * Elcon control byte: 0 = charging on, 1 = charging off
  */
 static void update_charge_command(charger_t *charger_ctx) {
-  uint16_t requested_voltage = charger_ctx->requested_voltage;
-  uint16_t requested_current = charger_ctx->requested_current;
+  uint16_t requested_voltage_dv = charger_ctx->requested_voltage_dv;
+  uint16_t requested_current_da = charger_ctx->requested_current_da;
 
   /* never clamp a bad setpoint up to the limits, refuse it */
   if (!charger_ctx->setpoint_valid ||
-      !charger_setpoint_in_range(requested_voltage, requested_current)) {
+      !charger_setpoint_in_range(requested_voltage_dv, requested_current_da)) {
     clear_charge_command(charger_ctx);
     return;
   }
 
-  charger_ctx->elcon->max_voltage = requested_voltage;
-  charger_ctx->elcon->max_current = requested_current;
+  charger_ctx->elcon->max_voltage_dv = requested_voltage_dv;
+  charger_ctx->elcon->max_current_da = requested_current_da;
   charger_ctx->elcon->charge_disable = false;
 
   elcon_send_command(charger_ctx->elcon);
 }
 
 /**
- * @brief copies the charger's output readback into whole volts / amps
+ * @brief copies the charger's output readback (0.1 V / 0.1 A)
  */
 static void update_reported_output(charger_t *charger_ctx) {
   int32_t lock = osKernelLock();
@@ -408,8 +410,8 @@ static void update_reported_output(charger_t *charger_ctx) {
   uint16_t amps_da = charger_ctx->elcon->output_current_da;
   (void)osKernelRestoreLock(lock);
 
-  charger_ctx->reported_voltage = volts_dv / 10U;
-  charger_ctx->reported_current = amps_da / 10U;
+  charger_ctx->reported_voltage_dv = volts_dv;
+  charger_ctx->reported_current_da = amps_da;
 }
 
 static void clear_charge_command(charger_t *charger_ctx) {
@@ -417,8 +419,8 @@ static void clear_charge_command(charger_t *charger_ctx) {
     return;
   }
 
-  charger_ctx->elcon->max_voltage = 0;
-  charger_ctx->elcon->max_current = 0;
+  charger_ctx->elcon->max_voltage_dv = 0;
+  charger_ctx->elcon->max_current_da = 0;
   charger_ctx->elcon->charge_disable = true;
   elcon_send_command(charger_ctx->elcon);
 }

@@ -40,9 +40,9 @@
 #define ELCON_STATUS_STARTING_STATE (1U << 3)
 #define ELCON_STATUS_COMM_TIMEOUT (1U << 4)
 
-/* hardcoded safety clamps applied to every outgoing request (whole V / A) */
-#define ELCON_CLAMP_MAX_VOLTAGE_V LIMIT_CHARGER_VOLTAGE_MAX_V
-#define ELCON_CLAMP_MAX_CURRENT_A LIMIT_CHARGER_CURRENT_MAX_A
+/* hardcoded safety clamps applied to every outgoing request (0.1 V / 0.1 A) */
+#define ELCON_CLAMP_MAX_VOLTAGE_DV (LIMIT_CHARGER_VOLTAGE_MAX_V * 10U)
+#define ELCON_CLAMP_MAX_CURRENT_DA (LIMIT_CHARGER_CURRENT_MAX_A * 10U)
 
 void elcon_send_command(const elcon_internal_t *command_profile);
 

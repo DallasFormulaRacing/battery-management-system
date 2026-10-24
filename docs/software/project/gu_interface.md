@@ -13,7 +13,7 @@ Information pertaining to communication between the host computer GUI and the BM
 | Command | ID field | Payload |
 |---|---|---|
 | `BMS_GUI_CONNECT` | `0xBB01` | none, starts a charging session |
-| `BMS_GUI_CHARGING_REQUEST` | `0xBB02` | bytes 0-1 voltage setpoint in whole volts, bytes 2-3 current setpoint in whole amps, big-endian. Also acts as the session keepalive (3 s timeout) |
+| `BMS_GUI_CHARGING_REQUEST` | `0xBB02` | bytes 0-1 voltage setpoint at 0.1 V/bit, bytes 2-3 current setpoint at 0.1 A/bit, unsigned big-endian (e.g. 595.5 V / 2.5 A = `17 43 00 19`). Also acts as the session keepalive (3 s timeout) |
 | `BMS_GUI_DISCONNECT` | `0xBB03` | none, ends the session |
 | `BMS_GUI_CHARGING_SOFTSTOP` | `0xBBFF` | none, ends the session |
 

@@ -14,9 +14,9 @@ typedef struct {
 } elcon_status_t;
 
 typedef struct {
-  /* outgoing request, whole volts / amps */
-  uint16_t max_voltage;
-  uint16_t max_current;
+  /* outgoing request, same scaling as the CAN frame */
+  uint16_t max_voltage_dv; /* 0.1 V/bit */
+  uint16_t max_current_da; /* 0.1 A/bit */
   uint8_t charge_disable; /* 0 = charging on, 1 = charging off */
 
   /* latest charger broadcast */

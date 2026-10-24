@@ -90,13 +90,14 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) 
       send_can_error(ERROR_ID_INVALID_CMD);
       break;
     }
-    uint16_t rx_volts = (uint16_t)((data[0] << 8) | data[1]);
-    uint16_t rx_amps = (uint16_t)((data[2] << 8) | data[3]);
-    if (!charger_setpoint_in_range(rx_volts, rx_amps)) {
+    /* bytes 0-1 volts, bytes 2-3 amps, both 0.1 per bit, big-endian */
+    uint16_t rx_volts_dv = (uint16_t)((data[0] << 8) | data[1]);
+    uint16_t rx_amps_da = (uint16_t)((data[2] << 8) | data[3]);
+    if (!charger_setpoint_in_range(rx_volts_dv, rx_amps_da)) {
       send_can_error(ERROR_ID_INVALID_SETPOINT);
     }
     /* forwarded either way: an out-of-range setpoint cancels the current one */
-    charger_update_requested_setpoints(rx_volts, rx_amps);
+    charger_update_requested_setpoints(rx_volts_dv, rx_amps_da);
     charging_session_kick_wdt();
     break;
   }
