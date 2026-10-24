@@ -4,9 +4,11 @@
 /*
  * Single source of truth for the BMS hard limits.
  *
- * Only physical limits and absolute maximums live here: what the cells, the
- * pack and the charger can take. Protocol facts (CAN IDs, scaling, status
- * bits, timeouts the device dictates) stay with their driver.
+ * Only physical limits live here: what the cells, the pack and the charger can take.
+ * Only use the LIMITS defined here, as these are the "official" numbers reported in ESF.
+ * Additional constraints from FSAE rules force us to derate our setpoints from the physical limits.
+ *  
+ * Protocol details (CAN IDs, scaling, status bits, timeouts the device dictates) stay with their driver.
  *
  * This header includes nothing on purpose so any layer can use it.
  */
@@ -14,11 +16,30 @@
 /******************** Cell limits ********************/
 
 /* any cell at/above this faults the BMS and counts as "pack full" */
-#define LIMIT_CELL_OVERVOLTAGE_V 4.15F      // Cell is safe up to 4.2 V but that would cause a total pack voltage over 600V.
-#define LIMIT_CELL_UNDERVOLTAGE_V 2.51F
+#define MAX_SAFE_CELL_VOLTAGE_V 4.20F
+#define MIN_SAFE_CELL_VOLTAGE_V 2.50F
+#define BMS_MEAS_VOLTAGE_ACCURACY_V 0.001F // +/- 1mV accuracy on cell voltage measurement
+#define ESF_LEGAL_MAX_CELL_VOLTAGE_V 4.166F // Max allowable cell voltage to keep pack under 600V. (4.166V * 144 cells = 599.9V)
+#define LIMIT_CELL_OVERVOLTAGE_V  (ESF_LEGAL_MAX_CELL_VOLTAGE_V - BMS_MEAS_VOLTAGE_ACCURACY_V) // We must account for worst case voltage accuracy
+#define LIMIT_CELL_UNDERVOLTAGE_V  (MIN_SAFE_CELL_VOLTAGE_V + BMS_MEAS_VOLTAGE_ACCURACY_V)
 
-#define LIMIT_CELL_OVERTEMP_C 60.0F
-#define LIMIT_CELL_UNDERTEMP_C -20.0F
+#define MAX_SAFE_CELL_TEMP_C 60.0F
+#define MIN_SAFE_CELL_TEMP_C -20.0F
+#define BMS_MEAS_THERMISTOR_ACCURACY_DEG_C 1.0F
+#define LIMIT_CELL_OVERTEMP_C  (MAX_SAFE_CELL_TEMP_C - BMS_MEAS_THERMISTOR_ACCURACY_DEG_C) // We must account for worst case thermistor accuracy
+#define LIMIT_CELL_UNDERTEMP_C (MIN_SAFE_CELL_TEMP_C + BMS_MEAS_THERMISTOR_ACCURACY_DEG_C)
+
+#define LIMIT_CELL_DISCHARGE_CURRENT_CONTINUOUS_A 60.0F // For 3P group, 60A per cell 
+// #define LIMIT_CELL_DISCHARGE_CURRENT_PULSE_A 60.0F // Pulse TBD, dep on SoC, Temp, pulse time
+
+#define LIMIT_CELL_CHARGE_CURRENT_FAST_A 25.0F // For 3P group, 25A per cell
+// #define LIMIT_CELL_CHARGE_CURRENT_PULSE_A 25.0F // Pulse TBD, dep on SoC, Temp, pulse time
+
+/******************** Pack limits ********************/
+#define LIMIT_PACK_DISCHARGE_CURRENT_CONTINUOUS_A 180.0F // For 3P group, 60A per cell
+#define LIMIT_PACK_CHARGE_CURRENT_FAST_A 75.0F // For 3P group, 25A per cell
+// #define LIMIT_PACK_CHARGE_CURRENT_PULSE_A 75.0F // For 3P group, TBD per cell
+
 
 /******************** Pack charging limits ********************/
 
