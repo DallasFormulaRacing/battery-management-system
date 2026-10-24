@@ -3,6 +3,7 @@
 
 #include "can.h"
 #include "elcon_types.h"
+#include "bms_limits.h"
 
 /*
  * Elcon TC HK-L 6.6kW charger, standard CAN protocol No. 1000.
