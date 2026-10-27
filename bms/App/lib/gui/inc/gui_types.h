@@ -85,6 +85,7 @@ typedef enum {
   ERROR_ID_INVALID_CMD = 0xBE01,
   ERROR_ID_INVALID_TARGET = 0xBE02,
   ERROR_ID_INVALID_ID = 0xBE03,
+  ERROR_ID_INVALID_SETPOINT = 0xBE04, /* charge setpoint outside bms_limits.h */
 } can_error_id_t;
 
 static inline can_ext_id_t can_id_build(can_priority_t priority,

@@ -1,4 +1,5 @@
 #include "supervisor.h"
+#include "bms_limits.h"
 #include "charger.h"
 #include "cmsis_os2.h"
 #include "config.h"
@@ -31,23 +32,26 @@ const osMessageQueueAttr_t charger_power_setpoint_queue_attributes = {
     .name = "chg_pwr_setpoint",
 };
 
-// params for charging
-static const uint16_t MAX_PACK_CHARGING_VOLTS = 600;
-static const uint16_t MAX_PACK_CHARGING_AMPS = 10;
-static const uint32_t ELCON_HEARTBEAT_STALE_MS = 5000;
+// params for charging, see bms_limits.h. Setpoints are 0.1 V / 0.1 A per bit.
+static const uint16_t MIN_CHARGER_DV = LIMIT_CHARGER_VOLTAGE_MIN_V * 10U;
+static const uint16_t MAX_PACK_CHARGING_DV = LIMIT_PACK_CHARGE_VOLTAGE_MAX_V * 10U;
+static const uint16_t MIN_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MIN_A * 10U;
+static const uint16_t MAX_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MAX_A * 10U;
+static const uint32_t ELCON_HEARTBEAT_STALE_MS = ELCON_COMM_TIMEOUT_MS;
 
 // low level helpers
-static void update_charge_command(charger_t *hchg);
-static void clear_charge_command(charger_t *hchg);
+static void update_charge_command(charger_t *charger_ctx);
+static void clear_charge_command(charger_t *charger_ctx);
+static void update_reported_output(charger_t *charger_ctx);
 
 // high level helpers
 static bool is_pack_full(void);
 static bool is_pack_okay(void);
-static bool is_elcon_ready(charger_t *hchg);
-static bool is_elcon_okay(charger_t *hchg);
+static bool is_elcon_ready(charger_t *charger_ctx);
+static bool is_elcon_okay(charger_t *charger_ctx);
 static bool pack_needs_balancing(bool refresh);
 
-typedef void (*charging_handler_t)(charger_t *hchg);
+typedef void (*charging_handler_t)(charger_t *charger_ctx);
 
 static const charging_handler_t chg_state_handlers[] = {
     [CHARGING_STATE_STANDBY] = charging_state_standby,
@@ -58,8 +62,8 @@ static const charging_handler_t chg_state_handlers[] = {
 };
 
 /****************** Queue Overrun Counter ****************/
-void charger_update_requested_setpoints(uint16_t volts, uint16_t amps) {
-  charger_power_setpoint_t new_setpoint = {.voltage = volts, .current = amps};
+void charger_update_requested_setpoints(uint16_t volts_dv, uint16_t amps_da) {
+  charger_power_setpoint_t new_setpoint = {.voltage_dv = volts_dv, .current_da = amps_da};
 
   // Attempt non-blocking push
   osStatus_t status =
@@ -76,100 +80,150 @@ void charger_update_requested_setpoints(uint16_t volts, uint16_t amps) {
 }
 /**************** CHARGING FSM Helpers ****************/
 
-void charging_fsm_init(charger_t *hchg) {
-  hchg->state = CHARGING_STATE_STANDBY;
-  hchg->elcon = &g_elcon;
-  hchg->elcon->charge_disable = true;
-  hchg->requested_voltage = MAX_PACK_CHARGING_VOLTS;
-  hchg->requested_current = MAX_PACK_CHARGING_AMPS;
-  hchg->reported_voltage = 0;
-  hchg->reported_current = 0;
-  clear_charge_command(hchg);
+void charging_fsm_init(charger_t *charger_ctx) {
+  charger_ctx->state = CHARGING_STATE_STANDBY;
+  charger_ctx->elcon = &g_elcon;
+  charger_ctx->elcon->charge_disable = true;
+  /* no power is ever requested until the GUI sends an in-range setpoint */
+  charger_ctx->setpoint_valid = false;
+  charger_ctx->requested_voltage_dv = 0;
+  charger_ctx->requested_current_da = 0;
+  charger_ctx->reported_voltage_dv = 0;
+  charger_ctx->reported_current_da = 0;
+  clear_charge_command(charger_ctx);
 }
 
-void charging_fsm_transition(charger_t *hchg, charging_state_t new_state) {
-  hchg->state = new_state;
+void charging_fsm_transition(charger_t *charger_ctx, charging_state_t new_state) {
+  charger_ctx->state = new_state;
+}
+
+/**
+ * @brief true when a GUI setpoint is a real, in-range charge request
+ *
+ * Anything outside the pack limits (bms_limits.h) is rejected outright, never
+ * clamped, so a bad frame can't turn into a max-power request.
+ */
+bool charger_setpoint_in_range(uint16_t volts_dv, uint16_t amps_da) {
+  return (volts_dv >= MIN_CHARGER_DV) &&
+         (volts_dv <= MAX_PACK_CHARGING_DV) &&
+         (amps_da >= MIN_PACK_CHARGING_DA) &&
+         (amps_da <= MAX_PACK_CHARGING_DA);
+}
+
+static void invalidate_setpoint(charger_t *charger_ctx) {
+  charger_ctx->setpoint_valid = false;
+  charger_ctx->requested_voltage_dv = 0;
+  charger_ctx->requested_current_da = 0;
+}
+
+/**
+ * @brief stops the charger right away when the BMS leaves the charging state
+ *
+ * Without this the charger keeps running the last request until its own 5 s
+ * comm timeout. A latched fault is kept, anything else goes back to standby so
+ * the next session starts from the top of the sequence.
+ * 
+ * Better to stop the charger immediately and let the next session start fresh than to
+ * let the charger keep running the last request until its own 5 s comm timeout.
+ */
+void charger_supervisor_stop(charger_t *charger_ctx) {
+  if (charger_ctx == NULL || charger_ctx->elcon == NULL) {
+    elcon_hard_stop();
+    return;
+  }
+
+  clear_charge_command(charger_ctx);
+
+  /* the next session has to send its own setpoint */
+  invalidate_setpoint(charger_ctx);
+  if (charger_power_setpoint_queueHandle != NULL) {
+    (void)osMessageQueueReset(charger_power_setpoint_queueHandle);
+  }
+
+  if (charger_ctx->state != CHARGING_STATE_FAULT) {
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_STANDBY);
+  }
 }
 
 /**************** CHARGING FSM State functions ****************/
 
-static inline bool is_okay(charger_t *hchg) {
-  return is_pack_okay() && is_elcon_okay(hchg);
+static inline bool is_okay(charger_t *charger_ctx) {
+  return is_pack_okay() && is_elcon_okay(charger_ctx);
 }
 
-void charging_state_standby(charger_t *hchg) {
+void charging_state_standby(charger_t *charger_ctx) {
   /* charger must stay off while idle */
-  clear_charge_command(hchg);
+  clear_charge_command(charger_ctx);
 
-  if (!is_okay(hchg)) {
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  if (!is_okay(charger_ctx)) {
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_FAULT);
   } 
   
-  else if (is_charging_permitted(hchg)) {
+  else if (is_charging_permitted(charger_ctx)) {
     /* pack/elcon interlocks allow charging */
-    charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_READY2CHARGE);
   }
 }
 
-void charging_state_ready2charge(charger_t *hchg) {
+void charging_state_ready2charge(charger_t *charger_ctx) {
   /* no power request until REQUEST4POWER */
-  clear_charge_command(hchg);
+  clear_charge_command(charger_ctx);
 
-  if (!is_okay(hchg)) {
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+  if (!is_okay(charger_ctx)) {
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_FAULT);
   } 
   
-  else if (!is_charging_permitted(hchg)) {
-    charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
+  else if (!is_charging_permitted(charger_ctx)) {
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_STANDBY);
   } 
   
   else if (pack_needs_balancing(true)) {
     /* cell spread above limit so balance before requesting power */
-    charging_fsm_transition(hchg, CHARGING_STATE_BALANCING);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_BALANCING);
   } 
   
   else {
     /* permitted and balanced so request charger power */
-    charging_fsm_transition(hchg, CHARGING_STATE_REQUEST4POWER);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_REQUEST4POWER);
   }
 }
 
-void charging_state_request4power(charger_t *hchg) {
-  if (!is_okay(hchg)) {
-    clear_charge_command(hchg);
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+void charging_state_request4power(charger_t *charger_ctx) {
+  if (!is_okay(charger_ctx)) {
+    clear_charge_command(charger_ctx);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_FAULT);
   } 
   
-  else if (!is_charging_permitted(hchg)) {
+  else if (!is_charging_permitted(charger_ctx)) {
     /* soft deny so stop charger and wait */
-    clear_charge_command(hchg);
-    charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
+    clear_charge_command(charger_ctx);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_STANDBY);
   } 
   
   else if (pack_needs_balancing(true)) {
     /* imbalance while charging so stop charger and balance */
-    clear_charge_command(hchg);
-    charging_fsm_transition(hchg, CHARGING_STATE_BALANCING);
+    clear_charge_command(charger_ctx);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_BALANCING);
   } 
   
   else {
     /* still permitted and balanced so keep requesting power */
-    update_charge_command(hchg);
+    update_charge_command(charger_ctx);
   }
 }
 
-void charging_state_balancing(charger_t *hchg) {
+void charging_state_balancing(charger_t *charger_ctx) {
   /* charger must stay off while balancing */
-  clear_charge_command(hchg);
+  clear_charge_command(charger_ctx);
 
-  if (!is_okay(hchg) || (hbms.asic == NULL || hbms.pcb == NULL)) {
+  if (!is_okay(charger_ctx) || (hbms.asic == NULL || hbms.pcb == NULL)) {
     /* cannot safely balance without asic/pcb context */
-    charging_fsm_transition(hchg, CHARGING_STATE_FAULT);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_FAULT);
   } 
   
-  else if (!is_charging_permitted(hchg)) {
+  else if (!is_charging_permitted(charger_ctx)) {
     /* soft deny so abort balancing */
-    charging_fsm_transition(hchg, CHARGING_STATE_STANDBY);
+    charging_fsm_transition(charger_ctx, CHARGING_STATE_STANDBY);
   } 
   
   else {
@@ -177,14 +231,14 @@ void charging_state_balancing(charger_t *hchg) {
 
     if (!pack_needs_balancing(true)) {
       /* pack within delta limit so resume charge sequence */
-      charging_fsm_transition(hchg, CHARGING_STATE_READY2CHARGE);
+      charging_fsm_transition(charger_ctx, CHARGING_STATE_READY2CHARGE);
     }
   }
 }
 
-void charging_state_fault(charger_t *hchg) {
+void charging_state_fault(charger_t *charger_ctx) {
   /* charger must stay off in fault */
-  clear_charge_command(hchg);
+  clear_charge_command(charger_ctx);
   // report fault to GUI with CAN message
 }
 
@@ -194,22 +248,31 @@ void charging_state_fault(charger_t *hchg) {
  * @brief periodic charging supervisor task (runs the FSM)
  *
  */
-bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
-  if (hchg == NULL || hchg->elcon == NULL) {
+bms_fault_t charger_supervisor_fsm(charger_t *charger_ctx) {
+  if (charger_ctx == NULL || charger_ctx->elcon == NULL) {
     return BMS_ERR_CHARGING;
   }
 
-  if (CHARGING_STATE_FAULT == hchg->state) {
-    charging_state_fault(hchg);
+  if (CHARGING_STATE_FAULT == charger_ctx->state) {
+    charging_state_fault(charger_ctx);
     return BMS_ERR_CHARGING;
   }
+  update_reported_output(charger_ctx);
+
   charger_power_setpoint_t inbound_setpoint;
   osStatus_t status = osMessageQueueGet(charger_power_setpoint_queueHandle, &inbound_setpoint, NULL, 0U);
   if (status == osOK) {
-    hchg->requested_voltage = inbound_setpoint.voltage;
-    hchg->requested_current = inbound_setpoint.current;
+    if (charger_setpoint_in_range(inbound_setpoint.voltage_dv,
+                                  inbound_setpoint.current_da)) {
+      charger_ctx->requested_voltage_dv = inbound_setpoint.voltage_dv;
+      charger_ctx->requested_current_da = inbound_setpoint.current_da;
+      charger_ctx->setpoint_valid = true;
+    } else {
+      /* out of range: drop back to no setpoint, which stops the charger */
+      invalidate_setpoint(charger_ctx);
+    }
   }
-  chg_state_handlers[hchg->state](hchg);
+  chg_state_handlers[charger_ctx->state](charger_ctx);
   // report internal state will need to happen in the CAN2 job in ISR.
 
   return BMS_ERR_NONE;
@@ -224,10 +287,10 @@ bms_fault_t charger_supervisor_fsm(charger_t *hchg) {
  * @return true if elcon status is fresh and no startup failure
  * @return false otherwise
  */
-static bool is_elcon_ready(charger_t *hchg) {
+static bool is_elcon_ready(charger_t *charger_ctx) {
   int32_t lock = osKernelLock();
-  elcon_status_t status = hchg->elcon->heartbeat_msg;
-  uint32_t tick = hchg->elcon->heartbeat_tick;
+  elcon_status_t status = charger_ctx->elcon->heartbeat_msg;
+  uint32_t tick = charger_ctx->elcon->heartbeat_tick;
   (void)osKernelRestoreLock(lock);
 
   uint32_t age_ms = osKernelGetTickCount() - tick;
@@ -243,9 +306,9 @@ static bool is_elcon_ready(charger_t *hchg) {
  *
  * ignores stale heartbeat, starting_state, and comm_state
  */
-static bool is_elcon_okay(charger_t *hchg) {
+static bool is_elcon_okay(charger_t *charger_ctx) {
   int32_t lock = osKernelLock();
-  elcon_status_t status = hchg->elcon->heartbeat_msg;
+  elcon_status_t status = charger_ctx->elcon->heartbeat_msg;
   (void)osKernelRestoreLock(lock);
 
   return !status.hw && !status.temp && !status.input_voltage;
@@ -316,49 +379,62 @@ static bool pack_needs_balancing(bool refresh) {
 }
 
 /**
- * @brief applies voltage/current caps and enables charging
+ * @brief sends the validated GUI setpoint and enables charging
  *
  * Elcon control byte: 0 = charging on, 1 = charging off
  */
-static void update_charge_command(charger_t *hchg) {
-  uint16_t requested_voltage = hchg->requested_voltage;
-  uint16_t requested_current = hchg->requested_current;
+static void update_charge_command(charger_t *charger_ctx) {
+  uint16_t requested_voltage_dv = charger_ctx->requested_voltage_dv;
+  uint16_t requested_current_da = charger_ctx->requested_current_da;
 
-  if (requested_voltage > MAX_PACK_CHARGING_VOLTS) {
-    requested_voltage = MAX_PACK_CHARGING_VOLTS;
-  }
-
-  if (requested_current > MAX_PACK_CHARGING_AMPS) {
-    requested_current = MAX_PACK_CHARGING_AMPS;
-  }
-
-  hchg->elcon->max_voltage = requested_voltage;
-  hchg->elcon->max_current = requested_current;
-  hchg->elcon->charge_disable = false;
-
-  elcon_send_command(hchg->elcon);
-}
-
-static void clear_charge_command(charger_t *hchg) {
-  if (hchg == NULL || hchg->elcon == NULL) {
+  /* never clamp a bad setpoint up to the limits, refuse it */
+  if (!charger_ctx->setpoint_valid ||
+      !charger_setpoint_in_range(requested_voltage_dv, requested_current_da)) {
+    clear_charge_command(charger_ctx);
     return;
   }
 
-  hchg->elcon->max_voltage = 0;
-  hchg->elcon->max_current = 0;
-  hchg->elcon->charge_disable = true;
-  elcon_send_command(hchg->elcon);
+  charger_ctx->elcon->max_voltage_dv = requested_voltage_dv;
+  charger_ctx->elcon->max_current_da = requested_current_da;
+  charger_ctx->elcon->charge_disable = false;
+
+  elcon_send_command(charger_ctx->elcon);
+}
+
+/**
+ * @brief copies the charger's output readback (0.1 V / 0.1 A)
+ */
+static void update_reported_output(charger_t *charger_ctx) {
+  int32_t lock = osKernelLock();
+  uint16_t volts_dv = charger_ctx->elcon->output_voltage_dv;
+  uint16_t amps_da = charger_ctx->elcon->output_current_da;
+  (void)osKernelRestoreLock(lock);
+
+  charger_ctx->reported_voltage_dv = volts_dv;
+  charger_ctx->reported_current_da = amps_da;
+}
+
+static void clear_charge_command(charger_t *charger_ctx) {
+  if (charger_ctx == NULL || charger_ctx->elcon == NULL) {
+    return;
+  }
+
+  charger_ctx->elcon->max_voltage_dv = 0;
+  charger_ctx->elcon->max_current_da = 0;
+  charger_ctx->elcon->charge_disable = true;
+  elcon_send_command(charger_ctx->elcon);
 }
 
 /**
  * @brief checks if charging is permitted
  *
  * true when the pack and vehicle interlocks allow charging (faults clear, elcon
- * ready, etc)
+ * ready, etc) and the GUI has sent a valid setpoint
  *
  * @return true if charging is permitted
  * @return false otherwise
  */
-bool is_charging_permitted(charger_t *hchg) {
-  return !is_pack_full() && is_pack_okay() && is_elcon_ready(hchg);
+bool is_charging_permitted(charger_t *charger_ctx) {
+  return charger_ctx->setpoint_valid && !is_pack_full() && is_pack_okay() &&
+         is_elcon_ready(charger_ctx);
 }

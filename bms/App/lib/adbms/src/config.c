@@ -1,5 +1,6 @@
 #include "config.h"
 #include "bms_enums.h"
+#include "bms_limits.h"
 
 adc_config_t g_cell_profile = {
     .redundant_measurement_mode = RD_ON,
@@ -86,10 +87,10 @@ adc_config_t g_cell_force_sync_s_adc = {
 };
 
 voltage_config_t g_voltage_cfg = {
-    .overvoltage_threshold_v = 4.15F,
-    .undervoltage_threshold_v = 2.51F,
-    .overtemp_threshold_c = 60.0F,
-    .undertemp_threshold_c = -20.0F,
+    .overvoltage_threshold_v = LIMIT_CELL_OVERVOLTAGE_V,
+    .undervoltage_threshold_v = LIMIT_CELL_UNDERVOLTAGE_V,
+    .overtemp_threshold_c = LIMIT_CELL_OVERTEMP_C,
+    .undertemp_threshold_c = LIMIT_CELL_UNDERTEMP_C,
     .openwire_cell_threshold_mv = 1000,
     .openwire_aux_threshold_mv = 2900,
     .loop_meas_count = 4,
