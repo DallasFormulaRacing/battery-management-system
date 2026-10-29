@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+extern osMutexId_t bms_mutex_id;
+
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -240,11 +242,18 @@ void hard_fault_disable_openwire_on_profiles() {
 /**
  * @brief this is a special mesurement loop designed to operate under fault
  * it should NOT: bleed cells or do open wire checks, since ow injects current
- */ // todo
+ * The range checks still run so the per-cell fault flags stay current, but
+ * their result is ignored: we are already faulted and only want fresh data.
+ */
 void measure_during_fault() {
   hard_fault_disable_openwire_on_profiles();
-  // measure voltages (top level task)
-  // measure temps (top level task)
+
+  if (osOK != osMutexAcquire(bms_mutex_id, 1000)) {
+    return;
+  }
+  (void)cell_voltage_in_range_check();
+  (void)therm_temp_in_range_check();
+  osMutexRelease(bms_mutex_id);
 }
 volatile float look[NUM_IC_COUNT_CHAIN][NUM_CELLS_PER_SEGMENT];
 static void pop() {

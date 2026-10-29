@@ -65,11 +65,20 @@ bms_fault_t cell_open_wire_check_odd();
 bms_fault_t cell_open_wire_check_even();
 bms_fault_t therm_temp_in_range_check();
 bms_fault_t cell_voltage_in_range_check();
+void force_sync_s_adc();
 void measure_during_fault();
 void open_shutdown_circuit();
 void hard_fault_disable_openwire_on_profiles();
 
 //***** TESTING FUNCTIONS *****/
+
+/*
+ * Bench testing only: 1 keeps reading the thermistors but never faults on
+ * over/under temp or thermistor open wire (for boards with no NTCs fitted).
+ * Must be 0 on the car.
+ */
+#define BMS_BENCH_IGNORE_THERM_FAULTS 1
+
 void bms_test_init();
 void bms_test_run();
 

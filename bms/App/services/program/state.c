@@ -3,6 +3,12 @@
 #include "cmsis_os2.h"
 #include "supervisor.h"
 
+#if BMS_BENCH_IGNORE_THERM_FAULTS
+#warning "BMS_BENCH_IGNORE_THERM_FAULTS is on: thermistor faults are ignored"
+#endif
+
+#define FAULT_MEASURE_PERIOD_MS 200U
+
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
 const osMutexAttr_t bms_mutex_attr = {
@@ -113,6 +119,9 @@ void bms_state_measure(bms_handler_t *hbms) {
     }
 
     status = therm_temp_in_range_check();
+#if BMS_BENCH_IGNORE_THERM_FAULTS
+    status = BMS_ERR_NONE; // temps are still read, just not acted on
+#endif
     if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
       hbms->state.error_code = status;
       bms_fsm_transition(hbms, BMS_STATE_FAULT);
@@ -137,6 +146,9 @@ void bms_state_measure(bms_handler_t *hbms) {
     }
 
     status = therm_open_wire_check();
+#if BMS_BENCH_IGNORE_THERM_FAULTS
+    status = BMS_ERR_NONE;
+#endif
     if (BMS_ERR_AUX_OPENWIRE == status) {
       hbms->state.error_code = status;
       bms_fsm_transition(hbms, BMS_STATE_FAULT);
@@ -228,8 +240,15 @@ void bms_state_fault(bms_handler_t *hbms) {
   // keep monitoring so the we can see wtf is happening
   open_shutdown_circuit();
   hard_fault_disable_openwire_on_profiles();
+
+  // stop balancing and restart both ADCs with open wire off, in case the
+  // fault hit mid balance or mid open wire check
+  (void)adbms_clear_all_pwm(hbms->asic);
+  force_sync_s_adc();
+  (void)adbms_start_cell_voltage_measurement(hbms->asic);
+
   for (;;) {
     measure_during_fault();
-    osDelay(1000);
+    osDelay(FAULT_MEASURE_PERIOD_MS);
   }
 }
