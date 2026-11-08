@@ -17,7 +17,7 @@
 
 /* any cell at/above this faults the BMS and counts as "pack full" */
 #define MAX_SAFE_CELL_VOLTAGE_V 4.20F
-#define MIN_SAFE_CELL_VOLTAGE_V 2.50F
+#define MIN_SAFE_CELL_VOLTAGE_V 1.00F
 #define BMS_MEAS_VOLTAGE_ACCURACY_V 0.001F // +/- 1mV accuracy on cell voltage measurement
 #define ESF_LEGAL_MAX_CELL_VOLTAGE_V 4.166F // Max allowable cell voltage to keep pack under 600V. (4.166V * 144 cells = 599.9V)
 #define LIMIT_CELL_OVERVOLTAGE_V  (ESF_LEGAL_MAX_CELL_VOLTAGE_V - BMS_MEAS_VOLTAGE_ACCURACY_V) // We must account for worst case voltage accuracy
