@@ -119,6 +119,10 @@ bms_fault_t therm_open_wire_check() {
 bms_fault_t cell_voltage_in_range_check() {
   // todo: test this and make sure it updates the fault struct
 
+  if (adbms_read_fcell_voltages_muted(hbms.asic) != COMM_OK) {
+    return BMS_ERR_SPI_FAULT;
+  }
+
   adbms_read_fcell_voltages(hbms.asic);
   bool cell_over_flag = false;
   bool cell_under_flag = false;

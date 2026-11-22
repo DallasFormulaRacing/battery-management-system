@@ -9,6 +9,7 @@
 #include "spi.h"
 #include <assert.h>
 #include <stdint.h>
+#include <cmsis_os2.h>
 
 #define RETURN_IF_ERROR(status)                                                \
   do {                                                                         \
@@ -189,6 +190,24 @@ comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
       bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
 
   return COMM_OK;
+}
+
+/**
+ * @brief read filtered cell voltages with balancing paused so voltage drop doesn't have 
+ * cells read low (4ms delay plus ~1ms per IC in chain )
+ */
+comm_status_t adbms_read_fcell_voltages_muted(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  bms_send_command(MUTE); 
+  osDelay(2);            
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, DCP_OFF, RSTF_ON,
+                   g_cell_profile.ow_mode);
+  osDelay(2);             
+
+  comm_status_t status = adbms_read_fcell_voltages(asic_ctx);
+  bms_send_command(UNMUTE);
+  return status;
 }
 
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
