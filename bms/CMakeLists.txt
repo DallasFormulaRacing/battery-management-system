@@ -104,6 +104,7 @@ target_link_libraries(${PROJECT_NAME}
         daemons    
         threads
         gui
+        ev27can
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

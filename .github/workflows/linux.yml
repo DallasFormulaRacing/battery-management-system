@@ -17,6 +17,11 @@ jobs:
         steps:
             - name: checkout repository
               uses: actions/checkout@v4
+              with:
+                  # ev27-can is a submodule in a private repo; the default
+                  # token can't read it, so EV27_CAN_TOKEN must be a token with read access to it.
+                  submodules: true
+                  token: ${{ secrets.EV27_CAN_TOKEN }}
 
             - name: install build dependencies
               run: |
@@ -51,3 +56,4 @@ jobs:
                   path: |
                       bms/build/*.elf
                       bms/build/*.bin
+ 

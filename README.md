@@ -10,7 +10,9 @@ We are also working on integrating Doxygen so the BMS can become and remain a mu
 
 ## Getting Started
 
-Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-system.git`
+Clone with `git clone --recurse-submodules https://github.com/DallasFormulaRacing/battery-management-system.git`
+
+The CAN message definitions come from [ev27-can](https://github.com/DallasFormulaRacing/ev27-can), a submodule at `bms/submodules/ev27-can`. If you already cloned without it, run `git submodule update --init bms/submodules/ev27-can`. Run `git config submodule.recurse true` once so `git pull` and `git checkout` keep it in step.
 
 ### Tools
 
