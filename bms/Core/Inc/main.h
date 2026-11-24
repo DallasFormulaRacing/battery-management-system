@@ -57,29 +57,32 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define B1_EXTI_IRQn EXTI15_10_IRQn
-#define RCC_OSC32_IN_Pin GPIO_PIN_14
-#define RCC_OSC32_IN_GPIO_Port GPIOC
-#define RCC_OSC32_OUT_Pin GPIO_PIN_15
-#define RCC_OSC32_OUT_GPIO_Port GPIOC
 #define RCC_OSC_IN_Pin GPIO_PIN_0
 #define RCC_OSC_IN_GPIO_Port GPIOF
 #define RCC_OSC_OUT_Pin GPIO_PIN_1
 #define RCC_OSC_OUT_GPIO_Port GPIOF
-#define LPUART1_TX_Pin GPIO_PIN_2
-#define LPUART1_TX_GPIO_Port GPIOA
-#define LPUART1_RX_Pin GPIO_PIN_3
-#define LPUART1_RX_GPIO_Port GPIOA
+#define HV_MEASURE_ADC_N_Pin GPIO_PIN_0
+#define HV_MEASURE_ADC_N_GPIO_Port GPIOA
+#define HV_MEASURE_ADC_P_Pin GPIO_PIN_1
+#define HV_MEASURE_ADC_P_GPIO_Port GPIOA
 #define SPI1_nCS_Pin GPIO_PIN_4
 #define SPI1_nCS_GPIO_Port GPIOA
-#define SDC_Pin GPIO_PIN_8
-#define SDC_GPIO_Port GPIOA
-#define T_SWDIO_Pin GPIO_PIN_13
-#define T_SWDIO_GPIO_Port GPIOA
-#define T_SWCLK_Pin GPIO_PIN_14
-#define T_SWCLK_GPIO_Port GPIOA
+#define ADBMS6822_Wake1_Pin GPIO_PIN_7
+#define ADBMS6822_Wake1_GPIO_Port GPIOC
+#define SDC_Pin_Pin GPIO_PIN_8
+#define SDC_Pin_GPIO_Port GPIOA
+#define SWD_SWDIO_Pin GPIO_PIN_13
+#define SWD_SWDIO_GPIO_Port GPIOA
+#define SWD_SWCLK_Pin GPIO_PIN_14
+#define SWD_SWCLK_GPIO_Port GPIOA
+#define I2C_EEPROM_SCL_Pin GPIO_PIN_15
+#define I2C_EEPROM_SCL_GPIO_Port GPIOA
+#define EEPROM_WrEn_Pin GPIO_PIN_11
+#define EEPROM_WrEn_GPIO_Port GPIOC
+#define SWD_SWO_Pin GPIO_PIN_3
+#define SWD_SWO_GPIO_Port GPIOB
+#define I2C_EEPROM_SDA_Pin GPIO_PIN_9
+#define I2C_EEPROM_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

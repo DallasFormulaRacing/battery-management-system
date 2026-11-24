@@ -87,7 +87,7 @@ void spi_read(uint16_t size, uint8_t *rx_data) {
 }
 
 void print_over_uart(const char *str) {
-  HAL_UART_Transmit(&hlpuart1, (uint8_t *)str, strlen(str), UART_TIME_OUT);
+  //HAL_UART_Transmit(&hlpuart1, (uint8_t *)str, strlen(str), UART_TIME_OUT);
 }
 
 #if TIM_EN
