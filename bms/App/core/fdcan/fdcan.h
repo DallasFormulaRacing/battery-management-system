@@ -8,6 +8,14 @@
 extern FDCAN_HandleTypeDef hfdcan2;
 
 /**
+ * @brief Queue one frame on FDCAN2. Every FDCAN2 sender goes through this
+ * (the GUI's fdcan_send() and the ev27 main-bus code), so two tasks never
+ * write the TX FIFO at once. If the 3-deep TX FIFO is full it waits 1 ms and
+ * tries again, a few times. Task context only.
+ */
+HAL_StatusTypeDef fdcan2_tx(FDCAN_TxHeaderTypeDef *header, const uint8_t *data);
+
+/**
  * @brief Send an extended-ID CAN FD data frame (FDCAN2).
  *
  * @param ext_id   29-bit extended identifier
@@ -31,8 +39,9 @@ typedef struct {
 void fdcan_configure_filter(void);
 
 /**
- * @brief Start FDCAN2, configure filters, and enable RX FIFO0 notifications.
- * Called once from main.c before program/bms init runs.
+ * @brief Add the GUI filter, reject every frame no filter accepts, enable RX
+ * FIFO0 notifications and start FDCAN2. Called once from ev27_can_start()
+ * (services/ev27), after it has added the main-bus 11-bit filters.
  */
 void fdcan_hardware_init(void);
 

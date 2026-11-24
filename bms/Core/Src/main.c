@@ -26,6 +26,7 @@
 #include "bms_board.h"
 #include "can.h"
 #include "can2_job.h"
+#include "ev27_port.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
 #include "gui_types.h"
@@ -181,6 +182,10 @@ int main(void)
       osMessageQueueNew(1, sizeof(charger_power_setpoint_t),
                         &charger_power_setpoint_queue_attributes);
   configASSERT(charger_power_setpoint_queueHandle != NULL);
+
+  /* main bus (FDCAN2): ev27 + GUI filters, RX queue, then starts FDCAN2 */
+  ev27_can_start();
+  configASSERT(ev27_rx_queue != NULL);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -203,6 +208,15 @@ int main(void)
   osThreadId_t can2_job_osTaskHandler __attribute__((unused)) =
       osThreadNew(can2_job_runner, NULL, &can2_job_runner_attributes);
   configASSERT(can2_job_osTaskHandler != NULL);
+
+  /* main bus: ev27 TimeSync/Command/ChargeControl in, every BMS message out */
+  osThreadId_t ev27_can_rx_osTaskHandler __attribute__((unused)) =
+      osThreadNew(ev27_can_rx_task, NULL, &ev27_can_rx_task_attributes);
+  configASSERT(ev27_can_rx_osTaskHandler != NULL);
+
+  osThreadId_t ev27_can_tx_osTaskHandler __attribute__((unused)) =
+      osThreadNew(ev27_can_tx_task, NULL, &ev27_can_tx_task_attributes);
+  configASSERT(ev27_can_tx_osTaskHandler != NULL);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -416,7 +430,7 @@ static void MX_FDCAN2_Init(void)
   hfdcan2.Init.DataSyncJumpWidth = 9;
   hfdcan2.Init.DataTimeSeg1 = 10;
   hfdcan2.Init.DataTimeSeg2 = 9;
-  hfdcan2.Init.StdFiltersNbr = 0;
+  hfdcan2.Init.StdFiltersNbr = 2;
   hfdcan2.Init.ExtFiltersNbr = 2;
   hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)

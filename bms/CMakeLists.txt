@@ -104,6 +104,7 @@ target_link_libraries(${PROJECT_NAME}
         daemons    
         threads
         gui
+        ev27_bms
         ev27can
 )
 

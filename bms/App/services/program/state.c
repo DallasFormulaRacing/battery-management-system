@@ -204,6 +204,16 @@ void charging_session_kick_wdt(void) {
   }
 }
 
+bool charging_session_active(void) {
+  return (osEventFlagsGet(charging_session_active_osEventFlags) &
+          CHARGING_SESSION_ACTIVE_FLAG) != 0U;
+}
+
+/* ms since the last Connect or keepalive */
+uint32_t charging_session_ms_since_kick(void) {
+  return osKernelGetTickCount() - charging_session_get_last_tick();
+}
+
 void bms_state_charging(bms_handler_t *hbms) {
   uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
   if ((flags & CHARGING_SESSION_ACTIVE_FLAG) == 0U) {
