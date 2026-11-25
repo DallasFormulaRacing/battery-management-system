@@ -46,9 +46,8 @@ _Static_assert(BMS_PEC_REINIT_AFTER < BMS_PEC_FAIL_LIMIT,
  * setpoint above it is refused. Charging also stops (is_pack_full) when any
  * cell reaches this divided by the cell count. Must be at or below the
  * overvoltage limit, or a full charge would fault the BMS. */
-#define BMS_PACK_CHARGE_VOLTAGE_LIMIT_V 597.0F /* 4.146 V per cell */
-#define BMS_CHARGE_CELL_VOLTAGE_LIMIT_V                                        \
-  (BMS_PACK_CHARGE_VOLTAGE_LIMIT_V / (float)BMS_PACK_SERIES_CELLS)
+#define BMS_PACK_CHARGE_VOLTAGE_LIMIT_V 597.0F /* ~4.146 V per cell */
+#define BMS_CHARGE_CELL_VOLTAGE_LIMIT_V (BMS_PACK_CHARGE_VOLTAGE_LIMIT_V / (float)BMS_PACK_SERIES_CELLS)
 
 _Static_assert(BMS_PACK_CHARGE_VOLTAGE_LIMIT_V <=
                    LIMIT_CELL_OVERVOLTAGE_V * (float)BMS_PACK_SERIES_CELLS,

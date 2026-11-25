@@ -43,7 +43,10 @@
 
 /******************** Pack charging limits ********************/
 
-/* the most the BMS will ever ask the charger for, whatever the GUI sends */
+/* Hard ceiling for a charge request. The limit the BMS actually uses is
+ * BMS_PACK_CHARGE_VOLTAGE_LIMIT_V in lib/adbms/inc/config.h, which must be at
+ * or below this and at or below the pack overvoltage limit. If we actually
+ * tried to charge to PACK_MAX, we would hit a cell OV, causing a fault. */
 #define LIMIT_PACK_CHARGE_VOLTAGE_MAX_V 600U
 #define LIMIT_PACK_CHARGE_CURRENT_MAX_A 10U
 
