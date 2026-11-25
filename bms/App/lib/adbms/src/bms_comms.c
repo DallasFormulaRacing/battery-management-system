@@ -48,7 +48,9 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
   if (bytes_per_asic_register == 0)
     return COMM_INVALID_PARAMETERS;
 
-  if (bytes_per_asic_register < 3U)
+  /* each IC frame needs at least one data byte plus the 2 PEC bytes after
+   * the command header */
+  if (bytes_per_asic_register < COMMAND_HEADER_SIZE + 3U)
     return COMM_INVALID_PARAMETERS;
 
   if ((uint16_t)ic_count * bytes_per_asic_register > BUF_MAX)
@@ -70,10 +72,13 @@ comm_status_t bms_read_register_spi(uint8_t ic_count,
   // send on SPI
   spi_write_read(cmd_msg, asic_status_buffers->register_data, len);
 
-  // parse retrieved data
-  return read_all_asics(ic_count, bytes_per_asic_register,
-                        asic_status_buffers->register_data,
-                        asic_status_buffers);
+  // The first COMMAND_HEADER_SIZE bytes clocked in arrive while the command
+  // goes out and carry no data. Each IC's frame (data + CC/PEC) follows them,
+  // so check the PEC there, not over the header bytes.
+  return read_all_asics(
+      ic_count, (uint8_t)(bytes_per_asic_register - COMMAND_HEADER_SIZE),
+      &asic_status_buffers->register_data[COMMAND_HEADER_SIZE],
+      asic_status_buffers);
 }
 
 /**
