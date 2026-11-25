@@ -123,7 +123,7 @@ bms_fault_t cell_voltage_in_range_check() {
     return BMS_ERR_SPI_FAULT;
   }
 
-  adbms_read_fcell_voltages(hbms.asic);
+  // adbms_read_fcell_voltages(hbms.asic); Removed since this is already called inside adbms_read_fcell_voltages_muted()
   bool cell_over_flag = false;
   bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
