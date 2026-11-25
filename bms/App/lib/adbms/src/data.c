@@ -319,18 +319,25 @@ comm_status_t bms_read_data(cell_asic_ctx_t *asic_ctx, bms_op_t type,
 
   // why did + 4 work
   // spi call
-  bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
-                        reg_data_size + COMMAND_HEADER_SIZE);
+  status = bms_read_register_spi(asic_ctx->ic_count, cmd_arg, &status_buffers,
+                                 reg_data_size + COMMAND_HEADER_SIZE);
 
-  // compensate for the 4 useless bytes at the beginning of the transaction
-  status_buffers.register_data =
-      &status_buffers.register_data[COMMAND_HEADER_SIZE];
+  if (status == COMM_OK || status == COMM_INVALID_PEC_ERROR_FLAG) {
+    // compensate for the 4 useless bytes at the beginning of the transaction
+    status_buffers.register_data =
+        &status_buffers.register_data[COMMAND_HEADER_SIZE];
 
-  // parse data on arrival
-  handle_read_type(type, asic_ctx, group, &status_buffers);
+    // parse data on arrival. With a PEC error the per-IC crc_err flag says
+    // which ICs' values are garbage; the caller decides what to do with them.
+    handle_read_type(type, asic_ctx, group, &status_buffers);
+  }
   osMutexRelease(spi_mutex_id);
 
-  return COMM_OK;
+  return status;
+}
+
+uint8_t *bms_pec_flag(cell_asic_ctx_t *ic_ctx, bms_op_t type) {
+  return get_pec(ic_ctx, type);
 }
 
 /**
