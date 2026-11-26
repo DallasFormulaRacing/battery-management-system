@@ -1,119 +1,78 @@
+/*
+ * tb bus (FDCAN1, 500k classic CAN) task.
+ *
+ * Every received frame:
+ *   - is copied to the main bus if ev27-can lists it in EV27_FORWARD_TB_TO_MAIN
+ *     (can/main/forward_tb.yaml). The copy keeps the tb ID (11- or 29-bit) and
+ *     the payload, so a frame looks the same on both buses.
+ *   - goes to the IMD and Elcon handlers.
+ * Between frames (at least every 10 ms) it runs the IMD threshold check and
+ * the FDCAN1 bus-off recovery.
+ */
 #include "can2_job.h"
 #include "can.h"
 #include "cmsis_os2.h"
 #include "elcon_comms.h"
-#include "fdcan.h"
-#include "gui_types.h"
-#include "imd_drivers.h"
-#include "imd_types.h"
-#include "stm32g474xx.h"
-#include <string.h>
+#include "ev27_forward_main.h"
+#include "ev27_node.h"
+#include "ev27_port.h"
+#include "imd.h"
+#include <stdbool.h>
 
-// make sure this exists irl
 extern osMessageQueueId_t can2_rx_dispatch_queueHandle;
 
-static uint32_t can2_len_to_dlc(uint32_t len);
-static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg);
-static void process_can2_protocols(const can2_msg_t *msg);
-static void handle_forwarding(const can2_msg_t *msg);
+#define CAN2_IDLE_TICK_MS 10U
 
-static volatile can2_forwarding_stats_t g_can2_forwarding_stats = {0};
+static volatile can2_stats_t g_can2_stats = {0};
+static uint32_t s_forward_last_ms[EV27_FORWARD_TB_TO_MAIN_COUNT];
+static bool s_forward_sent[EV27_FORWARD_TB_TO_MAIN_COUNT];
 
-static uint32_t can2_len_to_dlc(uint32_t len) {
-  static const uint32_t dlc_codes[9] = {
-      FDCAN_DLC_BYTES_0, FDCAN_DLC_BYTES_1, FDCAN_DLC_BYTES_2,
-      FDCAN_DLC_BYTES_3, FDCAN_DLC_BYTES_4, FDCAN_DLC_BYTES_5,
-      FDCAN_DLC_BYTES_6, FDCAN_DLC_BYTES_7, FDCAN_DLC_BYTES_8,
-  };
-
-  if (len > 8U) {
-    return FDCAN_DLC_BYTES_8;
-  }
-  return dlc_codes[len];
+static bool imd_send(uint32_t ext_id, const uint8_t *data, uint8_t len) {
+  return can2_send_ext(ext_id, data, len) == HAL_OK;
 }
 
-static HAL_StatusTypeDef forward_can2_to_fdvcan(const can2_msg_t *msg) {
-  FDCAN_TxHeaderTypeDef header = {
-      .IdType = FDCAN_EXTENDED_ID,
-      .Identifier = 0,
-      .TxFrameType = FDCAN_DATA_FRAME,
-      .DataLength = can2_len_to_dlc(msg->len),
-      .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-      .BitRateSwitch = FDCAN_BRS_ON,
-      .FDFormat = FDCAN_FD_CAN,
-      .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-      .MessageMarker = 0U,
-  };
+static void forward_to_main(const can2_msg_t *msg, uint32_t now_ms) {
+  const bool extended = (msg->id_type == FDCAN_EXTENDED_ID);
 
-  switch (msg->id) {
-  case PLACEHOLDER_CURRENT_SENSOR_CAN_ID:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_CURRENT_SENSOR, NODE_BMS);
-    break;
-  case IMD_CAN_ID_REQUEST:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_REQUEST, NODE_BMS);
-    break;
-  case IMD_CAN_ID_RESPONSE:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_RESPONSE, NODE_BMS);
-    break;
-  case IMD_CAN_ID_GENERAL:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_GENERAL, NODE_BMS);
-    break;
-  case IMD_CAN_ID_ISO_DETAIL:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_ISO_DETAIL, NODE_BMS);
-    break;
-  case IMD_CAN_ID_VOLTAGE:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_VOLTAGE, NODE_BMS);
-    break;
-  case IMD_CAN_ID_IT_SYSTEM:
-    header.Identifier = can_id_build(CAN_PRIORITY_P1, NODE_RASPI,
-                                     BMS_IMD_IT_SYSTEM, NODE_BMS);
-    break;
-  default:
-    // Unmapped (e.g. Elcon heartbeat) — do not emit extended ID 0 on GUI bus
-    return HAL_BUSY;
+  for (uint32_t i = 0U; i < EV27_FORWARD_TB_TO_MAIN_COUNT; i++) {
+    const ev27_forward_t *f = &EV27_FORWARD_TB_TO_MAIN[i];
+
+    if (f->src_id != msg->id || (f->src_extended != 0U) != extended) {
+      continue;
+    }
+    if (f->min_period_ms > 0U && s_forward_sent[i] &&
+        (uint32_t)(now_ms - s_forward_last_ms[i]) < f->min_period_ms) {
+      return;
+    }
+    /* A muted node sends Status only (ev27-can CONVENTIONS.md). */
+    if (ev27_node_muted()) {
+      g_can2_stats.forward_muted_total++;
+      return;
+    }
+    if (ev27_port_send_frame(f->dst_id, f->dst_extended != 0U, msg->data,
+                             (uint8_t)msg->len) == 0) {
+      s_forward_last_ms[i] = now_ms;
+      s_forward_sent[i] = true;
+      g_can2_stats.forwarded_total++;
+    } else {
+      g_can2_stats.forward_drop_total++;
+    }
+    return;
   }
-
-  return fdcan_send(header.Identifier, msg->data, header.DataLength);
 }
 
-static void process_can2_protocols(const can2_msg_t *msg) {
-  if (msg->id == IMD_CAN_ID_REQUEST) {
-    parse_imd_msg(msg->id, msg->data);
-  }
+static void process_can2_protocols(const can2_msg_t *msg, uint32_t now_ms) {
+  imd_rx(msg->id, msg->id_type == FDCAN_EXTENDED_ID, msg->data,
+         (uint8_t)msg->len, now_ms);
 
   if (msg->id == ELCON_HEARTBEAT_CAN_ID) {
     elcon_handle_heartbeat(msg);
   }
-
-  // if (msg->id == CAB_CAN_ID_REQUEST 1) {
-  //   parse_current_sensor_msg(msg.id, msg.data);
-  // }
 }
 
-static void handle_forwarding(const can2_msg_t *msg) {
-  g_can2_forwarding_stats.rx_total++;
+void can2_count_queue_overrun(void) { g_can2_stats.queue_overrun_total++; }
 
-  const HAL_StatusTypeDef st = forward_can2_to_fdvcan(msg);
-  if (st == HAL_OK) {
-    g_can2_forwarding_stats.forwarded_total++;
-  } else if (st != HAL_BUSY) {
-    g_can2_forwarding_stats.forward_drop_total++;
-  }
-}
-
-void can2_forwarding_count_queue_overrun(void) {
-  g_can2_forwarding_stats.queue_overrun_total++;
-}
-
-can2_forwarding_stats_t can2_forwarding_stats_get(void) {
-  return (can2_forwarding_stats_t)g_can2_forwarding_stats;
-}
+can2_stats_t can2_stats_get(void) { return (can2_stats_t)g_can2_stats; }
 
 const osThreadAttr_t can2_job_runner_attributes = {
     .name = "can2_job_runner",
@@ -123,15 +82,20 @@ const osThreadAttr_t can2_job_runner_attributes = {
 void can2_job_runner(void *argument) {
   (void)argument;
   can2_msg_t msg;
+
+  imd_init(imd_send);
   can2_hardware_init();
 
   for (;;) {
     if (osMessageQueueGet(can2_rx_dispatch_queueHandle, &msg, NULL,
-                          osWaitForever) != osOK) {
-      continue;
+                          CAN2_IDLE_TICK_MS) == osOK) {
+      const uint32_t now_ms = osKernelGetTickCount();
+      g_can2_stats.rx_total++;
+      forward_to_main(&msg, now_ms);
+      process_can2_protocols(&msg, now_ms);
     }
 
-    handle_forwarding(&msg);
-    process_can2_protocols(&msg);
+    imd_tick(osKernelGetTickCount());
+    can2_service();
   }
 }

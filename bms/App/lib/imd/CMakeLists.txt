@@ -1,8 +1,7 @@
-# Auto-generated CMake for Library Module: imd
+# Bender iso175C IMD on the tb bus (FDCAN1): Info_General and the threshold check.
 add_library(imd STATIC)
 
-file(GLOB SRC_FILES "src/*.c")
-target_sources(imd PRIVATE ${SRC_FILES})
+target_sources(imd PRIVATE src/imd.c)
 
-target_include_directories(imd PUBLIC . inc can)
-target_link_libraries(imd PUBLIC can)
+target_include_directories(imd PUBLIC inc)
+target_link_libraries(imd PUBLIC ev27can freertos)

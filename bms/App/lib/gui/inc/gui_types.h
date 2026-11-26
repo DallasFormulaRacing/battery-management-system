@@ -58,22 +58,15 @@ enum {
   BMS_CELL_VOLTAGES_PACK_6 = 0xB106,
   BMS_SEGMENT_TEMPS_HALF_1 = 0xB111,
   BMS_SEGMENT_TEMPS_HALF_2 = 0xB112,
-  BMS_IMD_DATA = 0xBA01,
   BMS_GUI_CONNECT = 0xBB01,
   BMS_GUI_CHARGING_REQUEST = 0xBB02,
   BMS_GUI_DISCONNECT = 0xBB03,
   BMS_GUI_CHARGING_SOFTSTOP = 0xBBFF,
 };
 
-/* BMS Normal Commands (TCAN → VCAN forwarding / onboard devices) */
+/* BMS Normal Commands (onboard devices). tb-bus frames (IMD, CAB500, Elcon)
+ * are forwarded to the main bus with their own IDs, see can2_job.c. */
 enum {
-  BMS_CURRENT_SENSOR = 0xBEEF,
-  BMS_IMD_REQUEST = 0xBF22,
-  BMS_IMD_RESPONSE = 0xBF23,
-  BMS_IMD_GENERAL = 0xBF37,
-  BMS_IMD_ISO_DETAIL = 0xBF38,
-  BMS_IMD_VOLTAGE = 0xBF39,
-  BMS_IMD_IT_SYSTEM = 0xBF3A,
   BMS_PRECHARGE_FAILURE = 0xBFAA,
 };
 

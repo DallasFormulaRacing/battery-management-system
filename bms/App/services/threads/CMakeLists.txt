@@ -17,4 +17,4 @@ target_include_directories(threads PUBLIC
 target_link_libraries(threads PRIVATE program 
 fdcan 
 can 
-imd gui freertos elcon thermal cb adbms charger segment amc ev27_bms)
+imd gui freertos elcon thermal cb adbms charger segment amc ev27_bms ev27can)

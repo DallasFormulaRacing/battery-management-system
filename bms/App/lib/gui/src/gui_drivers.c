@@ -82,9 +82,6 @@ void gui_process_can_command(uint32_t ext_id, const uint8_t *data, uint8_t len) 
   case BMS_BATTERY_PACK_DATA:
     send_metadata_frame(BMS_BATTERY_PACK_DATA);
     break;
-  case BMS_IMD_DATA:
-    /* TODO: implement */
-    break;
   case BMS_GUI_CHARGING_REQUEST: {
     if (data == NULL || len < 4U) {
       send_can_error(ERROR_ID_INVALID_CMD);
