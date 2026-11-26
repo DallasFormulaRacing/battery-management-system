@@ -5,6 +5,18 @@ set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_TESTING "Build native executable for unit testing" OFF)
 
+# ezfd CAN bootloader: link the app at 0x08008000 (STM32G474XX_FLASH_BL.ld),
+# move the vector table there and let the CM5 reboot the BMS into the
+# bootloader. Off = the usual image at 0x08000000, flashed over SWD.
+option(BOOTLOADER "Build the app to be loaded by the ezfd CAN bootloader" OFF)
+if(BOOTLOADER)
+  add_compile_definitions(BMS_BOOTLOADER=1 VECT_TAB_OFFSET=0x8000U)
+  set(BMS_LINKER_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/STM32G474XX_FLASH_BL.ld")
+else()
+  add_compile_definitions(BMS_BOOTLOADER=0)
+  set(BMS_LINKER_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/STM32G474XX_FLASH.ld")
+endif()
+
 if(NOT CMAKE_TOOLCHAIN_FILE AND NOT BUILD_TESTING)
   set(CMAKE_TOOLCHAIN_FILE
         "${CMAKE_CURRENT_LIST_DIR}/cmake/gcc-arm-none-eabi.cmake"
@@ -86,7 +98,7 @@ target_sources(${PROJECT_NAME} PRIVATE ${HAL_SOURCES})
 
 # 10. Linker Settings
 target_link_options(${PROJECT_NAME} PRIVATE
-    "-T${CMAKE_SOURCE_DIR}/STM32G474XX_FLASH.ld"
+    "-T${BMS_LINKER_SCRIPT}"
     -Wl,--gc-sections
     --specs=nosys.specs 
 )
