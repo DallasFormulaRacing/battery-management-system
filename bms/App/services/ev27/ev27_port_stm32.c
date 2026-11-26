@@ -95,6 +95,11 @@ void ev27_can_service(void)
 
 int ev27_port_send(uint32_t id, const uint8_t *data, uint8_t len)
 {
+    return ev27_port_send_frame(id, false, data, len);
+}
+
+int ev27_port_send_frame(uint32_t id, bool extended, const uint8_t *data, uint8_t len)
+{
     FDCAN_TxHeaderTypeDef h;
     uint8_t buf[64];
 
@@ -102,8 +107,8 @@ int ev27_port_send(uint32_t id, const uint8_t *data, uint8_t len)
         return -1;
     }
     memset(&h, 0, sizeof(h));
-    h.Identifier = id;
-    h.IdType = FDCAN_STANDARD_ID;
+    h.Identifier = extended ? (id & 0x1FFFFFFFu) : (id & 0x7FFu);
+    h.IdType = extended ? FDCAN_EXTENDED_ID : FDCAN_STANDARD_ID;
     h.TxFrameType = FDCAN_DATA_FRAME;
     h.DataLength = len_to_dlc(len);
     h.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
@@ -138,9 +143,13 @@ void ev27_port_can_errors(uint8_t *tec, uint8_t *rec)
 
 void ev27_port_reboot_to_bootloader(void)
 {
-    /* Deliberately does nothing on the BMS. There is no CAN bootloader yet, and
-     * a reset would also clear a latched AMS fault and close the shutdown
-     * circuit, which only a person may do (NRST or a power cycle). */
+    /* With the ezfd bootloader (cmake -DBOOTLOADER=ON) it runs after every
+     * reset and waits 100 ms for the host, so a reset is all it takes. Without
+     * it, the reset just restarts the app. Refused while the VCU does not allow
+     * it or a charging session is active (ev27_device_reboot_allowed()). */
+    if (ev27_device_reboot_allowed()) {
+        NVIC_SystemReset();
+    }
 }
 
 void ev27_port_identify(void)

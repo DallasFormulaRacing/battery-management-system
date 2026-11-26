@@ -10,7 +10,8 @@
  * Pack layout on the bus: 6 segments x 2 ADBMS6830 x 12 cells, 2 x 10
  * thermistors per segment. Chain IC i is segment i / 2, cells 1-12 (even i) or
  * 13-24 (odd i). ICs not in the chain (NUM_IC_COUNT_CHAIN < 12 on the bench)
- * are sent as NotPresent.
+ * are sent as NotPresent, and so are the cells or temperatures of an IC whose
+ * last reading failed (PEC error, or the IC was reset).
  *
  * Status sensor bits (BMS):  bit0 = cell monitors (ADBMS6830 chain)
  *                            bit1 = thermistors
@@ -23,6 +24,7 @@
 #include "bms.h"
 #include "bms_limits.h"
 #include "config.h"
+#include "imd.h"
 #include "main.h"
 #include "state.h"
 #include "supervisor.h"
@@ -46,6 +48,14 @@ _Static_assert(NUM_CELLS_PER_SEGMENT == EV27_CELLS_PER_IC,
 _Static_assert(NUM_THERM_PER_SEGMENT == EV27_THERMS_PER_IC,
                "bms.yaml packs 10 thermistors per ADBMS6830 (NUM_THERM_PER_SEGMENT is per IC)");
 _Static_assert(NUM_IC_COUNT_CHAIN <= EV27_ICS_IN_PACK, "more ICs than bms.yaml has room for");
+
+_Static_assert(IMD_CONFIG_NOT_SEEN == EV27_MAIN_BMS_STATE_IMD_CONFIG_NOT_SEEN_CHOICE &&
+               IMD_CONFIG_CHECKING == EV27_MAIN_BMS_STATE_IMD_CONFIG_CHECKING_CHOICE &&
+               IMD_CONFIG_OK == EV27_MAIN_BMS_STATE_IMD_CONFIG_OK_CHOICE &&
+               IMD_CONFIG_FAILED == EV27_MAIN_BMS_STATE_IMD_CONFIG_FAILED_CHOICE &&
+               IMD_CONFIG_LOCKED == EV27_MAIN_BMS_STATE_IMD_CONFIG_LOCKED_CHOICE &&
+               IMD_CONFIG_LOST == EV27_MAIN_BMS_STATE_IMD_CONFIG_LOST_CHOICE,
+               "imd_config_state_t must match BMS_State.ImdConfig in bms.yaml");
 
 #define CELL_NOT_PRESENT ((int16_t)EV27_MAIN_BMS_SEG1_CELLS_CELL01_NOT_PRESENT_CHOICE) /* raw 0x8000 */
 #define TEMP_NOT_PRESENT ((int8_t)EV27_MAIN_BMS_SEG1_TEMPS_TEMP01_NOT_PRESENT_CHOICE)  /* -128 */
@@ -89,6 +99,17 @@ static uint8_t s_state_counter;
 static volatile uint8_t s_charge_last_error = EV27_MAIN_BMS_CHARGING_LAST_ERROR_NONE_CHOICE;
 static bool s_session_was_active;
 
+/* VCU_State.FlashAllowed and when it last came (RX task writes, RX task reads
+ * through the Command handler). */
+static bool s_vcu_flash_allowed;
+static uint32_t s_vcu_state_ms;
+static bool s_vcu_seen;
+#define VCU_STATE_FRESH_MS (EV27_MAIN_VCU_STATE_CYCLE_TIME_MS * 4u)
+
+#if BMS_BENCH_REBOOT_WITHOUT_VCU
+#warning "BMS_BENCH_REBOOT_WITHOUT_VCU is on: the CM5 can reboot the BMS without VCU FlashAllowed"
+#endif
+
 #define FAULT_BIT(f) ((uint16_t)(1u << (unsigned)(f)))
 
 static float raw_to_volts(int16_t raw)
@@ -128,6 +149,7 @@ static bool take_snapshot(void)
     for (ic = 0; ic < EV27_ICS_IN_PACK; ic++) {
         const cell_asic_ctx_t *a;
         uint16_t bal = 0;
+        bool cells_ok, temps_ok;
 
         if (ic >= NUM_IC_COUNT_CHAIN) {
             for (k = 0; k < EV27_CELLS_PER_IC; k++) {
@@ -140,9 +162,12 @@ static bool take_snapshot(void)
             continue;
         }
         a = &hbms.asic[ic];
+        cells_ok = bms_ic_cells_valid((uint8_t)ic);
+        temps_ok = bms_ic_temps_valid((uint8_t)ic);
 
         for (k = 0; k < EV27_CELLS_PER_IC; k++) {
-            const int16_t raw = a->filt_cell.filt_cell_voltages_array[k];
+            /* last reading failed its PEC or the IC was reset: no value */
+            const int16_t raw = cells_ok ? a->filt_cell.filt_cell_voltages_array[k] : CELL_NOT_PRESENT;
             s_snap.cell[ic][k] = raw;
             if (a->cell_fault_status[k] == OPEN_WIRE_FAULT) {
                 flags |= FAULT_BIT(BMS_ERR_CELL_OPENWIRE);
@@ -165,7 +190,8 @@ static bool take_snapshot(void)
 
         /* Open wire is latched by therm_open_wire_check() until reset. */
         for (k = 0; k < EV27_THERMS_PER_IC; k++) {
-            const int8_t t = temp_to_i8(a->thermistor[k], a->thermistor_fault_status[k]);
+            const int8_t t = temps_ok ? temp_to_i8(a->thermistor[k], a->thermistor_fault_status[k])
+                                      : TEMP_NOT_PRESENT;
             s_snap.temp[ic][k] = t;
             if (a->thermistor_fault_status[k] == OPEN_WIRE_FAULT) {
                 flags |= FAULT_BIT(BMS_ERR_AUX_OPENWIRE);
@@ -182,6 +208,9 @@ static bool take_snapshot(void)
         }
     }
 
+    if (bms_readings_failing()) {
+        flags |= FAULT_BIT(BMS_ERR_PEC_FAIL);   /* counting towards BMS_PEC_FAIL_LIMIT */
+    }
     s_snap.state = (uint8_t)hbms.state.current_state;
     s_snap.error_code = (uint8_t)hbms.state.error_code;
     s_snap.charging_state = (uint8_t)g_charger.state;
@@ -191,8 +220,8 @@ static bool take_snapshot(void)
     (void)osMutexRelease(bms_mutex_id);
 
     s_snap.session_active = charging_session_active();
-    /* With no session the state machine goes Measure -> Charging -> Measure
-     * every pass, so report Charging only while a session is on. */
+    /* Charging with no session lasts one pass on the way back to Measure:
+     * report Charging only while a session is on. */
     if (s_snap.state == BMS_STATE_CHARGING && !s_snap.session_active) {
         s_snap.state = BMS_STATE_MEASURE;
     }
@@ -250,11 +279,41 @@ static void handle_charge_control(const ev27_rx_frame_t *fr)
     s_charge_last_error = err;
 }
 
+static void handle_vcu_state(const ev27_rx_frame_t *fr)
+{
+    struct ev27_main_vcu_state_t m;
+
+    if (ev27_main_vcu_state_unpack(&m, fr->data, fr->len) != 0) {
+        return;
+    }
+    s_vcu_flash_allowed = (m.flash_allowed != 0u);
+    s_vcu_state_ms = ev27_port_uptime_ms();
+    s_vcu_seen = true;
+}
+
+bool ev27_device_reboot_allowed(void)
+{
+    const bool vcu_allows = s_vcu_seen && s_vcu_flash_allowed &&
+                            (ev27_port_uptime_ms() - s_vcu_state_ms) < VCU_STATE_FRESH_MS;
+
+    if (!vcu_allows && !BMS_BENCH_REBOOT_WITHOUT_VCU) {
+        return false;   /* car may be driving */
+    }
+    /* Stop the charging session first (CM5 ChargeControl SoftStop), so the
+     * charger is told to stop rather than left to time out. Balancing only
+     * happens inside a session; the 6830s' PWM is cleared again at boot.
+     * Fault does not block: the AMS latch is hardware, so it stays open. */
+    return !charging_session_active();
+}
+
 void ev27_device_rx(const ev27_rx_frame_t *fr)
 {
     switch (fr->id) {
     case EV27_MAIN_CM5_CHARGE_CONTROL_FRAME_ID:
         handle_charge_control(fr);
+        break;
+    case EV27_MAIN_VCU_STATE_FRAME_ID:
+        handle_vcu_state(fr);
         break;
     default:
         break;
@@ -283,6 +342,7 @@ static void send_state(void)
     m.balancing = balancing ? 1u : 0u;
     m.ic_count = NUM_IC_COUNT_CHAIN;
     m.therm_faults_ignored = BMS_BENCH_IGNORE_THERM_FAULTS ? 1u : 0u;
+    m.imd_config = (uint8_t)imd_get_status().config;
     m.counter = s_state_counter;
     s_state_counter = (uint8_t)((s_state_counter + 1u) & 0x0Fu);
     if (ev27_main_bms_state_pack(buf, &m, sizeof(buf)) > 0) {

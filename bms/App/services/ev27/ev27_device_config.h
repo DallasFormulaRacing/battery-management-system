@@ -35,6 +35,7 @@ extern TIM_HandleTypeDef htim2;
     EV27_MAIN_CM5_TIME_SYNC_FRAME_ID, \
     EV27_MAIN_CM5_COMMAND_FRAME_ID, \
     EV27_MAIN_CM5_CHARGE_CONTROL_FRAME_ID, \
+    EV27_MAIN_VCU_STATE_FRAME_ID, /* FlashAllowed, for RebootToBootloader */ \
 }
 
 #endif /* EV27_DEVICE_CONFIG_H */

@@ -43,6 +43,13 @@ void ev27_can_start(void);
  * ev27_port_time_us() read at the start of the interrupt. */
 void ev27_can_queue_rx_from_isr(uint32_t id, const uint8_t *data, uint8_t len, uint32_t time_us);
 
+/* Queue one CAN FD frame on the main bus (no BRS while the bus runs 1M/1M).
+ * ev27_port_send() is this with extended = false. The BMS also uses it to
+ * forward tb-bus frames with their own 29-bit IDs (can2_job.c). It does not
+ * check the CM5's mute: callers that send data messages must check
+ * ev27_node_muted() first. Returns 0 if queued. */
+int ev27_port_send_frame(uint32_t id, bool extended, const uint8_t *data, uint8_t len);
+
 /* Called every tick by the TX task: restarts FDCAN2 after a bus-off. */
 void ev27_can_service(void);
 
@@ -68,5 +75,11 @@ void ev27_device_status(ev27_device_status_t *st);
 /* True if the device's config record in flash passed its CRC check. The BMS
  * has no config record yet: always true. */
 bool ev27_device_config_valid(void);
+
+/* True if a reboot request (ev27 Command RebootToBootloader or ezfd Reboot)
+ * may reset the BMS now: no charging session, and the VCU says FlashAllowed
+ * (or BMS_BENCH_REBOOT_WITHOUT_VCU). Allowed in Fault: the shutdown-circuit
+ * latch is hardware, so a reset cannot clear a latched AMS fault. */
+bool ev27_device_reboot_allowed(void);
 
 #endif /* EV27_PORT_H */

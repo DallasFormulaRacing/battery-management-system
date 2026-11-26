@@ -9,7 +9,7 @@ static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header) {
   tx_header->IdType = FDCAN_EXTENDED_ID;
   tx_header->TxFrameType = FDCAN_DATA_FRAME;
   tx_header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-  tx_header->BitRateSwitch = FDCAN_BRS_ON;
+  tx_header->BitRateSwitch = FDCAN_BRS_OFF; /* main bus is 1M/1M, no BRS */
   tx_header->FDFormat = FDCAN_FD_CAN;
   tx_header->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
   tx_header->MessageMarker = 0;
@@ -65,6 +65,14 @@ void fdcan_configure_filter(void) {
   const uint32_t bms_target = (0x1CU << 21);  /* NODE_BMS == 0x1C */
 
   filter_config.FilterID1 = bms_target;
+  filter_config.FilterID2 = target_mask;
+
+  HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+
+  /* ezfd commands (Ping, Reboot) addressed to the BMS's node address.
+   * ExtFiltersNbr is 2 in main.c / bms.ioc. */
+  filter_config.FilterIndex = 1;
+  filter_config.FilterID1 = (FDCAN_EZFD_NODE_ADDR << 21);
   filter_config.FilterID2 = target_mask;
 
   HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);

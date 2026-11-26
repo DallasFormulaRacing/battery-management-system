@@ -7,6 +7,13 @@
 #include <stdint.h>
 extern FDCAN_HandleTypeDef hfdcan2;
 
+/* The BMS's address in the 29-bit DFR/ezfd ID scheme
+ * ([prio 3][target 5][command 16][source 5]). Same as its ev27 node address
+ * and the ezfd bootloader's THIS_NODE, so the dashboard's Ping and Reboot reach
+ * the app as well as the bootloader. */
+#define FDCAN_EZFD_NODE_ADDR 0x03U
+#define FDCAN_DFR_TARGET(id) (((id) >> 21) & 0x1FU)
+
 /**
  * @brief Queue one frame on FDCAN2. Every FDCAN2 sender goes through this
  * (the GUI's fdcan_send() and the ev27 main-bus code), so two tasks never

@@ -3,10 +3,10 @@
 #include "can2_job.h"
 #include "cmsis_os2.h"
 #include "ev27_node.h"
+#include "ev27_ezfd.h"
 #include "ev27_port.h"
 #include "gui_drivers.h"
 #include "gui_types.h"
-#include "imd_drivers.h"
 #include "stm32g474xx.h"
 #include <string.h>
 
@@ -58,7 +58,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 
       if (osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0) !=
           osOK) {
-        can2_forwarding_count_queue_overrun();
+        can2_count_queue_overrun();
       }
     } else if (hfdcan->Instance == FDCAN2 &&
                rxHeader.IdType == FDCAN_STANDARD_ID) {
@@ -84,7 +84,11 @@ void gui_can_job_runner(void *argument) {
   for (;;) {
     if (osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
                           osWaitForever) == osOK) {
-      gui_process_can_command(msg.id, msg.data, msg.len);
+      if (FDCAN_DFR_TARGET(msg.id) == FDCAN_EZFD_NODE_ADDR) {
+        ev27_ezfd_rx(msg.id, msg.data, (uint8_t)msg.len);
+      } else {
+        gui_process_can_command(msg.id, msg.data, msg.len);
+      }
     }
   }
 }
