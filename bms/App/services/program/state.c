@@ -1,5 +1,6 @@
 #include "state.h"
 #include "bms.h"
+#include "bms_watchdog.h"
 #include "cmsis_os2.h"
 #include "supervisor.h"
 
@@ -8,6 +9,9 @@
 #endif
 
 #define FAULT_MEASURE_PERIOD_MS 200U
+
+_Static_assert(BMS_ERR_WATCHDOG == BMS_WDG_FAULT_CODE,
+               "bms_watchdog.c sends BMS_WDG_FAULT_CODE as the BMS_State FaultCode");
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
@@ -233,6 +237,7 @@ void bms_state_fault(bms_handler_t *hbms) {
 
   for (;;) {
     measure_during_fault();
+    bms_watchdog_feed(); /* this loop never returns to bms_safety_task */
     osDelay(FAULT_MEASURE_PERIOD_MS);
   }
 }

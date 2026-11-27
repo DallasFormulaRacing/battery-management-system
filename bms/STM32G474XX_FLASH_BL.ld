@@ -79,6 +79,16 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  /* ezfd image header (App/config/app_image.c): fixed at 0x200 into the image,
+   * after the 472-byte vector table. The bootloader and the dashboard read the
+   * board tag here. */
+  .app_header ORIGIN(FLASH) + 0x200 :
+  {
+    KEEP(*(.app_header))
+  } >FLASH
+  ASSERT(ADDR(.isr_vector) + SIZEOF(.isr_vector) <= ADDR(.app_header), "vector table runs into the ezfd image header")
+  ASSERT(SIZEOF(.app_header) == 32, "ezfd image header missing: App/config/app_image.c must be in the BOOTLOADER build")
+
   /* The program code and other data goes into FLASH */
   .text :
   {
@@ -175,6 +185,17 @@ SECTIONS
     PROVIDE(__data_end = .);
     PROVIDE(__tdata_end = .);
   } >RAM AT> FLASH
+
+  /* ezfd end marker (App/config/app_image.c): the last 8 bytes of the image,
+   * after the load copy of .data. The bootloader starts the app only once
+   * these have been written, so a half-finished upload never runs. */
+  .app_trailer :
+  {
+    . = ALIGN(8);
+    KEEP(*(.app_trailer))
+    . = ALIGN(8);
+  } >FLASH
+  ASSERT(SIZEOF(.app_trailer) == 8, "ezfd end marker missing: App/config/app_image.c must be in the BOOTLOADER build")
 
   PROVIDE( __tdata_start = ADDR(.tdata) );
   PROVIDE( __tdata_size = __tdata_end - __tdata_start );

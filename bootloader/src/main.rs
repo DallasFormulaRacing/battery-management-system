@@ -7,18 +7,29 @@
 //!   - Main bus rules for now: 1 Mbit/s, CAN FD frames, no BRS.
 //!   - G4 flash: dual-bank mode (factory default), 2 KB pages, 64-bit writes.
 //!     The app slot is the rest of bank 1, 0x08008000-0x0803FFFF (224 KB).
-//!   - Checks the app's vector table before jumping and stays in the
-//!     bootloader if there is no valid app.
+//!   - Starts the app only if it is complete and built for this board: the
+//!     vector table, the image header (node and board tag) and the end
+//!     marker are checked first (image.rs). Otherwise it stays.
+//!   - Reads every write back before it answers WriteOk, and checks a CRC-32
+//!     of the whole image on request (Verify, 0x4E).
 //!   - Sends ev27 Status (0x703, Mode = Bootloader) every 500 ms while it stays.
 //!   - A flash error or a bad address skips the WriteOk instead of panicking,
 //!     so the host reports the failure and the node is still reachable.
 //!   - Answers Reboot (0x4D) with a reset.
+//!   - Goes back to a complete app after 30 s without a frame from the host.
+//!   - Runs the independent watchdog (30 s). It keeps running in the app,
+//!     which sets it to 25 s in bms_watchdog_start() and reloads it from its
+//!     1 ms tick.
+//!
+//! Ping is answered with [0, board]; the app answers [1, board].
 //!
 //! Boot sequence (as the H533 version): send FirmwareUpdateQuery to the host,
 //! wait 100 ms for FirmwareUpdateResponse(1); otherwise jump to the app.
 #![no_std]
 #![no_main]
 
+mod crc;
+mod image;
 mod protocol;
 mod status;
 
@@ -31,7 +42,8 @@ use embassy_stm32::can::config::{
 };
 use embassy_stm32::can::filter::{ExtendedFilter, ExtendedFilterSlot, FilterType};
 use embassy_stm32::can::frame::FdFrame;
-use embassy_stm32::peripherals::FDCAN2;
+use embassy_stm32::peripherals::{FDCAN2, IWDG};
+use embassy_stm32::wdg::IndependentWatchdog;
 use embassy_stm32::{Config, bind_interrupts, can, flash, pac, rcc};
 use embassy_time::{Duration, Instant, Timer, with_timeout};
 use embedded_can::Id;
@@ -50,9 +62,10 @@ bind_interrupts!(struct Irqs {
     FDCAN2_IT1 => can::IT1InterruptHandler<FDCAN2>;
 });
 
-/// ev27-can EV27_ADDR_BMS. The bootloader address and the Status ID (0x700 + addr).
-const THIS_NODE: u16 = 0x03;
-const HOST: u16 = CanDevices::RaspberryPi as u16;
+/// The bootloader address and the Status ID (0x700 + addr).
+const THIS_NODE: u16 = EV27_ADDR_BMS;
+/// Who flashes us: the CM5 (Pi dashboard, ezfd-bootloader-host).
+const HOST: u16 = EV27_ADDR_CM5;
 
 const FLASH_BASE: u32 = 0x0800_0000;
 const APP_BASE: u32 = 0x0800_8000;
@@ -66,21 +79,58 @@ const UID_BASE: u32 = 0x1FFF_7590;
 
 const HOST_WAIT: Duration = Duration::from_millis(100);
 const STATUS_PERIOD: Duration = Duration::from_millis(500);
+/// With a complete app in flash, a bootloader the host told to stay goes back
+/// to it after this long without a frame from the host (the dashboard was
+/// closed or the Pi lost power before the update started).
+const IDLE_TIMEOUT: Duration = Duration::from_secs(30);
+/// Independent watchdog. Petted at least every 50 ms here; after the jump the
+/// app sets it to 25 s and reloads it every 1 ms. 30 s is close to the IWDG's
+/// longest (32.7 s at /256).
+const WDG_TIMEOUT_US: u32 = 30_000_000;
+/// Flash read per CRC step, so the watchdog is petted in between.
+const CRC_STEP: u32 = 4096;
 /// Longest wait for a free TX buffer. Retransmission is off, so a frame nobody
 /// ACKs is dropped and the buffer frees up; this only guards against a stuck bus.
 const TX_TIMEOUT: Duration = Duration::from_millis(20);
 
 type CanTx = can::CanTx<'static>;
 type CanRx = can::CanRx<'static>;
+type Watchdog = IndependentWatchdog<'static, IWDG>;
 
-/// The app's vector table looks sane: stack pointer in RAM, reset handler in
-/// the app slot (Thumb bit set), and the slot is not erased.
-fn app_is_valid() -> bool {
-    let sp = unsafe { core::ptr::read_volatile(APP_BASE as *const u32) };
-    let reset = unsafe { core::ptr::read_volatile((APP_BASE + 4) as *const u32) };
-    let sp_ok = sp > RAM_START && sp <= RAM_END && (sp & 0x3) == 0;
-    let reset_ok = (reset & 1) == 1 && (reset & !1) >= APP_BASE + 8 && (reset & !1) < APP_END;
-    sp_ok && reset_ok
+fn app_ok() -> bool {
+    image::check() == image::Check::Ok
+}
+
+/// ErrorFlags for Status: why the app can't start, plus the latched events.
+fn error_flags(write_failed: bool, watchdog_reset: bool) -> u16 {
+    let mut f = match image::check() {
+        image::Check::Ok => 0,
+        image::Check::NoApp => status::ERR_NO_VALID_APP,
+        image::Check::WrongBoard => status::ERR_NO_VALID_APP | status::ERR_WRONG_BOARD,
+        image::Check::Incomplete => status::ERR_NO_VALID_APP | status::ERR_INCOMPLETE,
+    };
+    if write_failed {
+        f |= status::ERR_WRITE_FAILED;
+    }
+    if watchdog_reset {
+        f |= status::ERR_WATCHDOG_RESET;
+    }
+    f
+}
+
+/// CRC-32 (zlib) of `len` bytes of flash from APP_BASE.
+fn flash_crc(len: u32, wdg: &mut Watchdog) -> u32 {
+    let mut crc = 0;
+    let mut addr = APP_BASE;
+    let end = APP_BASE + len;
+    while addr < end {
+        let n = core::cmp::min(CRC_STEP, end - addr);
+        let bytes = unsafe { core::slice::from_raw_parts(addr as *const u8, n as usize) };
+        crc = crc::update(crc, bytes);
+        addr += n;
+        wdg.pet();
+    }
+    crc
 }
 
 fn read_uid() -> [u32; 3] {
@@ -104,11 +154,11 @@ async fn send(tx: &mut CanTx, id: u32, data: &[u8]) {
     }
 }
 
-async fn send_status(tx: &mut CanTx, uid: &[u32; 3]) {
+async fn send_status(tx: &mut CanTx, uid: &[u32; 3], error_flags: u16) {
     let ecr = pac::FDCAN2.ecr().read();
     let s = status::Status {
         uptime_s: (Instant::now().as_millis() / 1000) as u32,
-        error_flags: if app_is_valid() { 0 } else { status::ERR_NO_VALID_APP },
+        error_flags,
         tec: ecr.tec(),
         rec: ecr.rec(),
         uid: *uid,
@@ -155,6 +205,26 @@ unsafe fn jump_to_app() -> ! {
     unsafe {
         let mut p = cortex_m::Peripherals::steal();
         cortex_m::interrupt::disable();
+
+        // Flush the flash instruction and data caches, so nothing read while
+        // the app was being written survives into it. They must be off to be reset.
+        let acr = pac::FLASH.acr();
+        acr.modify(|w| {
+            w.set_icen(false);
+            w.set_dcen(false);
+        });
+        acr.modify(|w| {
+            w.set_icrst(true);
+            w.set_dcrst(true);
+        });
+        acr.modify(|w| {
+            w.set_icrst(false);
+            w.set_dcrst(false);
+        });
+        acr.modify(|w| {
+            w.set_icen(true);
+            w.set_dcen(true);
+        });
 
         p.SYST.disable_counter();
         p.SYST.disable_interrupt();
@@ -203,6 +273,14 @@ async fn main(_spawner: Spawner) {
     config.rcc.pll = None;
     config.rcc.mux.fdcansel = rcc::mux::Fdcansel::PCLK1;
     let p = embassy_stm32::init(config);
+
+    // Watchdog first. Read the reset flags, then clear them so the next boot
+    // only sees its own. The IWDG is frozen while a debugger halts the core.
+    let watchdog_reset = pac::RCC.csr().read().iwdgrstf();
+    pac::RCC.csr().modify(|w| w.set_rmvf(true));
+    pac::DBGMCU.apb1lfzr().modify(|w| w.set_iwdg(true));
+    let mut wdg: Watchdog = IndependentWatchdog::new(p.IWDG, WDG_TIMEOUT_US);
+    wdg.unleash();
 
     let uid = read_uid();
 
@@ -257,22 +335,29 @@ async fn main(_spawner: Spawner) {
     send(&mut tx, dfr_id(BootloaderCommand::FirmwareUpdateQuery), &[]).await;
     let stay = wait_for_host(&mut rx).await;
 
-    if !stay && app_is_valid() {
+    if !stay && app_ok() {
         log!("No update requested, jumping to the app");
         unsafe { jump_to_app() };
     }
-    log!("Staying in the bootloader (update requested: {}, app valid: {})", stay, app_is_valid());
+    log!("Staying in the bootloader (update requested: {}, app check: {:?})", stay, image::check());
 
     let mut flash = flash::Flash::new_blocking(p.FLASH).into_blocking_regions();
     let bank1 = &mut flash.bank1_region;
     let mut chunk_address: u32 = 0;
     let mut chunk_size: u8 = 0;
     let mut next_status = Instant::now();
+    let mut last_host = Instant::now();
+    let mut write_failed = false;
 
     loop {
+        wdg.pet();
         if Instant::now() >= next_status {
-            send_status(&mut tx, &uid).await;
+            send_status(&mut tx, &uid, error_flags(write_failed, watchdog_reset)).await;
             next_status = Instant::now() + STATUS_PERIOD;
+        }
+        if Instant::now() - last_host >= IDLE_TIMEOUT && app_ok() {
+            log!("No host for {} s, going back to the app", IDLE_TIMEOUT.as_secs());
+            unsafe { jump_to_app() };
         }
 
         let message = match with_timeout(Duration::from_millis(50), rx.read_fd()).await {
@@ -293,17 +378,20 @@ async fn main(_spawner: Spawner) {
             log!("Unknown command 0x{:04X}", m.command);
             continue;
         };
+        last_host = Instant::now();
         let data = frame.data();
 
         match command {
             BootloaderCommand::Ping => {
-                // 0 = in the bootloader (the app answers 1)
-                send(&mut tx, dfr_id(BootloaderCommand::Ping), &[0]).await;
+                // [0 = in the bootloader (the app answers 1), board tag]
+                send(&mut tx, dfr_id(BootloaderCommand::Ping), &[0, image::BOARD]).await;
             }
             BootloaderCommand::Erase => {
                 let mut ok = true;
                 let mut page = APP_BASE;
+                write_failed = false;
                 while page < APP_END {
+                    wdg.pet();
                     let off = page - FLASH_BASE;
                     if bank1.blocking_erase(off, off + PAGE_SIZE).is_err() {
                         ok = false;
@@ -312,7 +400,7 @@ async fn main(_spawner: Spawner) {
                     page += PAGE_SIZE;
                     // ~20-40 ms per page, 112 pages: keep the Status going.
                     if Instant::now() >= next_status {
-                        send_status(&mut tx, &uid).await;
+                        send_status(&mut tx, &uid, error_flags(write_failed, watchdog_reset)).await;
                         next_status = Instant::now() + STATUS_PERIOD;
                     }
                 }
@@ -346,6 +434,14 @@ async fn main(_spawner: Spawner) {
                 if bank1.blocking_write(chunk_address - FLASH_BASE, &buf[..len]).is_err() {
                     // Usually a second write to the same place without an erase.
                     log!("Flash write failed at 0x{:08X}", chunk_address);
+                    write_failed = true;
+                    continue;
+                }
+                // Read it back (the driver resets the data cache after a write).
+                let written = unsafe { core::slice::from_raw_parts(chunk_address as *const u8, len) };
+                if written != &buf[..len] {
+                    log!("Read-back mismatch at 0x{:08X}", chunk_address);
+                    write_failed = true;
                     continue;
                 }
                 let mut reply = [0u8; 5];
@@ -354,12 +450,37 @@ async fn main(_spawner: Spawner) {
                 send(&mut tx, dfr_id(BootloaderCommand::WriteOk), &reply).await;
                 chunk_address += data.len() as u32;
             }
+            BootloaderCommand::Verify => {
+                // [length u32 BE, crc32 u32 BE] -> [result, flash crc32 BE, image check]
+                let mut result = 2u8; // bad length
+                let mut crc = 0u32;
+                if data.len() >= 8 {
+                    let len = u32::from_be_bytes([data[0], data[1], data[2], data[3]]);
+                    let want = u32::from_be_bytes([data[4], data[5], data[6], data[7]]);
+                    if len > 0 && len <= APP_END - APP_BASE {
+                        crc = flash_crc(len, &mut wdg);
+                        result = if crc != want {
+                            1
+                        } else if !app_ok() {
+                            3
+                        } else {
+                            0
+                        };
+                    }
+                }
+                log!("Verify: result {}, flash crc 0x{:08X}", result, crc);
+                let mut reply = [0u8; 6];
+                reply[0] = result;
+                reply[1..5].copy_from_slice(&crc.to_be_bytes());
+                reply[5] = image::check() as u8;
+                send(&mut tx, dfr_id(BootloaderCommand::VerifyResult), &reply).await;
+            }
             BootloaderCommand::Jump => {
-                if app_is_valid() {
+                if app_ok() {
                     log!("Jumping to the app");
                     unsafe { jump_to_app() };
                 }
-                log!("Jump refused: no valid app at 0x{:08X}", APP_BASE);
+                log!("Jump refused: app check {:?}", image::check());
             }
             BootloaderCommand::Reboot => cortex_m::peripheral::SCB::sys_reset(),
             _ => log!("Unhandled command 0x{:04X}", m.command),

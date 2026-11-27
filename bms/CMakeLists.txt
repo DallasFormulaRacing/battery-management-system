@@ -5,9 +5,10 @@ set(CMAKE_BUILD_TYPE Debug)
 
 option(BUILD_TESTING "Build native executable for unit testing" OFF)
 
-# ezfd CAN bootloader: link the app at 0x08008000 (STM32G474XX_FLASH_BL.ld),
-# move the vector table there and let the CM5 reboot the BMS into the
-# bootloader. Off = the usual image at 0x08000000, flashed over SWD.
+# ezfd CAN bootloader: link the app at 0x08008000 (STM32G474XX_FLASH_BL.ld)
+# and move the vector table there. Set by the Debug-BL / Release-BL presets.
+# Off (Debug / Release) = the usual image at 0x08000000, flashed over SWD.
+# See bootloader/README.md.
 option(BOOTLOADER "Build the app to be loaded by the ezfd CAN bootloader" OFF)
 if(BOOTLOADER)
   add_compile_definitions(BMS_BOOTLOADER=1 VECT_TAB_OFFSET=0x8000U)
@@ -65,6 +66,12 @@ add_executable(${PROJECT_NAME}
     startup_stm32g474xx.s
 )
 
+if(BOOTLOADER)
+  # Image header (board tag) and end marker the bootloader checks before it
+  # starts the app. Added here, not in a library, so the linker keeps them.
+  target_sources(${PROJECT_NAME} PRIVATE App/config/app_image.c)
+endif()
+
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     STM32G474xx
@@ -118,6 +125,8 @@ target_link_libraries(${PROJECT_NAME}
         gui
         ev27_bms
         ev27can
+        bms_watchdog
+        bms_limits
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -127,4 +136,4 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_SIZE} --format=berkeley ${PROJECT_NAME}.elf
-    COMMENT ">> Running command: Memory Usage Report")
+    COMMENT ">> Running command: Memory Usage Report")

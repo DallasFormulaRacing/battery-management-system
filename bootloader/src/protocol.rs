@@ -50,17 +50,21 @@ pub enum BootloaderCommand {
     FirmwareUpdateQuery = 0x4B,
     FirmwareUpdateResponse = 0x4C,
     Reboot = 0x4D,
+    /// G474 BMS bootloader only: [length u32 BE, crc32 u32 BE] of the image
+    /// from APP_BASE. Answered with VerifyResult.
+    Verify = 0x4E,
+    /// [result u8 (0 ok, 1 CRC mismatch, 2 bad length, 3 image check failed),
+    ///  crc32 of the flash u32 BE, image::Check u8]
+    VerifyResult = 0x4F,
     Jump = 0xAAAA,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum CanDevices {
-    RaspberryPi = 0x01,
-    Nuc1 = 0x06,
-    Nuc2 = 0x07,
-    UNKNOWN = 0x1F,
-}
+/// Node addresses from ev27-can can/devices.yaml (generated/c/ev27_devices.h,
+/// EV27_ADDR_*). The bootloader uses the same address as the device's Status
+/// frame (0x700 + addr). Only the two this bootloader talks to; add others
+/// from devices.yaml when needed.
+pub const EV27_ADDR_CM5: u16 = 0x01;
+pub const EV27_ADDR_BMS: u16 = 0x03;
 
 pub fn parse_can_id(raw_id: u32) -> DfrCanId {
     // raw_id (29 bits) = [priority 3b][target 5b][command 16b][source 5b]
@@ -90,6 +94,8 @@ impl TryFrom<u16> for BootloaderCommand {
             x if x == BootloaderCommand::FirmwareUpdateQuery as u16 => Ok(BootloaderCommand::FirmwareUpdateQuery),
             x if x == BootloaderCommand::FirmwareUpdateResponse as u16 => Ok(BootloaderCommand::FirmwareUpdateResponse),
             x if x == BootloaderCommand::Reboot as u16 => Ok(BootloaderCommand::Reboot),
+            x if x == BootloaderCommand::Verify as u16 => Ok(BootloaderCommand::Verify),
+            x if x == BootloaderCommand::VerifyResult as u16 => Ok(BootloaderCommand::VerifyResult),
             x if x == BootloaderCommand::Jump as u16 => Ok(BootloaderCommand::Jump),
             _ => Err(()),
         }

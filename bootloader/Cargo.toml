@@ -1,6 +1,6 @@
 [package]
 name = "ezfd-bootloader-g474"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "ezfd CAN FD bootloader for the EV-27 BMS (STM32G474RE, FDCAN2)"
 

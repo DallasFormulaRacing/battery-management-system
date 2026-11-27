@@ -18,10 +18,19 @@ pub const STATUS_LEN: usize = 48;
 pub const MODE_BOOTLOADER: u8 = 1;
 
 /// Bootloader version, reported as FwMajor.FwMinor.FwPatch while in the bootloader.
-pub const BL_VERSION: (u8, u8, u8) = (0, 1, 0);
+pub const BL_VERSION: (u8, u8, u8) = (0, 2, 0);
 
 /// ErrorFlags bits the bootloader sets.
+/// No app it will start (any of the next two also sets this one).
 pub const ERR_NO_VALID_APP: u16 = 1 << 0;
+/// The app in flash was built for another node or board.
+pub const ERR_WRONG_BOARD: u16 = 1 << 1;
+/// The app's end marker is missing: the last upload didn't finish.
+pub const ERR_INCOMPLETE: u16 = 1 << 2;
+/// A write failed or read back wrong since the last Erase.
+pub const ERR_WRITE_FAILED: u16 = 1 << 3;
+/// The reset before this boot came from the watchdog.
+pub const ERR_WATCHDOG_RESET: u16 = 1 << 4;
 
 pub struct Status {
     pub uptime_s: u32,

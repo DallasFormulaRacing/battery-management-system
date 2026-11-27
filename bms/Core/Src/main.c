@@ -26,6 +26,7 @@
 #include "bms_board.h"
 #include "can.h"
 #include "can2_job.h"
+#include "bms_watchdog.h"
 #include "ev27_port.h"
 #include "fdcan.h"
 #include "gui_can_job.h"
@@ -146,6 +147,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  bms_watchdog_start();          /* 20 s BMS watchdog + 25 s IWDG backstop (App/services/watchdog) */
   bms_controller_config_apply();/* pin/SPI overrides for BMS_BOARD (see App/config/bms_board.h) */
   HAL_TIM_Base_Start(&htim2);   /* 1 MHz free-running counter for ev27_port_time_us() */
 
@@ -781,7 +783,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+  if (htim->Instance == TIM5)
+  {
+    bms_watchdog_tick_1ms(); /* 20 s without a feed: SDC open, CAN frame, restart */
+  }
   /* USER CODE END Callback 1 */
 }
 

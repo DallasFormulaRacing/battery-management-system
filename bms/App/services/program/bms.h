@@ -36,6 +36,7 @@ typedef enum {
   BMS_ERR_THERM_UNDER_TEMP,
   BMS_ERR_CHARGING,
   BMS_ERR_TIMEOUT,
+  BMS_ERR_WATCHDOG, /* only in the last BMS_State frame before a watchdog restart (bms_watchdog.c) */
 } bms_fault_t;
 
 typedef struct {
