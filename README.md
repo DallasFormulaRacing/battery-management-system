@@ -10,32 +10,51 @@ We are also working on integrating Doxygen so the BMS can become and remain a mu
 
 ## Getting Started
 
-Clone with `git clone https://github.com/DallasFormulaRacing/battery-management-system.git`
+Clone with `git clone --recurse-submodules https://github.com/DallasFormulaRacing/battery-management-system.git`
+
+The CAN message definitions come from [ev27-can](https://github.com/DallasFormulaRacing/ev27-can), a submodule at `bms/submodules/ev27-can`. If you already cloned without it, run `git submodule update --init bms/submodules/ev27-can`. Run `git config submodule.recurse true` once so `git pull` and `git checkout` keep it in step.
 
 ### Tools
 
-Make sure you have the following utilities:
-
-- `make`
-- `CMake`
-- `gcc-arm-none-eabi`
-- `openocd`
+- Git
+- CMake 3.22 or newer, and Ninja
+- The Arm GNU toolchain (`arm-none-eabi-gcc` on your PATH). On Windows the MSYS2 package `mingw-w64-x86_64-arm-none-eabi-gcc` works.
+- [probe-rs](https://probe.rs/docs/getting-started/installation/) to flash over SWD (the Nucleo's ST-LINK works). VS Code with Cortex-Debug or STM32CubeProgrammer also work.
+- Only for the CAN bootloader: Rust, see [bootloader/README.md](bootloader/README.md)
 
 DO NOT USE CUBE-CMAKE
 
-[Add more here]
+### Build
 
-### How to run
+Run from the `bms` folder:
 
-`Firmware Instructions`
+```
+cd bms
+cmake --preset Debug
+cmake --build --preset Debug
+```
 
-`cwd = bms`
+The firmware is `bms/build/Debug/bms.elf`. The board it is built for (bench Nucleo or controller board) is `BMS_BOARD` in `bms/App/config/bms_board.h`.
 
-1. `mkdir build && cd build`
-2. `cmake ..`
-3. `cmake --build build`
+| Preset | Use it when | App address |
+|---|---|---|
+| `Debug` | The chip has no bootloader; you flash over SWD | 0x08000000 |
+| `Debug-BL` | The chip has the CAN bootloader; you flash over CAN from the dashboard or over SWD | 0x08008000 |
 
-If you get compiler detection errors make sure the CMake GNU ARM toolchain flag is being detected!
+`Release` and `Release-BL` exist too, but `bms/CMakeLists.txt` currently forces `CMAKE_BUILD_TYPE` to Debug, so they build the same image.
+
+If you get compiler detection errors, check that `arm-none-eabi-gcc` is on your PATH. The presets pass `bms/cmake/gcc-arm-none-eabi.cmake` as the toolchain file.
+
+### Flash
+
+Without the bootloader (`Debug` preset):
+
+```
+probe-rs download --chip STM32G474RETx build/Debug/bms.elf
+probe-rs reset --chip STM32G474RETx
+```
+
+This overwrites the bootloader if the chip has one. To set a board up with the bootloader, and for flashing over CAN, follow [bootloader/README.md](bootloader/README.md).
 
 ### Recommended VS Code Extensions
 

@@ -1,4 +1,5 @@
 #include "safety_monitor.h"
+#include "bms_watchdog.h"
 #include "cmsis_os2.h"
 #include <stdint.h>
 
@@ -18,6 +19,7 @@ void bms_safety_task(void *argument) {
   for (;;) {
     // bms_test_run();
     bms_fsm_run(&hbms); // uncomment this for the real thing
+    bms_watchdog_feed();
     tick += task_freq;
     osDelayUntil(tick);
   }

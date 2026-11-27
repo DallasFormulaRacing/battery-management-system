@@ -34,7 +34,8 @@ const osMessageQueueAttr_t charger_power_setpoint_queue_attributes = {
 
 // params for charging, see bms_limits.h. Setpoints are 0.1 V / 0.1 A per bit.
 static const uint16_t MIN_CHARGER_DV = LIMIT_CHARGER_VOLTAGE_MIN_V * 10U;
-static const uint16_t MAX_PACK_CHARGING_DV = LIMIT_PACK_CHARGE_VOLTAGE_MAX_V * 10U;
+static const uint16_t MAX_PACK_CHARGING_DV =
+    (uint16_t)(BMS_PACK_CHARGE_VOLTAGE_LIMIT_V * 10.0F); /* config.h */
 static const uint16_t MIN_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MIN_A * 10U;
 static const uint16_t MAX_PACK_CHARGING_DA = LIMIT_PACK_CHARGE_CURRENT_MAX_A * 10U;
 static const uint32_t ELCON_HEARTBEAT_STALE_MS = ELCON_COMM_TIMEOUT_MS;
@@ -315,7 +316,8 @@ static bool is_elcon_okay(charger_t *charger_ctx) {
 }
 
 /**
- * @brief checks if the pack is full by checking if ANY cell voltage is greater than the overvoltage threshold
+ * @brief checks if the pack is full: ANY cell at or above the charge limit
+ * (BMS_CHARGE_CELL_VOLTAGE_LIMIT_V in config.h, below the overvoltage fault)
  * this is about not overcharging a cell
  *
  * @return true if the pack is full
@@ -326,7 +328,7 @@ static bool is_pack_full(void) {
     for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
       float cell_v = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
-      if (cell_v >= g_voltage_cfg.overvoltage_threshold_v) {
+      if (cell_v >= BMS_CHARGE_CELL_VOLTAGE_LIMIT_V) {
         return true;
       }
     }

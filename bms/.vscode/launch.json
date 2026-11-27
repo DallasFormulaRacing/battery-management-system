@@ -6,7 +6,7 @@
             "type": "cortex-debug",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/bms.elf",
+            "executable": "${workspaceFolder}/build/Debug/bms.elf",
             "servertype": "openocd",
             "configFiles": [
                 "interface/stlink.cfg",

@@ -11,6 +11,8 @@
 #include "segment.h"
 #include "spi.h"
 #include "stm32g4xx_hal.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 const extern osMutexAttr_t spi_mutex_attr;
 const extern osMutexAttr_t bms_mutex_attr;
@@ -23,6 +25,8 @@ void bms_fsm_run(bms_handler_t *hbms);
 void charging_session_enable(void);
 void charging_session_disable(void);
 void charging_session_kick_wdt(void);
+bool charging_session_active(void);
+uint32_t charging_session_ms_since_kick(void);
 
 void bms_state_entry(bms_handler_t *hbms);
 void bms_state_init(bms_handler_t *hbms);

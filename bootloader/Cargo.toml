@@ -1,0 +1,49 @@
+[package]
+name = "ezfd-bootloader-g474"
+version = "0.2.0"
+edition = "2024"
+description = "ezfd CAN FD bootloader for the EV-27 BMS (STM32G474RE, FDCAN2)"
+
+[features]
+# Default pins are the BMS controller board (FDCAN2 on PB5 RX / PB6 TX).
+# `--features nucleo` uses the bench Nucleo-G474RE wiring (PB12 RX / PB13 TX).
+nucleo = []
+
+[dependencies]
+embassy-stm32 = { version = "0.5.0", features = ["stm32g474re", "dual-bank", "unstable-pac", "time-driver-any"] }
+embassy-executor = { version = "0.9.0", features = ["arch-cortex-m", "executor-thread"] }
+embassy-time = "0.4"
+
+rtt-target = "0.6"
+
+cortex-m = { version = "0.7.6", features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt = "0.7.0"
+panic-halt = "0.2"
+embedded-can = "0.4.1"
+
+[patch.crates-io]
+embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "2b7a98b9981168264cd474596ac687f458e2e412" }
+embassy-time-driver = { git = "https://github.com/embassy-rs/embassy", rev = "2b7a98b9981168264cd474596ac687f458e2e412" }
+embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "2b7a98b9981168264cd474596ac687f458e2e412" }
+embassy-stm32 = { git = "https://github.com/embassy-rs/embassy", rev = "2b7a98b9981168264cd474596ac687f458e2e412" }
+
+# Debug builds log over RTT (probe-rs). They must still fit the 32 KB
+# bootloader slot, hence size optimisation and LTO here too.
+[profile.dev]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+incremental = false
+lto = "fat"
+opt-level = "z"
+overflow-checks = true
+
+[profile.release]
+codegen-units = 1
+debug = 0
+debug-assertions = false
+incremental = false
+lto = "fat"
+opt-level = "z"
+overflow-checks = false
+strip = "symbols"

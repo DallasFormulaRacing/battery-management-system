@@ -2,9 +2,11 @@
 #include "can.h"
 #include "can2_job.h"
 #include "cmsis_os2.h"
+#include "ev27_node.h"
+#include "ev27_ezfd.h"
+#include "ev27_port.h"
 #include "gui_drivers.h"
 #include "gui_types.h"
-#include "imd_drivers.h"
 #include "stm32g474xx.h"
 #include <string.h>
 
@@ -20,12 +22,17 @@ const osThreadAttr_t gui_can_job_runner_attributes = {
 
 /**
  * @brief
- * if MSG comes from GUI, send to GUI can handle
+ * FDCAN1 frames go to can2_job. FDCAN2 (main bus) frames are sorted by ID
+ * type: 11-bit ev27 main-bus frames go to the ev27 RX task, 29-bit GUI frames
+ * to the GUI handler.
  * @param hfdcan
  * @param RxFifo0ITs
  */
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
                                uint32_t RxFifo0ITs) {
+  /* first thing: ev27 TimeSync needs the instant the frame arrived */
+  const uint32_t now_us = ev27_port_time_us();
+
   if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) == 0U) {
     return;
   }
@@ -51,8 +58,11 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 
       if (osMessageQueuePut(can2_rx_dispatch_queueHandle, &msg, 0, 0) !=
           osOK) {
-        can2_forwarding_count_queue_overrun();
+        can2_count_queue_overrun();
       }
+    } else if (hfdcan->Instance == FDCAN2 &&
+               rxHeader.IdType == FDCAN_STANDARD_ID) {
+      ev27_can_queue_rx_from_isr(rxHeader.Identifier, rx_payload, len, now_us);
     } else if (hfdcan->Instance == FDCAN2) {
       fdcan_msg_t msg = {
           .id = rxHeader.Identifier,
@@ -69,12 +79,16 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan,
 // actual thread function
 void gui_can_job_runner(void *argument) {
   fdcan_msg_t msg;
-  fdcan_hardware_init();
+  /* FDCAN2 is set up and started by ev27_can_start() in main.c */
 
   for (;;) {
     if (osMessageQueueGet(fdcan_rx_dispatch_queueHandle, &msg, NULL,
                           osWaitForever) == osOK) {
-      gui_process_can_command(msg.id, msg.data, msg.len);
+      if (FDCAN_DFR_TARGET(msg.id) == FDCAN_EZFD_NODE_ADDR) {
+        ev27_ezfd_rx(msg.id, msg.data, (uint8_t)msg.len);
+      } else {
+        gui_process_can_command(msg.id, msg.data, msg.len);
+      }
     }
   }
 }

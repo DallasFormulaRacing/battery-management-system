@@ -1,6 +1,8 @@
 #ifndef SPI_H
 #define SPI_H
 
+#include "bms_board.h"
+#include "main.h"
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_spi.h"
 #include "stm32g4xx_hal_tim.h"
@@ -23,11 +25,12 @@ extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c3;
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi5;
-extern UART_HandleTypeDef hlpuart1;
+// extern UART_HandleTypeDef hlpuart1;
 extern TIM_HandleTypeDef htim3;
 
-#define CS_PIN GPIO_PIN_6
-#define GPIO_PORT GPIOB
+/* 6822 chip select comes from the board preset (App/config/bms_board.h) */
+#define CS_PIN BMS_ASIC_CS_PIN
+#define GPIO_PORT BMS_ASIC_CS_PORT
 
 void delay(uint32_t ms);
 

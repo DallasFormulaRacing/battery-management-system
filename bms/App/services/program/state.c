@@ -1,7 +1,17 @@
 #include "state.h"
 #include "bms.h"
+#include "bms_watchdog.h"
 #include "cmsis_os2.h"
 #include "supervisor.h"
+
+#if BMS_BENCH_IGNORE_THERM_FAULTS
+#warning "BMS_BENCH_IGNORE_THERM_FAULTS is on: thermistor faults are ignored"
+#endif
+
+#define FAULT_MEASURE_PERIOD_MS 200U
+
+_Static_assert(BMS_ERR_WATCHDOG == BMS_WDG_FAULT_CODE,
+               "bms_watchdog.c sends BMS_WDG_FAULT_CODE as the BMS_State FaultCode");
 
 typedef void (*state_handler_t)(bms_handler_t *hbms);
 extern osMutexId_t bms_mutex_id;
@@ -86,6 +96,28 @@ void bms_state_init(bms_handler_t *hbms) {
   bms_fsm_transition(hbms, BMS_STATE_MEASURE);
 }
 
+/*
+ * One measurement pass under bms_mutex_id, run by both Measure and Charging.
+ * Any fault (OV, UV, temperature, open wire, BMS_ERR_PEC_FAIL) goes to Fault.
+ * Returns false if it faulted.
+ */
+static bool measure_pass(bms_handler_t *hbms) {
+  if (osOK != osMutexAcquire(bms_mutex_id, 1000)) {
+    // failed to acquire mutex - why did this happen?
+    hbms->state.error_code = BMS_ERR_TIMEOUT;
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+    return false;
+  }
+
+  const bms_fault_t status = bms_run_measurement_checks();
+  if (status != BMS_ERR_NONE) {
+    hbms->state.error_code = status;
+    bms_fsm_transition(hbms, BMS_STATE_FAULT);
+  }
+  osMutexRelease(bms_mutex_id);
+  return status == BMS_ERR_NONE;
+}
+
 void bms_state_measure(bms_handler_t *hbms) {
   /*
   - this state must be able to:
@@ -98,61 +130,12 @@ void bms_state_measure(bms_handler_t *hbms) {
       - check for over temp
     - if UV or OV or OW, set fault flag and transition to fault state
     - if nothing is wrong, stay in this state
+  - Charging measures the same way, so a session only starts after a clean
+    pass and the cells are still watched while it runs.
   */
-
-  // adbms_read_aux_open_wire(hbms->asic);
-
-  bms_fault_t status = BMS_ERR_NONE;
-  if (osOK == osMutexAcquire(bms_mutex_id, 1000)) {
-    status = cell_voltage_in_range_check();
-    if (BMS_ERR_CELL_OV == status || BMS_ERR_CELL_UV == status) {
-      hbms->state.error_code = status;
-      bms_fsm_transition(hbms, BMS_STATE_FAULT);
-      osMutexRelease(bms_mutex_id);
-      return;
-    }
-
-    status = therm_temp_in_range_check();
-    if (BMS_ERR_THERM_OVER_TEMP == status || BMS_ERR_THERM_UNDER_TEMP == status) {
-      hbms->state.error_code = status;
-      bms_fsm_transition(hbms, BMS_STATE_FAULT);
-      osMutexRelease(bms_mutex_id);
-      return;
-    }
-
-    status = cell_open_wire_check_odd();
-    if (BMS_ERR_CELL_OPENWIRE == status) {
-      hbms->state.error_code = status;
-      bms_fsm_transition(hbms, BMS_STATE_FAULT);
-      osMutexRelease(bms_mutex_id);
-      return;
-    }
-
-    status = cell_open_wire_check_even();
-    if (BMS_ERR_CELL_OPENWIRE == status) {
-      hbms->state.error_code = status;
-      bms_fsm_transition(hbms, BMS_STATE_FAULT);
-      osMutexRelease(bms_mutex_id);
-      return;
-    }
-
-    status = therm_open_wire_check();
-    if (BMS_ERR_AUX_OPENWIRE == status) {
-      hbms->state.error_code = status;
-      bms_fsm_transition(hbms, BMS_STATE_FAULT);
-      osMutexRelease(bms_mutex_id);
-      return;
-    }
-
-    osMutexRelease(bms_mutex_id);
+  if (measure_pass(hbms) && charging_session_active()) {
+    bms_fsm_transition(hbms, BMS_STATE_CHARGING);
   }
-
-  else { //failed to acquire mutex - why did this happen?
-    hbms->state.error_code = BMS_ERR_TIMEOUT;
-    bms_fsm_transition(hbms, BMS_STATE_FAULT);
-    return;
-  }
-  if(BMS_ERR_NONE == status) bms_fsm_transition(hbms, BMS_STATE_CHARGING);
 }
 
 // ======== CHARGING SESSION ========
@@ -192,6 +175,16 @@ void charging_session_kick_wdt(void) {
   }
 }
 
+bool charging_session_active(void) {
+  return (osEventFlagsGet(charging_session_active_osEventFlags) &
+          CHARGING_SESSION_ACTIVE_FLAG) != 0U;
+}
+
+/* ms since the last Connect or keepalive */
+uint32_t charging_session_ms_since_kick(void) {
+  return osKernelGetTickCount() - charging_session_get_last_tick();
+}
+
 void bms_state_charging(bms_handler_t *hbms) {
   uint32_t flags = osEventFlagsGet(charging_session_active_osEventFlags);
   if ((flags & CHARGING_SESSION_ACTIVE_FLAG) == 0U) {
@@ -206,6 +199,13 @@ void bms_state_charging(bms_handler_t *hbms) {
     charging_session_disable();
     charger_supervisor_stop(&g_charger);
     bms_fsm_transition(hbms, BMS_STATE_MEASURE);
+    return;
+  }
+
+  /* Same checks as Measure, every pass. Cell voltages are read with balancing
+   * paused (adbms_read_fcell_voltages_muted), so a balancing cell does not
+   * read low. */
+  if (!measure_pass(hbms)) {
     return;
   }
 
@@ -228,8 +228,16 @@ void bms_state_fault(bms_handler_t *hbms) {
   // keep monitoring so the we can see wtf is happening
   open_shutdown_circuit();
   hard_fault_disable_openwire_on_profiles();
+
+  // stop balancing and restart both ADCs with open wire off, in case the
+  // fault hit mid balance or mid open wire check
+  (void)adbms_clear_all_pwm(hbms->asic);
+  force_sync_s_adc();
+  (void)adbms_start_cell_voltage_measurement(hbms->asic);
+
   for (;;) {
     measure_during_fault();
-    osDelay(1000);
+    bms_watchdog_feed(); /* this loop never returns to bms_safety_task */
+    osDelay(FAULT_MEASURE_PERIOD_MS);
   }
 }

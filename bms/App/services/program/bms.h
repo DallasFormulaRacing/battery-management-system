@@ -5,6 +5,8 @@
 #include "charger.h"
 #include "segment.h"
 #include "spi.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #define IDLE_POLLING_INTERVAL_MS 1000
 #define MEASUREMENT_POLLING_INTERVAL_MS 10
@@ -34,6 +36,7 @@ typedef enum {
   BMS_ERR_THERM_UNDER_TEMP,
   BMS_ERR_CHARGING,
   BMS_ERR_TIMEOUT,
+  BMS_ERR_WATCHDOG, /* only in the last BMS_State frame before a watchdog restart (bms_watchdog.c) */
 } bms_fault_t;
 
 typedef struct {
@@ -65,11 +68,42 @@ bms_fault_t cell_open_wire_check_odd();
 bms_fault_t cell_open_wire_check_even();
 bms_fault_t therm_temp_in_range_check();
 bms_fault_t cell_voltage_in_range_check();
+/* One full pass: cell OV/UV, temperatures, cell and thermistor open wire.
+ * Returns the first fault (BMS_ERR_PEC_FAIL included). Caller holds
+ * bms_mutex_id. Used by the Measure and Charging states. */
+bms_fault_t bms_run_measurement_checks(void);
+
+/* Result of the last reading of IC ic (chain order): PEC passed on every group
+ * and the IC was not at its reset values. False before the first reading. */
+bool bms_ic_cells_valid(uint8_t ic);
+bool bms_ic_temps_valid(uint8_t ic);
+/* True while the last reading of some kind (cell, S-ADC, aux) failed. */
+bool bms_readings_failing(void);
+/* How many times the 6830 chain was re-initialised after failed readings. */
+uint32_t bms_chain_reinit_count(void);
+
+void force_sync_s_adc();
 void measure_during_fault();
 void open_shutdown_circuit();
 void hard_fault_disable_openwire_on_profiles();
 
 //***** TESTING FUNCTIONS *****/
+
+/*
+ * Bench testing only: 1 keeps reading the thermistors but never faults on
+ * over/under temp or thermistor open wire (for boards with no NTCs fitted).
+ * Must be 0 on the car.
+ */
+#define BMS_BENCH_IGNORE_THERM_FAULTS 1
+
+/*
+ * Bench testing only, bootloader build: 1 lets the CM5 reboot the BMS into the
+ * CAN bootloader without a VCU_State saying FlashAllowed (there is no VCU on
+ * the bench yet). The other conditions still apply: not faulted, no charging
+ * session, no balancing. Must be 0 on the car.
+ */
+#define BMS_BENCH_REBOOT_WITHOUT_VCU 1
+
 void bms_test_init();
 void bms_test_run();
 

@@ -19,6 +19,9 @@ jobs:
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+                  # ev27-can is a submodule in a private repo; see linux.yml
+                  submodules: true
+                  token: ${{ secrets.EV27_CAN_TOKEN }}
 
             - name: Install GitVersion
               uses: gittools/actions/gitversion/setup@v1.1.1

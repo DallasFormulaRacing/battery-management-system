@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+extern osMutexId_t bms_mutex_id;
+
 cell_asic_ctx_t asic[NUM_IC_COUNT_CHAIN];
 uint8_t write_buffer[WRITE_SIZE];
 
@@ -39,19 +41,143 @@ bms_handler_t hbms = {
     .pack = &g_pack,
 };
 
+/* ---- isoSPI reading health -------------------------------------------------
+ * See BMS_PEC_FAIL_LIMIT and BMS_PEC_REINIT_AFTER in config.h. Each kind of
+ * reading keeps its own count, so a chain where only the aux reads fail still
+ * faults.
+ */
+typedef enum {
+  READ_CELL, /* filtered C-ADC (OV/UV) */
+  READ_S,    /* S-ADC (cell open wire) */
+  READ_AUX,  /* aux (thermistors, thermistor open wire) */
+  READ_KIND_COUNT,
+} read_kind_t;
+
+#define RAW_RESET_VALUE INT16_MIN /* 0x8000: what a 6830 result register holds after reset */
+
+static uint32_t s_fail_streak[READ_KIND_COUNT];
+static uint32_t s_reinit_count;
+static bool s_reinit_due;
+static bool s_cells_valid[NUM_IC_COUNT_CHAIN];
+static bool s_temps_valid[NUM_IC_COUNT_CHAIN];
+
+static bool all_reset_value(const voltage_readings_t *v, uint16_t n) {
+  for (uint16_t i = 0; i < n; i++) {
+    if (v[i] != RAW_RESET_VALUE) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+ * After a read: valid[ic] = that IC's data can be used (PEC passed on every
+ * group and not all at the reset value). Returns true if any IC failed.
+ */
+static bool check_ics(read_kind_t kind, bool *valid) {
+  bool any_failed = false;
+
+  for (uint8_t ic = 0; ic < NUM_IC_COUNT_CHAIN; ic++) {
+    const cell_asic_ctx_t *a = &hbms.asic[ic];
+    bool ok;
+
+    switch (kind) {
+    case READ_CELL:
+      ok = (a->crc_err.cell_pec == 0U) &&
+           !all_reset_value(a->filt_cell.filt_cell_voltages_array,
+                            NUM_CELLS_PER_SEGMENT);
+      break;
+    case READ_S:
+      ok = (a->crc_err.cell_pec == 0U) && /* S-ADC shares the cell PEC flag */
+           !all_reset_value(a->s_cell.s_cell_voltages_array,
+                            NUM_CELLS_PER_SEGMENT);
+      break;
+    case READ_AUX:
+    default:
+      ok = (a->crc_err.aux_channel_pec == 0U) &&
+           !all_reset_value(a->aux.aux_voltages_array, NUM_THERM_PER_SEGMENT);
+      break;
+    }
+    valid[ic] = ok;
+    any_failed = any_failed || !ok;
+  }
+  return any_failed;
+}
+
+/* Writes the 6830 config again and restarts the ADCs, as bms_state_init()
+ * does. Balancing PWM is cleared; the balancing code sets it again on its
+ * next pass. */
+static void reinit_chain(void) {
+  (void)adbms_init_config(hbms.asic);
+  (void)adbms_start_aux_voltage_measurement(hbms.asic);
+  (void)adbms_clear_all_pwm(hbms.asic);
+  (void)adbms_start_cell_voltage_measurement(hbms.asic);
+  s_reinit_count++;
+}
+
+/* At the end of a measurement pass: re-initialise once if any kind of reading
+ * reached a multiple of BMS_PEC_REINIT_AFTER failures during the pass. */
+static void reinit_if_due(void) {
+  if (s_reinit_due) {
+    s_reinit_due = false;
+    reinit_chain();
+  }
+}
+
+/* Counts one reading. Returns BMS_ERR_PEC_FAIL once BMS_PEC_FAIL_LIMIT
+ * readings of this kind have failed in a row. */
+static bms_fault_t count_reading(read_kind_t kind, bool failed) {
+  if (!failed) {
+    s_fail_streak[kind] = 0U;
+    return BMS_ERR_NONE;
+  }
+  s_fail_streak[kind]++;
+  if ((s_fail_streak[kind] % BMS_PEC_REINIT_AFTER) == 0U) {
+    s_reinit_due = true;
+  }
+  return (s_fail_streak[kind] >= BMS_PEC_FAIL_LIMIT) ? BMS_ERR_PEC_FAIL
+                                                     : BMS_ERR_NONE;
+}
+
+bool bms_ic_cells_valid(uint8_t ic) {
+  return (ic < NUM_IC_COUNT_CHAIN) && s_cells_valid[ic];
+}
+
+bool bms_ic_temps_valid(uint8_t ic) {
+  return (ic < NUM_IC_COUNT_CHAIN) && s_temps_valid[ic];
+}
+
+bool bms_readings_failing(void) {
+  for (uint32_t k = 0; k < READ_KIND_COUNT; k++) {
+    if (s_fail_streak[k] != 0U) {
+      return true;
+    }
+  }
+  return false;
+}
+
+uint32_t bms_chain_reinit_count(void) { return s_reinit_count; }
+
+/* ---- Measurement checks ----------------------------------------------------- */
+
 /*
  * @brief Check thermistor temperature and see if between range
  * @params None
- * @return Fault status message for whether thermistor is over or under temp.
- * Otherwise returns no error.
+ * @return BMS_ERR_THERM_OVER_TEMP / BMS_ERR_THERM_UNDER_TEMP, BMS_ERR_PEC_FAIL
+ * after BMS_PEC_FAIL_LIMIT failed aux readings in a row, else no error.
  */
 bms_fault_t therm_temp_in_range_check() {
   adbms_start_aux_voltage_measurement(hbms.asic);
   delay(5);
-  adbms_read_aux_voltages(hbms.asic);
+  (void)adbms_read_aux_voltages(hbms.asic);
+  const bms_fault_t pec = count_reading(READ_AUX, check_ics(READ_AUX, s_temps_valid));
+
   bool over_temp_flag = false;
   bool under_temp_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    if (!s_temps_valid[seg_num]) {
+      continue; /* garbage or reset IC: keep its last good temperatures */
+    }
     for (uint16_t therm_num = 0; therm_num < NUM_THERM_PER_SEGMENT;
          therm_num++) {
 
@@ -87,16 +213,22 @@ bms_fault_t therm_temp_in_range_check() {
     return BMS_ERR_THERM_UNDER_TEMP;
   }
 
-  return BMS_ERR_NONE;
+  return pec;
 }
 
 bms_fault_t therm_open_wire_check() {
+  bool valid[NUM_IC_COUNT_CHAIN];
+
   adbms_start_aux_voltage_measurement(hbms.asic);
   delay(5);
-  adbms_read_aux_voltages(hbms.asic);
+  (void)adbms_read_aux_voltages(hbms.asic);
+  const bms_fault_t pec = count_reading(READ_AUX, check_ics(READ_AUX, valid));
 
   bool open_wire_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
+    if (!valid[seg_num]) {
+      continue;
+    }
     for (uint16_t i = 0; i < NUM_THERM_PER_SEGMENT; i++) {
       // if voltage is greater than 2.9 V, there is probably an OW or it's
       // really cold
@@ -111,17 +243,25 @@ bms_fault_t therm_open_wire_check() {
   if (open_wire_flag) {
     return BMS_ERR_AUX_OPENWIRE;
   }
-  return BMS_ERR_NONE;
+  return pec;
 }
 
+/*
+ * @brief Filtered cell voltages, read with balancing paused, checked against
+ * OV/UV. ICs whose reading failed (PEC or reset) are skipped this time.
+ * @return BMS_ERR_CELL_OV / BMS_ERR_CELL_UV, BMS_ERR_PEC_FAIL after
+ * BMS_PEC_FAIL_LIMIT failed cell readings in a row, else no error.
+ */
 bms_fault_t cell_voltage_in_range_check() {
-  // todo: test this and make sure it updates the fault struct
+  (void)adbms_read_fcell_voltages_muted(hbms.asic);
+  const bms_fault_t pec = count_reading(READ_CELL, check_ics(READ_CELL, s_cells_valid));
 
-  adbms_read_fcell_voltages(hbms.asic);
   bool cell_over_flag = false;
   bool cell_under_flag = false;
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-
+    if (!s_cells_valid[seg_num]) {
+      continue;
+    }
     for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT; cell_num++) {
       float this_cell = convert_voltage_human_readable(
           hbms.asic[seg_num].filt_cell.filt_cell_voltages_array[cell_num]);
@@ -145,7 +285,7 @@ bms_fault_t cell_voltage_in_range_check() {
     return BMS_ERR_CELL_UV;
   }
 
-  return BMS_ERR_NONE;
+  return pec;
 }
 
 void adbms_set_watchdog() {}
@@ -160,7 +300,10 @@ static inline void get_odd_openwire_voltages() {
 }
 
 bms_fault_t cell_open_wire_check_odd() {
+  bool valid[NUM_IC_COUNT_CHAIN];
+
   get_odd_openwire_voltages();
+  const bms_fault_t pec = count_reading(READ_S, check_ics(READ_S, valid));
   bool cell_open_wire_flag = false;
 
   //////////////
@@ -168,7 +311,9 @@ bms_fault_t cell_open_wire_check_odd() {
   // todo: how to detect? value reading is fine now
   // do odd cell taps (even indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-
+    if (!valid[seg_num]) {
+      continue;
+    }
     for (uint16_t cell_num = 0; cell_num < NUM_CELLS_PER_SEGMENT;
          cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
@@ -184,7 +329,7 @@ bms_fault_t cell_open_wire_check_odd() {
   if (cell_open_wire_flag)
     return BMS_ERR_CELL_OPENWIRE;
 
-  return BMS_ERR_NONE;
+  return pec;
 }
 
 static inline void get_even_openwire_voltages() {
@@ -197,13 +342,18 @@ static inline void get_even_openwire_voltages() {
 }
 
 bms_fault_t cell_open_wire_check_even() {
+  bool valid[NUM_IC_COUNT_CHAIN];
+
   get_even_openwire_voltages();
+  const bms_fault_t pec = count_reading(READ_S, check_ics(READ_S, valid));
   bool cell_open_wire_flag = false;
 
   // todo: how to detect? value reading is fine now
   // do even cell taps (odd indexs due to array indexing)
   for (uint8_t seg_num = 0; seg_num < NUM_IC_COUNT_CHAIN; seg_num++) {
-
+    if (!valid[seg_num]) {
+      continue;
+    }
     for (uint16_t cell_num = 1; cell_num < NUM_CELLS_PER_SEGMENT;
          cell_num += 2) {
       float this_cell = convert_voltage_human_readable(
@@ -219,12 +369,56 @@ bms_fault_t cell_open_wire_check_even() {
   if (cell_open_wire_flag)
     return BMS_ERR_CELL_OPENWIRE;
 
-  return BMS_ERR_NONE;
+  return pec;
 }
 
 void force_sync_s_adc() {
   adbms_start_adc_s_voltage_measurement(hbms.asic, g_cell_force_sync_s_adc);
   osDelay(30);
+}
+
+/* Under BMS_BENCH_IGNORE_THERM_FAULTS thermistor results are still read but
+ * only a PEC fault from the aux reads counts. */
+static bool therm_result_faults(bms_fault_t f) {
+#if BMS_BENCH_IGNORE_THERM_FAULTS
+  return f == BMS_ERR_PEC_FAIL;
+#else
+  return f != BMS_ERR_NONE;
+#endif
+}
+
+static bms_fault_t run_checks(void) {
+  bms_fault_t f = cell_voltage_in_range_check();
+  if (f != BMS_ERR_NONE) {
+    return f;
+  }
+
+  f = therm_temp_in_range_check();
+  if (therm_result_faults(f)) {
+    return f;
+  }
+
+  f = cell_open_wire_check_odd();
+  if (f != BMS_ERR_NONE) {
+    return f;
+  }
+
+  f = cell_open_wire_check_even();
+  if (f != BMS_ERR_NONE) {
+    return f;
+  }
+
+  f = therm_open_wire_check();
+  if (therm_result_faults(f)) {
+    return f;
+  }
+  return BMS_ERR_NONE;
+}
+
+bms_fault_t bms_run_measurement_checks(void) {
+  const bms_fault_t f = run_checks();
+  reinit_if_due();
+  return f;
 }
 
 void hard_fault_disable_openwire_on_profiles() {
@@ -240,11 +434,20 @@ void hard_fault_disable_openwire_on_profiles() {
 /**
  * @brief this is a special mesurement loop designed to operate under fault
  * it should NOT: bleed cells or do open wire checks, since ow injects current
- */ // todo
+ * The range checks still run so the per-cell fault flags stay current, but
+ * their result is ignored: we are already faulted and only want fresh data.
+ * Failed readings still count, so the chain is re-initialised here too.
+ */
 void measure_during_fault() {
   hard_fault_disable_openwire_on_profiles();
-  // measure voltages (top level task)
-  // measure temps (top level task)
+
+  if (osOK != osMutexAcquire(bms_mutex_id, 1000)) {
+    return;
+  }
+  (void)cell_voltage_in_range_check();
+  (void)therm_temp_in_range_check();
+  reinit_if_due();
+  osMutexRelease(bms_mutex_id);
 }
 volatile float look[NUM_IC_COUNT_CHAIN][NUM_CELLS_PER_SEGMENT];
 static void pop() {

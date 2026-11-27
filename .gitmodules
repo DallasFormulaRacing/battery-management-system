@@ -5,3 +5,6 @@
 	path = bms/submodules/external/unity_cmake/CMock
 	url = https://github.com/ThrowTheSwitch/CMock
 
+[submodule "bms/submodules/ev27-can"]
+	path = bms/submodules/ev27-can
+	url = ../ev27-can.git

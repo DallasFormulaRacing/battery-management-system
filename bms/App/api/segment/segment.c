@@ -8,7 +8,9 @@
 #include "parse.h"
 #include "spi.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <cmsis_os2.h>
 
 #define RETURN_IF_ERROR(status)                                                \
   do {                                                                         \
@@ -16,6 +18,51 @@
     if (_s != COMM_OK)                                                         \
       return _s;                                                               \
   } while (0)
+
+typedef struct {
+  const uint8_t *cmd;
+  bms_group_select_t group;
+} group_read_t;
+
+/*
+ * Reads each register group in turn, all of them even when one fails, so one
+ * bad frame does not leave the other groups stale. Afterwards the crc_err flag
+ * for this register type (bms_pec_flag()) is 1 on every IC whose frame failed
+ * in any of the groups, or on every IC if a read did not happen at all.
+ * Returns COMM_OK, or the last error.
+ */
+static comm_status_t read_groups(cell_asic_ctx_t *asic_ctx, bms_op_t type,
+                                 const group_read_t *reads, uint8_t n) {
+  uint8_t failed[NUM_IC_COUNT_CHAIN] = {0};
+  const uint8_t ic_count = (asic_ctx->ic_count < NUM_IC_COUNT_CHAIN)
+                               ? asic_ctx->ic_count
+                               : NUM_IC_COUNT_CHAIN;
+  comm_status_t worst = COMM_OK;
+
+  for (uint8_t i = 0U; i < n; i++) {
+    const comm_status_t st =
+        bms_read_data(asic_ctx, type, reads[i].cmd, reads[i].group);
+    if (st != COMM_OK) {
+      worst = st;
+    }
+    for (uint8_t ic = 0U; ic < ic_count; ic++) {
+      const uint8_t *flag = bms_pec_flag(&asic_ctx[ic], type);
+      const bool not_read = (st != COMM_OK && st != COMM_INVALID_PEC_ERROR_FLAG);
+      if (not_read || (flag != NULL && *flag != 0U)) {
+        failed[ic] = 1U;
+      }
+    }
+  }
+  for (uint8_t ic = 0U; ic < ic_count; ic++) {
+    uint8_t *flag = bms_pec_flag(&asic_ctx[ic], type);
+    if (flag != NULL) {
+      *flag = failed[ic];
+    }
+  }
+  return worst;
+}
+
+#define GROUP_COUNT(a) ((uint8_t)(sizeof(a) / sizeof((a)[0])))
 
 comm_status_t adbms_init_config(cell_asic_ctx_t *asic_ctx) {
   bms_cfg_reg_a_t *cfg_a; // table 102
@@ -82,23 +129,13 @@ comm_status_t adbms_start_cell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_cell_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDCVA, REG_GROUP_A}, {RDCVB, REG_GROUP_B}, {RDCVC, REG_GROUP_C},
+      {RDCVD, REG_GROUP_D}, {RDCVE, REG_GROUP_E}, {RDCVF, REG_GROUP_F},
+  };
 
   asic_wakeup(asic_ctx->ic_count);
-
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVD, REG_GROUP_D));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVE, REG_GROUP_E));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_CELL_VOLT, RDCVF, REG_GROUP_F));
-
-  return COMM_OK;
+  return read_groups(asic_ctx, BMS_REG_CELL_VOLT, reads, GROUP_COUNT(reads));
 }
 
 comm_status_t
@@ -113,19 +150,13 @@ adbms_start_adc_s_voltage_measurement(cell_asic_ctx_t *asic_ctx,
 }
 
 comm_status_t adbms_read_s_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDSVA, REG_GROUP_A}, {RDSVB, REG_GROUP_B}, {RDSVC, REG_GROUP_C},
+      {RDSVD, REG_GROUP_D}, {RDSVE, REG_GROUP_E}, {RDSVF, REG_GROUP_F},
+  };
 
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adsv_command(cont_meas,
-  // g_cell_open_wire_check_profile.discharge_permit, ow_mode);
-
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVA, REG_GROUP_A));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVB, REG_GROUP_B));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVC, REG_GROUP_C));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVD, REG_GROUP_D));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVE, REG_GROUP_E));
-  RETURN_IF_ERROR(bms_read_data(asic_ctx, BMS_REG_S_VOLT, RDSVF, REG_GROUP_F));
-
-  return COMM_OK;
+  return read_groups(asic_ctx, BMS_REG_S_VOLT, reads, GROUP_COUNT(reads));
 }
 
 comm_status_t
@@ -140,21 +171,14 @@ adbms_start_avgcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_avgcell_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDACA, REG_GROUP_A}, {RDACB, REG_GROUP_B}, {RDACC, REG_GROUP_C},
+      {RDACD, REG_GROUP_D}, {RDACE, REG_GROUP_E}, {RDACF, REG_GROUP_F},
+  };
 
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACD, REG_GROUP_D));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACE, REG_GROUP_E));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AVG_CELL_VOLT, RDACF, REG_GROUP_F));
-
-  return COMM_OK;
+  asic_wakeup(asic_ctx->ic_count);
+  return read_groups(asic_ctx, BMS_REG_AVG_CELL_VOLT, reads,
+                     GROUP_COUNT(reads));
 }
 
 comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
@@ -168,27 +192,32 @@ comm_status_t adbms_start_fcell_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_fcell_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDFCA, REG_GROUP_A}, {RDFCB, REG_GROUP_B}, {RDFCC, REG_GROUP_C},
+      {RDFCD, REG_GROUP_D}, {RDFCE, REG_GROUP_E}, {RDFCF, REG_GROUP_F},
+  };
 
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adcv_command(g_cell_profile.redundant_measurement_mode,
-  //                  g_cell_profile.continuous_measurement,
-  //                  g_cell_profile.discharge_permit,
-  //                  g_cell_profile.reset_filter, g_cell_profile.ow_mode);
+  return read_groups(asic_ctx, BMS_REG_FILT_CELL_VOLT, reads,
+                     GROUP_COUNT(reads));
+}
 
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCD, REG_GROUP_D));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCE, REG_GROUP_E));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_FILT_CELL_VOLT, RDFCF, REG_GROUP_F));
+/**
+ * @brief read filtered cell voltages with balancing paused so voltage drop doesn't have 
+ * cells read low (4ms delay plus ~1ms per IC in chain )
+ */
+comm_status_t adbms_read_fcell_voltages_muted(cell_asic_ctx_t *asic_ctx) {
+  asic_wakeup(asic_ctx->ic_count);
+  bms_send_command(MUTE); 
+  osDelay(2);            
+  spi_adcv_command(g_cell_profile.redundant_measurement_mode,
+                   g_cell_profile.continuous_measurement, DCP_OFF, RSTF_ON,
+                   g_cell_profile.ow_mode);
+  osDelay(2);             
 
-  return COMM_OK;
+  comm_status_t status = adbms_read_fcell_voltages(asic_ctx);
+  bms_send_command(UNMUTE);
+  return status;
 }
 
 comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
@@ -206,36 +235,30 @@ comm_status_t adbms_start_aux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
 }
 
 comm_status_t adbms_read_aux_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDAUXA, REG_GROUP_A},
+      {RDAUXB, REG_GROUP_B},
+      {RDAUXC, REG_GROUP_C},
+      {RDAUXD, REG_GROUP_D},
+  };
 
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adax_command(g_thermistor_profile.aux_ow_mode,
-  //                  g_thermistor_profile.pull_up_resistor_ow,
-  //                  g_thermistor_profile.channels);
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXD, REG_GROUP_D));
-  return COMM_OK;
+  return read_groups(asic_ctx, BMS_REG_AUX_VOLT, reads, GROUP_COUNT(reads));
 }
 
 comm_status_t adbms_read_aux_open_wire(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDAUXA, REG_GROUP_A},
+      {RDAUXB, REG_GROUP_B},
+      {RDAUXC, REG_GROUP_C},
+      {RDAUXD, REG_GROUP_D},
+  };
+
   asic_wakeup(asic_ctx->ic_count);
   spi_adax_command(g_thermistor_open_wire_check_profile.aux_ow_mode,
                    g_thermistor_open_wire_check_profile.pull_up_resistor_ow,
                    g_thermistor_open_wire_check_profile.channels);
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_AUX_VOLT, RDAUXD, REG_GROUP_D));
-  return COMM_OK;
+  return read_groups(asic_ctx, BMS_REG_AUX_VOLT, reads, GROUP_COUNT(reads));
 }
 
 comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
@@ -259,18 +282,16 @@ comm_status_t adbms_start_raux_voltage_measurement(cell_asic_ctx_t *asic_ctx) {
  * @return comm_status_t
  */
 comm_status_t adbms_read_raux_voltages(cell_asic_ctx_t *asic_ctx) {
+  static const group_read_t reads[] = {
+      {RDRAXA, REG_GROUP_A},
+      {RDRAXB, REG_GROUP_B},
+      {RDRAXC, REG_GROUP_C},
+      {RDRAXD, REG_GROUP_D},
+  };
 
   asic_wakeup(asic_ctx->ic_count);
-  // spi_adax2_command(g_thermistor_profile.channels);
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, RDRAXA, REG_GROUP_A));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, RDRAXB, REG_GROUP_B));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, RDRAXC, REG_GROUP_C));
-  RETURN_IF_ERROR(
-      bms_read_data(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, RDRAXD, REG_GROUP_D));
-  return COMM_OK;
+  return read_groups(asic_ctx, BMS_REG_REDUNDANT_AUX_VOLT, reads,
+                     GROUP_COUNT(reads));
 }
 
 comm_status_t adbms_read_status_registers(cell_asic_ctx_t *asic_ctx) {

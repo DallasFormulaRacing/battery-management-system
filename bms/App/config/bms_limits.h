@@ -17,7 +17,7 @@
 
 /* any cell at/above this faults the BMS and counts as "pack full" */
 #define MAX_SAFE_CELL_VOLTAGE_V 4.20F
-#define MIN_SAFE_CELL_VOLTAGE_V 2.50F
+#define MIN_SAFE_CELL_VOLTAGE_V 1.00F
 #define BMS_MEAS_VOLTAGE_ACCURACY_V 0.001F // +/- 1mV accuracy on cell voltage measurement
 #define ESF_LEGAL_MAX_CELL_VOLTAGE_V 4.166F // Max allowable cell voltage to keep pack under 600V. (4.166V * 144 cells = 599.9V)
 #define LIMIT_CELL_OVERVOLTAGE_V  (ESF_LEGAL_MAX_CELL_VOLTAGE_V - BMS_MEAS_VOLTAGE_ACCURACY_V) // We must account for worst case voltage accuracy
@@ -43,7 +43,10 @@
 
 /******************** Pack charging limits ********************/
 
-/* the most the BMS will ever ask the charger for, whatever the GUI sends */
+/* Hard ceiling for a charge request. The limit the BMS actually uses is
+ * BMS_PACK_CHARGE_VOLTAGE_LIMIT_V in lib/adbms/inc/config.h, which must be at
+ * or below this and at or below the pack overvoltage limit. If we actually
+ * tried to charge to PACK_MAX, we would hit a cell OV, causing a fault. */
 #define LIMIT_PACK_CHARGE_VOLTAGE_MAX_V 600U
 #define LIMIT_PACK_CHARGE_CURRENT_MAX_A 10U
 

@@ -1,15 +1,37 @@
 #include "fdcan.h"
+#include "cmsis_os2.h"
 #include "stm32g4xx_hal_fdcan.h"
 #include <string.h>
+
+#define FDCAN2_TX_RETRIES 3U
 
 static void fdcan_init_tx_header(FDCAN_TxHeaderTypeDef *tx_header) {
   tx_header->IdType = FDCAN_EXTENDED_ID;
   tx_header->TxFrameType = FDCAN_DATA_FRAME;
   tx_header->ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-  tx_header->BitRateSwitch = FDCAN_BRS_ON;
+  tx_header->BitRateSwitch = FDCAN_BRS_OFF; /* main bus is 1M/1M, no BRS */
   tx_header->FDFormat = FDCAN_FD_CAN;
   tx_header->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
   tx_header->MessageMarker = 0;
+}
+
+HAL_StatusTypeDef fdcan2_tx(FDCAN_TxHeaderTypeDef *header, const uint8_t *data) {
+  for (uint32_t attempt = 0U;; attempt++) {
+    HAL_StatusTypeDef st = HAL_BUSY;
+
+    /* scheduler lock, not a mutex: this is a few us of register writes */
+    const int32_t lock = osKernelLock();
+    if (HAL_FDCAN_GetTxFifoFreeLevel(&hfdcan2) > 0U) {
+      /* HAL expects a non-const pointer; it only reads the data */
+      st = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, header, (uint8_t *)data);
+    }
+    (void)osKernelRestoreLock(lock);
+
+    if (st != HAL_BUSY || attempt >= FDCAN2_TX_RETRIES) {
+      return st;
+    }
+    (void)osDelay(1U); /* TX FIFO full: one frame takes well under 1 ms at 1 Mbit/s */
+  }
 }
 
 HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data,
@@ -20,8 +42,7 @@ HAL_StatusTypeDef fdcan_send(uint32_t ext_id, const uint8_t *data,
   tx_header.Identifier = (ext_id & 0x1FFFFFFFU); /* 29-bit */
   tx_header.DataLength = dlc_code;
 
-  /* HAL expects a non-const pointer; we won't mutate it. */
-  return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &tx_header, (uint8_t *)data);
+  return fdcan2_tx(&tx_header, data);
 }
 
 /* ---------------------------------------------------------
@@ -47,12 +68,26 @@ void fdcan_configure_filter(void) {
   filter_config.FilterID2 = target_mask;
 
   HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
+
+  /* ezfd commands (Ping, Reboot) addressed to the BMS's node address.
+   * ExtFiltersNbr is 2 in main.c / bms.ioc. */
+  filter_config.FilterIndex = 1;
+  filter_config.FilterID1 = (FDCAN_EZFD_NODE_ADDR << 21);
+  filter_config.FilterID2 = target_mask;
+
+  HAL_FDCAN_ConfigFilter(&hfdcan2, &filter_config);
 }
 
-// Called once from main.c before program/bms init runs.
-// configures filter, starts FDCAN, and enables RX FIFO0 notification
+// Called once from ev27_can_start() (services/ev27), which has already added
+// the main-bus 11-bit filters. Adds the GUI filter, rejects everything else,
+// enables the RX FIFO0 notification and starts FDCAN2.
 void fdcan_hardware_init(void) {
   fdcan_configure_filter();
+
+  /* Without this, frames that match no filter are accepted too (reset value)
+   * and every foreign frame on the bus would reach the GUI handler. */
+  (void)HAL_FDCAN_ConfigGlobalFilter(&hfdcan2, FDCAN_REJECT, FDCAN_REJECT,
+                                     FDCAN_REJECT_REMOTE, FDCAN_REJECT_REMOTE);
 
   if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
     /* handle error */
